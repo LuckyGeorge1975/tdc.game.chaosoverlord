@@ -3,3 +3,4 @@
 | Phase | Task | Status | Notes |
 | --- | --- | --- | --- |
 | Phase 1 | Task 1 – Solution Setup | Done | Solution + projects scaffolded, CI workflow added, Release build & tests passing |
+| Phase 1 | Task 2 – Reference Data Loader | Done | IDataService + EmbeddedJsonDataService implemented, JSON embedded, unit tests passing (2025-09-27) |

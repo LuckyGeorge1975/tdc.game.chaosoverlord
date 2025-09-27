@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChaosOverlords.Core\ChaosOverlords.Core.csproj" />
+    <ProjectReference Include="..\ChaosOverlords.Data\ChaosOverlords.Data.csproj" />
   </ItemGroup>
 
 </Project>

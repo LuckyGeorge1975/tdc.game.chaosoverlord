@@ -10,6 +10,7 @@
 | 2025-09-27 | Paketversionen | Alle Avalonia- und Testpakete auf aktuellste stabile Versionen angehoben. | Sorgt für aktuelle Bugfixes/Features; CI nutzt standardmäßiges .NET 9 SDK. |
 | 2025-09-27 | CI/CD | GitHub Actions Workflow `Build & Test` führt Restore/Build/Test für `main` und `dev` aus. | Stellt Qualität vor Merges sicher; Grundlage für spätere Deployment-Schritte. |
 | 2025-09-27 | Referenzdaten | Platzhalter-JSONs und Schwarz/Weiß-SVGs für Gangs/Items/Sites angelegt (`ChaosOverlords.Data/Reference`). | Erlaubt Task 2 mit realem Loader, bis finale Assets verfügbar sind. |
+| 2025-09-27 | Referenzdaten-Service | JSON-Dateien als Embedded Resources eingebunden, `EmbeddedJsonDataService` liefert stark typisierte Datensätze. Item-Type-Mapping aktuell mit Annahme 0=Melee, 1=Blade, 2=Ranged, 3=Armor, 4=Misc dokumentiert. | Daten können ohne Dateisystemzugriff geladen werden; Mapping wird bei finalem Balancing validiert. |
 
 ## Offene Punkte / Beobachtungen
 

@@ -1,9 +1,0 @@
-[
-  {
-    "id": "site_placeholder",
-    "name": "Placeholder Site",
-    "description": "Bootstrap location entry for development and testing.",
-    "image": "assets/dummy_site.svg",
-    "thumbnail": "assets/dummy_site_thumbnail.svg"
-  }
-]

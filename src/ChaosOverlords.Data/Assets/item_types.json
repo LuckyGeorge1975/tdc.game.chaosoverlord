@@ -1,0 +1,27 @@
+[
+  {
+    "Id": 0,
+    "Name": "Melee Weapon",
+    "Description": "Close-combat weapons that lean on raw strength or fighting skill."
+  },
+  {
+    "Id": 1,
+    "Name": "Blade Weapon",
+    "Description": "Edged weapons that synergise with BladeMelee capabilities."
+  },
+  {
+    "Id": 2,
+    "Name": "Ranged Weapon",
+    "Description": "Firearms and distance weapons that interact with a gang's Ranged capability."
+  },
+  {
+    "Id": 3,
+    "Name": "Armor",
+    "Description": "Protective gear that bolsters defense or survivability when equipped."
+  },
+  {
+    "Id": 4,
+    "Name": "Miscellaneous Equipment",
+    "Description": "Utility items such as medical, stealth or support gear that does not occupy weapon or armor slots."
+  }
+]

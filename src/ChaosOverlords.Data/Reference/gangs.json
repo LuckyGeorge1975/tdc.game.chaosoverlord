@@ -1,9 +1,0 @@
-[
-  {
-    "id": "gang_placeholder",
-    "name": "Placeholder Gang",
-    "description": "Bootstrap data entry for development and testing.",
-    "image": "assets/dummy_gang.svg",
-    "thumbnail": "assets/dummy_gang_thumbnail.svg"
-  }
-]
