@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\*.json" />
+		<None Update="Assets\assets\*.svg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ChaosOverlords.Core\ChaosOverlords.Core.csproj" />
+	</ItemGroup>
+</Project>

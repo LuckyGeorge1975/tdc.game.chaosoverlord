@@ -1,0 +1,46 @@
+# Build artifacts
+bin/
+obj/
+out/
+TestResults/
+
+# VS / Rider
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings*
+
+# VS Code local state
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Tooling caches
+artifacts/
+.nuget/
+packages/
+
+# Logs
+*.log
+logs/
+
+# System files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Resharper / Rider
+_ReSharper.Caches/
+.idea/
+
+# Avalonia designer cache
+*.axaml.cs.swap
+
+# Other
+*.swp
+*.bak
+*.tmp

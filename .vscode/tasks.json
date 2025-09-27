@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "restore",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "restore",
+        "${workspaceFolder}/src/ChaosOverlords.sln"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "build",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/ChaosOverlords.sln",
+        "--no-restore"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": ["restore"],
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "test",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/src/ChaosOverlords.sln",
+        "--no-build"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "test",
+      "dependsOn": ["build"],
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}
