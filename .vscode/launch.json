@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ChaosOverlords.App",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/ChaosOverlords.App/bin/Debug/net9.0/ChaosOverlords.App.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/ChaosOverlords.App",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}
