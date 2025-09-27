@@ -1,0 +1,9 @@
+[
+  {
+    "id": "item_placeholder",
+    "name": "Placeholder Item",
+    "description": "Bootstrap equipment entry for development and testing.",
+    "image": "assets/dummy_item.svg",
+    "thumbnail": "assets/dummy_item_thumbnail.svg"
+  }
+]
