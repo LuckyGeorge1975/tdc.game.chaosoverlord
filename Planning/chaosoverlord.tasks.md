@@ -3,11 +3,13 @@
 > Statuspflege: Abgeschlossene, blockierte oder obsolet gewordene Tasks in `Planning/chaosoverlord.progress.md` erfassen.
 
 ## Task 1 – Solution Setup
+**Status:** ✅ Done – solution scaffolded and projects linked (see `chaosoverlord.progress.md`).
 - Create solution `ChaosOverlords.sln`.
 - Add projects: `ChaosOverlords.App` (Avalonia), `ChaosOverlords.Core`, `ChaosOverlords.Data`, `ChaosOverlords.Tests`.
 - Configure references: App → Core + Data, Tests → Core.
 
 ## Task 2 – Reference Data Loader
+**Status:** ✅ Done – embedded JSON loader complete with unit tests (see `chaosoverlord.progress.md`).
 - Add JSON files (gangs, items, sites) to `ChaosOverlords.Data` as EmbeddedResources.
 - Implement `IDataService` in Core.
 - Implement `EmbeddedJsonDataService` to load and parse JSON into models.
