@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Core.Domain.Game;
@@ -130,7 +129,7 @@ public sealed class Gang
             return false;
         }
 
-        _items[index].Unequip();
+        _items[index].UnEquip();
         _items.RemoveAt(index);
         return true;
     }

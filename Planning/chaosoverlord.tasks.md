@@ -34,8 +34,10 @@
 - Headless UI smoke test stellt sicher, dass `MainWindow` mit `MapViewModel` lädt; Debug-Build nutzt Runtime-XAML-Fallback für frühe Binding-Fehler.
 
 ## Task 6 – Dependency Injection
+**Status:** ✅ Done – ServiceCollection richtet Daten-/Szenario-Services und ViewModels für die App ein (2025-09-28).
 - Setup `ServiceCollection` in App.
 - Register all services (IDataService, IScenarioService, …) with stub implementations where needed.
+- ViewModels über DI auflösen; `MainWindow` erhält `MainViewModel` aus dem Container.
 
 **Acceptance criteria:**
 - App starts.

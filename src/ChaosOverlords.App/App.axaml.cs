@@ -1,21 +1,25 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ChaosOverlords.App.ViewModels;
+using ChaosOverlords.Core.Services;
+using ChaosOverlords.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ChaosOverlords.App;
 
 public partial class App : Application
 {
+    private ServiceProvider? _serviceProvider;
+
     public override void Initialize()
     {
 #if DEBUG
         EnableRuntimeXamlFallback();
 #endif
+        ConfigureServices();
         AvaloniaXamlLoader.Load(this);
     }
 
@@ -54,15 +58,34 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mapViewModel = new MapViewModel();
-            var mainViewModel = new MainViewModel(mapViewModel);
+            if (_serviceProvider is null)
+            {
+                throw new InvalidOperationException("Service provider has not been initialized.");
+            }
+
+            var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
 
             desktop.MainWindow = new MainWindow
             {
                 DataContext = mainViewModel
             };
+
+            desktop.Exit += (_, _) => _serviceProvider?.Dispose();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSingleton<IDataService, EmbeddedJsonDataService>();
+        services.AddSingleton<IScenarioService, ScenarioService>();
+
+        services.AddSingleton<MapViewModel>();
+        services.AddSingleton<MainViewModel>();
+
+        _serviceProvider = services.BuildServiceProvider();
     }
 }

@@ -11,7 +11,7 @@ public sealed class GameTests
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
         var sector = new Sector("A1", CreateSiteData());
-        var game = new Core.Domain.Game.Game(new[] { player }, new[] { sector });
+        var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);
 
@@ -19,7 +19,7 @@ public sealed class GameTests
 
         var fetchedGang = game.GetGang(gang.Id);
         Assert.Same(gang, fetchedGang);
-        Assert.Equal(new[] { gang.Id }, player.GangIds);
+        Assert.Equal([gang.Id], player.GangIds);
         Assert.Contains(gang.Id, sector.GangIds);
     }
 
@@ -29,7 +29,7 @@ public sealed class GameTests
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
         var origin = new Sector("A1", CreateSiteData());
         var target = new Sector("B2", CreateSiteData());
-        var game = new Core.Domain.Game.Game(new[] { player }, new[] { origin, target });
+        var game = new Core.Domain.Game.Game([player], [origin, target]);
 
         var gang = CreateGang(player.Id, origin.Id);
         game.AddGang(gang);
@@ -46,7 +46,7 @@ public sealed class GameTests
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
         var sector = new Sector("A1", CreateSiteData());
-        var game = new Core.Domain.Game.Game(new[] { player }, new[] { sector });
+        var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);
         game.AddGang(gang);
@@ -66,7 +66,7 @@ public sealed class GameTests
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
         var sector = new Sector("A1", CreateSiteData());
-        var game = new Core.Domain.Game.Game(new[] { player }, new[] { sector });
+        var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);
         var item = new Item(Guid.NewGuid(), CreateItemData("item_1"));

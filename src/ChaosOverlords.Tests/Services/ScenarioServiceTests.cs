@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
@@ -216,7 +212,7 @@ public sealed class ScenarioServiceTests
         var playerOne = new TrackingPlayer(Guid.NewGuid(), "Player One");
         var playerTwo = new TrackingPlayer(Guid.NewGuid(), "Player Two");
 
-        var game = new Core.Domain.Game.Game(new IPlayer[] { playerOne, playerTwo }, Array.Empty<Sector>());
+        var game = new Game([playerOne, playerTwo], Array.Empty<Sector>());
         var state = new GameState(game, new ScenarioConfig
         {
             Type = ScenarioType.KillEmAll,
@@ -226,7 +222,7 @@ public sealed class ScenarioServiceTests
                 new() { Name = playerOne.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "A1" },
                 new() { Name = playerTwo.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "B2" }
             }
-        }, new IPlayer[] { playerOne, playerTwo }, 0);
+        }, [playerOne, playerTwo], 0);
 
         var manager = new GameStateManager(state);
 

@@ -3,6 +3,7 @@
 > Statuspflege: Nach Abschluss einer Phase die Ergebnisse in `Planning/chaosoverlord.progress.md` dokumentieren (inkl. Verweis auf den Merge nach `main`).
 
 ## Phase 1 – Bootstrapping
+**Status:** ✅ Completed (2025-09-28) – Tasks 1–6 umgesetzt, App startet via DI, Map & New Game funktionsfähig.
 - Set up solution, projects, and DI container.
 - Load JSON reference data (gangs, items, sites).
 - Implement `GameState` and `ScenarioService.CreateNewGame`.
