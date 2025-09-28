@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
@@ -12,14 +8,9 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 /// Default implementation that wires reference data into runtime game state for freshly created campaigns.
 /// </summary>
-public sealed class ScenarioService : IScenarioService
+public sealed class ScenarioService(IDataService dataService) : IScenarioService
 {
-    private readonly IDataService _dataService;
-
-    public ScenarioService(IDataService dataService)
-    {
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
-    }
+    private readonly IDataService _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
 
     public async Task<GameState> CreateNewGameAsync(ScenarioConfig config, CancellationToken cancellationToken = default)
     {

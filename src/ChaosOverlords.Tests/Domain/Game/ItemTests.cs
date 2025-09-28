@@ -16,11 +16,11 @@ public sealed class ItemTests
     }
 
     [Fact]
-    public void Unequip_ClearsFlag()
+    public void UnEquip_ClearsFlag()
     {
         var item = CreateItem(isEquipped: true);
 
-        item.Unequip();
+        item.UnEquip();
 
         Assert.False(item.IsEquipped);
     }

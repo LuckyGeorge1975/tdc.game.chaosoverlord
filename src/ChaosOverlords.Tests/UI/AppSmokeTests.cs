@@ -3,8 +3,6 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using ChaosOverlords.App;
 using ChaosOverlords.App.ViewModels;
-using ChaosOverlords.App.Views;
-using Xunit;
 
 namespace ChaosOverlords.Tests.UI;
 

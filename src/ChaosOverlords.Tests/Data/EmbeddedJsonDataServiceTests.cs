@@ -1,4 +1,3 @@
-using System.Linq;
 using ChaosOverlords.Data;
 
 namespace ChaosOverlords.Tests.Data;
@@ -46,7 +45,7 @@ public class EmbeddedJsonDataServiceTests
 
         Assert.NotNull(match);
 
-        var gang = match!;
+        var gang = match;
 
         Assert.Equal(hiringCost, gang.HiringCost);
         Assert.Equal(combat, gang.Combat);
@@ -73,7 +72,7 @@ public class EmbeddedJsonDataServiceTests
 
         Assert.NotNull(match);
 
-        var item = match!;
+        var item = match;
 
         Assert.Equal(type, item.Type);
         Assert.Equal(researchCost, item.ResearchCost);
@@ -99,7 +98,7 @@ public class EmbeddedJsonDataServiceTests
 
         Assert.NotNull(match);
 
-        var site = match!;
+        var site = match;
 
         Assert.Equal(resistance, site.Resistance);
         Assert.Equal(researchThroughTechLevel, site.EnablesResearchThroughTechLevel);
@@ -112,7 +111,7 @@ public class EmbeddedJsonDataServiceTests
     {
         var itemTypes = await _sut.GetItemTypesAsync();
 
-        Assert.Equal(new[] { 0, 1, 2, 3, 4 }, itemTypes.Keys.OrderBy(k => k));
+        Assert.Equal([0, 1, 2, 3, 4], itemTypes.Keys.OrderBy(k => k));
 
         Assert.Equal("Melee Weapon", itemTypes[0].Name);
         Assert.Equal("Blade Weapon", itemTypes[1].Name);

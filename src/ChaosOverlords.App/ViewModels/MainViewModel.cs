@@ -1,11 +1,9 @@
-using System;
-
 namespace ChaosOverlords.App.ViewModels;
 
 /// <summary>
 /// Application shell view model that hosts the currently active screen.
 /// </summary>
-public sealed partial class MainViewModel : ViewModelBase
+public sealed class MainViewModel : ViewModelBase
 {
     private ViewModelBase _currentViewModel;
 

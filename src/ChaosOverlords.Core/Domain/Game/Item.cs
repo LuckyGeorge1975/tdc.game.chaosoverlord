@@ -42,5 +42,5 @@ public sealed class Item
 
     public void Equip() => IsEquipped = true;
 
-    public void Unequip() => IsEquipped = false;
+    public void UnEquip() => IsEquipped = false;
 }

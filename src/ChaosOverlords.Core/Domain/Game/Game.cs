@@ -1,4 +1,3 @@
-using System.Linq;
 using ChaosOverlords.Core.Domain.Players;
 
 namespace ChaosOverlords.Core.Domain.Game;

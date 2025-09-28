@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ChaosOverlords.App.ViewModels;
@@ -7,7 +5,7 @@ namespace ChaosOverlords.App.ViewModels;
 /// <summary>
 /// Placeholder map view model that exposes an 8x8 grid.
 /// </summary>
-public sealed partial class MapViewModel : ViewModelBase
+public sealed class MapViewModel : ViewModelBase
 {
     public const int DefaultSize = 8;
 

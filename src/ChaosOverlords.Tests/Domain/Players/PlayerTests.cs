@@ -33,6 +33,6 @@ public sealed class PlayerTests
         player.AssignGang(gangId);
         player.AssignGang(gangId);
 
-        Assert.Equal(new[] { gangId }, player.GangIds);
+        Assert.Equal([gangId], player.GangIds);
     }
 }
