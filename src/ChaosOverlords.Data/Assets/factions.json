@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "factions": [
+    {
+      "id": "chrombund",
+      "name": "Chrombund",
+      "tags": ["cyberware", "trade"],
+      "modifiers": {
+        "combatBonusIfEquipped": 1,
+        "defenseBonusIfEquipped": 1,
+        "itemCostMultiplierByType": { "weapon": 0.9, "armor": 0.9 },
+        "stealthPenalty": 1,
+        "upkeepMultiplierIfEquippedAtLeast": { "threshold": 2, "multiplier": 1.10 }
+      },
+      "diplomaticBias": { "datenkommune": 5, "duftbund_flux": -10 }
+    },
+    {
+      "id": "duftbund_flux",
+      "name": "Duftbund \"Flux\"",
+      "tags": ["duft", "occult"],
+      "modifiers": {
+        "diceBonusForCommands": { "influence": 1, "heal": 1 },
+        "supportExtraChanceAfterInfluence": 0.10,
+        "detectPenalty": 1,
+        "turnEventChances": { "trance_skip_action": 0.05 }
+      },
+      "diplomaticBias": { "chrombund": -10, "dump_wardens": 5 }
+    },
+    {
+      "id": "datenkommune",
+      "name": "Datenkommune",
+      "tags": ["grid", "data"],
+      "modifiers": {
+        "techLevelBonus": 1,
+        "detectBonus": 1,
+        "researchEfficiencyMultiplier": 1.20,
+        "crackdownChanceBonusOnGridChaos": 0.05
+      },
+      "diplomaticBias": { "chrombund": 5, "schwarzlicht": -5 }
+    },
+    {
+      "id": "schiebergilde",
+      "name": "Schiebergilde",
+      "tags": ["logistics", "smuggling"],
+      "modifiers": {
+        "freeMovesPerTurn": 1,
+        "giveCashCost": 0,
+        "cashIncomeMultiplierBySiteTag": { "casino": 0.9, "btl": 0.9 },
+        "influencePenalty": 1
+      },
+      "diplomaticBias": { "schwarzlicht": 5, "dump_wardens": -5 }
+    },
+    {
+      "id": "schwarzlicht",
+      "name": "Schwarzlicht-Makler",
+      "tags": ["fences", "fixers"],
+      "modifiers": {
+        "bribeCostMultiplier": 0.75,
+        "controlDiceBonusIfSitesAtLeast": { "minSites": 2, "bonus": 1 },
+        "chaosPenalty": 1,
+        "snitchReputationImpactMultiplier": 2.0
+      },
+      "diplomaticBias": { "schiebergilde": 5, "datenkommune": -5 }
+    },
+    {
+      "id": "dump_wardens",
+      "name": "Dump-Wächterrat",
+      "tags": ["local", "defense"],
+      "modifiers": {
+        "sectorScopedModifiers": [
+          { "scope": "in_dump", "stealthBonus": 1, "controlDiceBonus": 1, "crackdownStageDelta": -1 },
+          { "scope": "with_clinic", "healDiceBonus": 1 }
+        ],
+        "supportGainPenaltyOutsideDump": 1,
+        "influencePenaltyAgainstConSites": 1
+      },
+      "diplomaticBias": { "duftbund_flux": 5, "schiebergilde": -5 }
+    },
+    {
+      "id": "eisenfaust",
+      "name": "Eisenfaust-Kartell",
+      "tags": ["mercs", "melee"],
+      "modifiers": {
+        "combatBonusOnAttack": 2,
+        "retaliatoryDamageDelta": -1,
+        "researchEfficiencyMultiplier": 0.90,
+        "itemCostMultiplier": 1.10
+      },
+      "diplomaticBias": { "datenkommune": -5, "dump_wardens": 5 }
+    },
+    {
+      "id": "nachtigallen",
+      "name": "Nachtigallen-Orden",
+      "tags": ["spies", "assassins"],
+      "modifiers": {
+        "stealthBonus": 1,
+        "hideUndetectedChancePerStealth": 0.02,
+        "defensePenalty": 1
+      },
+      "diplomaticBias": { "eisenfaust": -5, "schwarzlicht": 5 }
+    },
+    {
+      "id": "rotorkollektiv",
+      "name": "Rotorkollektiv",
+      "tags": ["drones", "rigger"],
+      "modifiers": {
+        "detectBonusInSectorsWithTags": { "factory": 2, "depot": 2 },
+        "reconSweepCooldownTurns": 10,
+        "influencePenalty": 1,
+        "moveExtraCashCostInTightQuarters": 1
+      },
+      "diplomaticBias": { "datenkommune": 5, "dump_wardens": -5 }
+    }
+  ],
+  "diplomacy": {
+    "reputationRange": { "min": -100, "max": 100 },
+    "startAdjustments": { "sameFaction": 10, "declaredAntagonist": -10 },
+    "agreements": {
+      "nap": {
+        "name": "Nichtangriffspakt",
+        "minRep": 10,
+        "durationTurns": 10,
+        "effects": {
+          "borderAttackChanceMultiplier": 0.75,
+          "mutualChaosDelta": -1
+        },
+        "breach": { "bilateralRepDelta": -40, "globalRepDelta": -10, "tempTrait": { "name": "unglaubwuerdig", "durationTurns": 5, "influencePenalty": 1 } }
+      },
+      "trade": {
+        "name": "Handelsabkommen",
+        "minRep": 15,
+        "durationTurns": 8,
+        "effects": { "bilateralItemCostMultiplier": 0.90, "giveCapacityDelta": 1 },
+        "breach": { "bilateralRepDelta": -25 }
+      },
+      "joint_op": {
+        "name": "Gemeinsame Operation",
+        "minRep": 20,
+        "cooldownTurns": 5,
+        "effects": { "sectorCombatBonus": 1, "sectorControlBonus": 1, "sectorChaosMultiplier": 0.5 },
+        "onSuccessRepDelta": 15,
+        "onFailRepDelta": -5
+      }
+    },
+    "drift": {
+      "borderConflictPerTurn": -1,
+      "aidChance": 0.20,
+      "aidRepDelta": 5
+    }
+  }
+}

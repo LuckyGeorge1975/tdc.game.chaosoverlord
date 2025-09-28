@@ -132,19 +132,14 @@ public sealed class TurnController : ITurnController
         {
             return;
         }
-
-        if (TurnNumber == int.MaxValue)
-        {
-            throw new InvalidOperationException("Turn number overflow.");
-        }
-
+    
         TurnNumber++;
         IsTurnActive = false;
         CurrentPhase = TurnPhase.Upkeep;
         _currentCommandPhaseIndex = -1;
         ResetCommandPhases();
         ClearActiveCommandPhase();
-
+    
         TurnCompleted?.Invoke(this, EventArgs.Empty);
         RaiseStateChanged();
     }

@@ -16,7 +16,10 @@ public class TurnViewModelTests
 
         viewModel.StartTurnCommand.Execute(null);
 
-        var guard = 32;
+        // The maximum number of phase advances is set to 32 as a safety guard to prevent infinite loops.
+        // This should be greater than or equal to the number of phases in the turn state machine.
+        var maxPhaseAdvances = 32;
+        var guard = maxPhaseAdvances;
         while (viewModel.CurrentPhase != TurnPhase.Elimination && guard-- > 0)
         {
             if (!viewModel.AdvancePhaseCommand.CanExecute(null))
@@ -27,7 +30,7 @@ public class TurnViewModelTests
             viewModel.AdvancePhaseCommand.Execute(null);
         }
 
-        Assert.True(guard > 0, "Failed to reach elimination phase while advancing phases.");
+        Assert.True(guard > 0, $"Failed to reach elimination phase within {maxPhaseAdvances} advances.");
         Assert.Equal(TurnPhase.Elimination, viewModel.CurrentPhase);
         Assert.True(viewModel.EndTurnCommand.CanExecute(null));
     }
