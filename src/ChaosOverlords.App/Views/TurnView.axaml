@@ -51,12 +51,12 @@
                 <ItemsControl ItemsSource="{Binding CommandTimeline}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                            <WrapPanel Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:TurnViewModel+CommandPhaseViewModel">
-                            <Border Classes="command-phase">
+                            <Border Classes="command-phase" Margin="4">
                                 <StackPanel>
                                     <TextBlock Classes="phase-name" Text="{Binding DisplayName}" />
                                     <TextBlock Classes="phase-state" Text="{Binding State}" />

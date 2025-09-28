@@ -9,7 +9,8 @@ public class TurnViewModelTests
     [Fact]
     public void EndTurnCommand_is_enabled_in_elimination_phase()
     {
-        var viewModel = new TurnViewModel();
+    var controller = new TurnController();
+    var viewModel = new TurnViewModel(controller);
 
         Assert.False(viewModel.EndTurnCommand.CanExecute(null));
 

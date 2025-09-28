@@ -8,37 +8,22 @@ using CommunityToolkit.Mvvm.Input;
 namespace ChaosOverlords.App.ViewModels;
 
 /// <summary>
-/// View model that coordinates the per-turn state machine and exposes UI-friendly helpers.
+/// View model that projects the turn controller state into UI-friendly bindings.
 /// </summary>
 public sealed partial class TurnViewModel : ViewModelBase
 {
-    private static readonly TurnPhase[] PhaseOrder =
-    {
-        TurnPhase.Upkeep,
-        TurnPhase.Command,
-        TurnPhase.Execution,
-        TurnPhase.Hire,
-        TurnPhase.Elimination
-    };
+    private readonly ITurnController _turnController;
 
-    private static readonly CommandPhase[] CommandPhaseOrder =
+    public TurnViewModel(ITurnController turnController)
     {
-        CommandPhase.Instant,
-        CommandPhase.Combat,
-        CommandPhase.Transaction,
-        CommandPhase.Chaos,
-        CommandPhase.Movement,
-        CommandPhase.Control
-    };
+        _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
 
-    private int _currentCommandPhaseIndex = -1;
-
-    public TurnViewModel()
-    {
         CommandTimeline = new ObservableCollection<CommandPhaseViewModel>(
-            CommandPhaseOrder.Select(phase => new CommandPhaseViewModel(phase)));
+            _turnController.CommandPhases.Select(p => new CommandPhaseViewModel(p.Phase, p.State)));
 
-        ResetTurnState();
+        SyncFromController();
+
+        _turnController.StateChanged += OnControllerStateChanged;
     }
 
     /// <summary>
@@ -61,246 +46,79 @@ public sealed partial class TurnViewModel : ViewModelBase
     /// </summary>
     public string TurnCounterDisplay => $"Turn {TurnNumber}";
 
-    /// <summary>
-    /// Tracks whether the turn state machine is currently active.
-    /// </summary>
     [ObservableProperty]
     private bool _isTurnActive;
 
-    /// <summary>
-    /// Current top-level phase.
-    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CurrentPhaseDisplay))]
-    [NotifyCanExecuteChangedFor(nameof(AdvancePhaseCommand))]
-    [NotifyCanExecuteChangedFor(nameof(EndTurnCommand))]
-    private TurnPhase _currentPhase = TurnPhase.Upkeep;
+    private TurnPhase _currentPhase;
 
-    /// <summary>
-    /// Current command sub-phase when the command timeline is running.
-    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveCommandPhaseDisplay))]
     [NotifyPropertyChangedFor(nameof(HasActiveCommandPhase))]
     private CommandPhase? _activeCommandPhase;
 
-    /// <summary>
-    /// Current turn number, incremented when a turn is completed.
-    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TurnCounterDisplay))]
-    private int _turnNumber = 1;
+    private int _turnNumber;
 
     /// <summary>
     /// Ordered collection of command sub-phases exposed to the timeline UI.
     /// </summary>
     public ObservableCollection<CommandPhaseViewModel> CommandTimeline { get; }
 
-    /// <summary>
-    /// Starts a new turn by resetting the state machine and enabling phase advancement.
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanStartTurn))]
-    private void StartTurn()
-    {
-        IsTurnActive = true;
-        _currentCommandPhaseIndex = -1;
-        CurrentPhase = TurnPhase.Upkeep;
-        ResetCommandPhases();
-    }
+    private void StartTurn() => _turnController.StartTurn();
 
-    /// <summary>
-    /// Advances either the current command sub-phase or the major turn phase.
-    /// </summary>
     [RelayCommand(CanExecute = nameof(CanAdvancePhase))]
-    private void AdvancePhase()
+    private void AdvancePhase() => _turnController.AdvancePhase();
+
+    [RelayCommand(CanExecute = nameof(CanEndTurn))]
+    private void EndTurn() => _turnController.EndTurn();
+
+    private bool CanStartTurn() => _turnController.CanStartTurn;
+
+    private bool CanAdvancePhase() => _turnController.CanAdvancePhase;
+
+    private bool CanEndTurn() => _turnController.CanEndTurn;
+
+    private void OnControllerStateChanged(object? sender, EventArgs e) => SyncFromController();
+
+    private void SyncFromController()
     {
-        if (!IsTurnActive)
-        {
-            return;
-        }
+        IsTurnActive = _turnController.IsTurnActive;
+        CurrentPhase = _turnController.CurrentPhase;
+        ActiveCommandPhase = _turnController.ActiveCommandPhase;
+        TurnNumber = _turnController.TurnNumber;
 
-        if (CurrentPhase == TurnPhase.Command && TryAdvanceCommandPhase())
+        var phases = _turnController.CommandPhases;
+        if (CommandTimeline.Count != phases.Count)
         {
-            return;
-        }
-
-        var nextPhase = GetNextPhase(CurrentPhase);
-        if (nextPhase == CurrentPhase)
-        {
-            return;
-        }
-
-        if (CurrentPhase == TurnPhase.Command)
-        {
-            CompleteCommandPhases();
-        }
-
-        CurrentPhase = nextPhase;
-
-        if (CurrentPhase == TurnPhase.Command)
-        {
-            ActivateCommandPhase(0);
+            CommandTimeline.Clear();
+            foreach (var phase in phases)
+            {
+                CommandTimeline.Add(new CommandPhaseViewModel(phase.Phase, phase.State));
+            }
         }
         else
         {
-            ClearActiveCommandPhase();
-        }
-    }
-
-    /// <summary>
-    /// Completes the turn, increments the turn counter and resets to the initial state.
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanEndTurn))]
-    private void EndTurn()
-    {
-        if (!IsTurnActive || CurrentPhase != TurnPhase.Elimination)
-        {
-            return;
+            for (var i = 0; i < phases.Count; i++)
+            {
+                CommandTimeline[i].State = phases[i].State;
+            }
         }
 
-        if (TurnNumber == int.MaxValue)
-        {
-            throw new InvalidOperationException("Turn number overflow.");
-        }
-
-        TurnNumber++;
-        IsTurnActive = false;
-        CurrentPhase = TurnPhase.Upkeep;
-        _currentCommandPhaseIndex = -1;
-        ResetCommandPhases();
-        ClearActiveCommandPhase();
-    }
-
-    private bool CanStartTurn() => !IsTurnActive;
-
-    private bool CanAdvancePhase()
-    {
-        if (!IsTurnActive)
-        {
-            return false;
-        }
-
-        if (CurrentPhase == TurnPhase.Command)
-        {
-            return _currentCommandPhaseIndex < CommandTimeline.Count;
-        }
-
-        var phaseIndex = Array.IndexOf(PhaseOrder, CurrentPhase);
-        return phaseIndex >= 0 && phaseIndex < PhaseOrder.Length - 1;
-    }
-
-    private bool CanEndTurn() => IsTurnActive && CurrentPhase == TurnPhase.Elimination;
-
-    partial void OnIsTurnActiveChanged(bool value)
-    {
         StartTurnCommand.NotifyCanExecuteChanged();
         AdvancePhaseCommand.NotifyCanExecuteChanged();
         EndTurnCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnCurrentPhaseChanged(TurnPhase value)
-    {
-        AdvancePhaseCommand.NotifyCanExecuteChanged();
-        EndTurnCommand.NotifyCanExecuteChanged();
-    }
-
-    private void ResetTurnState()
-    {
-        IsTurnActive = false;
-        CurrentPhase = TurnPhase.Upkeep;
-        _currentCommandPhaseIndex = -1;
-        ResetCommandPhases();
-        ClearActiveCommandPhase();
-    }
-
-    private void ResetCommandPhases()
-    {
-        foreach (var phase in CommandTimeline)
-        {
-            phase.State = CommandPhaseState.Upcoming;
-        }
-
-        AdvancePhaseCommand.NotifyCanExecuteChanged();
-    }
-
-    private bool TryAdvanceCommandPhase()
-    {
-        if (_currentCommandPhaseIndex < 0)
-        {
-            ActivateCommandPhase(0);
-            return true;
-        }
-
-        if (_currentCommandPhaseIndex < CommandTimeline.Count - 1)
-        {
-            ActivateCommandPhase(_currentCommandPhaseIndex + 1);
-            return true;
-        }
-
-        return false;
-    }
-
-    private void ActivateCommandPhase(int index)
-    {
-        if (index < 0 || index >= CommandTimeline.Count)
-        {
-            return;
-        }
-
-        for (var i = 0; i < CommandTimeline.Count; i++)
-        {
-            if (i < index)
-            {
-                CommandTimeline[i].State = CommandPhaseState.Completed;
-            }
-            else if (i == index)
-            {
-                CommandTimeline[i].State = CommandPhaseState.Active;
-            }
-            else
-            {
-                CommandTimeline[i].State = CommandPhaseState.Upcoming;
-            }
-        }
-
-        _currentCommandPhaseIndex = index;
-        ActiveCommandPhase = CommandTimeline[index].Phase;
-        AdvancePhaseCommand.NotifyCanExecuteChanged();
-    }
-
-    private void CompleteCommandPhases()
-    {
-        foreach (var phase in CommandTimeline)
-        {
-            phase.State = CommandPhaseState.Completed;
-        }
-
-        _currentCommandPhaseIndex = CommandTimeline.Count - 1;
-        AdvancePhaseCommand.NotifyCanExecuteChanged();
-    }
-
-    private void ClearActiveCommandPhase()
-    {
-        ActiveCommandPhase = null;
-    }
-
-    private static TurnPhase GetNextPhase(TurnPhase phase)
-    {
-        var index = Array.IndexOf(PhaseOrder, phase);
-        if (index < 0 || index >= PhaseOrder.Length - 1)
-        {
-            return phase;
-        }
-
-        return PhaseOrder[index + 1];
-    }
-
     public sealed partial class CommandPhaseViewModel : ObservableObject
     {
-        public CommandPhaseViewModel(CommandPhase phase)
+        public CommandPhaseViewModel(CommandPhase phase, CommandPhaseState state)
         {
             Phase = phase;
-            State = CommandPhaseState.Upcoming;
+            _state = state;
         }
 
         public CommandPhase Phase { get; }
@@ -315,12 +133,5 @@ public sealed partial class TurnViewModel : ViewModelBase
         public bool IsActive => State == CommandPhaseState.Active;
 
         public bool IsCompleted => State == CommandPhaseState.Completed;
-    }
-
-    public enum CommandPhaseState
-    {
-        Upcoming,
-        Active,
-        Completed
     }
 }

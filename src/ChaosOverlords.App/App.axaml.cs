@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ChaosOverlords.App.ViewModels;
+using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Services;
 using ChaosOverlords.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,9 +84,10 @@ public partial class App : Application
         services.AddSingleton<IDataService, EmbeddedJsonDataService>();
         services.AddSingleton<IScenarioService, ScenarioService>();
 
-    services.AddSingleton<MapViewModel>();
-    services.AddSingleton<TurnViewModel>();
-    services.AddSingleton<MainViewModel>();
+        services.AddSingleton<ITurnController, TurnController>();
+        services.AddSingleton<MapViewModel>();
+        services.AddSingleton<TurnViewModel>();
+        services.AddSingleton<MainViewModel>();
 
         _serviceProvider = services.BuildServiceProvider();
     }
