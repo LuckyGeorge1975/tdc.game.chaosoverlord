@@ -1,4 +1,5 @@
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Tests.Domain.Game;

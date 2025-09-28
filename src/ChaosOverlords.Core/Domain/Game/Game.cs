@@ -1,4 +1,5 @@
 using System.Linq;
+using ChaosOverlords.Core.Domain.Players;
 
 namespace ChaosOverlords.Core.Domain.Game;
 
@@ -8,13 +9,13 @@ namespace ChaosOverlords.Core.Domain.Game;
 /// </summary>
 public sealed class Game
 {
-    private readonly Dictionary<Guid, Player> _players;
+    private readonly Dictionary<Guid, IPlayer> _players;
     private readonly Dictionary<Guid, Gang> _gangs;
     private readonly Dictionary<Guid, Item> _items;
     private readonly Dictionary<string, Sector> _sectors;
 
     public Game(
-        IEnumerable<Player> players,
+        IEnumerable<IPlayer> players,
         IEnumerable<Sector> sectors,
         IEnumerable<Gang>? gangs = null,
         IEnumerable<Item>? items = null)
@@ -54,7 +55,7 @@ public sealed class Game
     /// <summary>
     /// All players participating in the current campaign, keyed by runtime id.
     /// </summary>
-    public IReadOnlyDictionary<Guid, Player> Players => _players;
+    public IReadOnlyDictionary<Guid, IPlayer> Players => _players;
 
     /// <summary>
     /// Known city sectors forming the map for the campaign.
@@ -74,12 +75,12 @@ public sealed class Game
     /// <summary>
     /// Retrieves the player runtime state for a known id.
     /// </summary>
-    public Player GetPlayer(Guid playerId) => _players[playerId];
+    public IPlayer GetPlayer(Guid playerId) => _players[playerId];
 
     /// <summary>
     /// Attempts to resolve the player runtime state for optional lookups.
     /// </summary>
-    public bool TryGetPlayer(Guid playerId, out Player? player) => _players.TryGetValue(playerId, out player);
+    public bool TryGetPlayer(Guid playerId, out IPlayer? player) => _players.TryGetValue(playerId, out player);
 
     /// <summary>
     /// Retrieves the gang runtime state for a known id.
@@ -114,7 +115,7 @@ public sealed class Game
     /// <summary>
     /// Registers a new player, usually during scenario setup.
     /// </summary>
-    public void AddPlayer(Player player)
+    public void AddPlayer(IPlayer player)
     {
         player = player ?? throw new ArgumentNullException(nameof(player));
         _players.Add(player.Id, player);
@@ -128,6 +129,7 @@ public sealed class Game
         gang = gang ?? throw new ArgumentNullException(nameof(gang));
 
         _gangs.Add(gang.Id, gang);
+
         var owner = GetPlayer(gang.OwnerId);
         owner.AssignGang(gang.Id);
 

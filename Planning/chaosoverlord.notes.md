@@ -17,6 +17,13 @@
 - Remote `origin` ist lokal noch nicht konfiguriert. Für Pushes nach GitHub wird die genaue URL des Repositories benötigt.
 - Branch-Strategie gemäß DoD: Feature-Branches von `dev`, Phase-Abschlüsse mergen nach `main`.
 
+## Task 4 – Out-of-Scope Elemente
+
+- KI-Logik für `AiPlayer` sowie echte Entscheidungsbäume folgen erst in Phase 2 (nur `ExecuteTurnAsync`-Placeholder vorhanden).
+- `NetworkPlayer` repräsentiert lediglich den Slot-Typ; Synchronisation/Netzwerk-Handshake wird später geplant.
+- UI-Anbindung des `GameStateManager` (Turn-Steuerung, Timeline) liegt außerhalb von Phase 1 Task 4 und wird in den Phasenaufgaben adressiert.
+- Persistenz und Save/Load des erzeugten `GameState` ist nicht Bestandteil von Task 4; aktuelle Implementierung arbeitet rein im Speicher.
+
 ## To-Validate / Ideen
 
 - Ergänzende Checks in CI (z. B. Avalonia Linter, Code-Coverage-Upload) evaluieren, sobald erste Feature-Implementierungen vorliegen.
