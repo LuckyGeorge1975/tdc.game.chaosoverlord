@@ -1,7 +1,7 @@
 namespace ChaosOverlords.Core.GameData;
 
 /// <summary>
-/// Immutable representation of a gang entry sourced from the embedded game data.
+/// Raw data payload for a gang as it appears in the shipped asset files before gameplay rules are applied.
 /// </summary>
 public sealed record GangData
 {
