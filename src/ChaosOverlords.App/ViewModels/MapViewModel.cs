@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace ChaosOverlords.App.ViewModels;
 
 /// <summary>
-/// Placeholder map view model that exposes a 8x8 grid.
+/// Placeholder map view model that exposes an 8x8 grid.
 /// </summary>
 public sealed class MapViewModel : ViewModelBase
 {
