@@ -32,3 +32,10 @@
 - Save/Load service.
 - UI polish.
 - Stability & performance.
+
+## Phase 7 – Silver City Adaptation (Priority 2)
+- Lore- und Fraktions-Remix („Cons“) ausarbeiten.
+- Con-Referenzdaten laden und in GameState integrieren.
+- Modifier in Wirtschaft/Commands/Movement/Recruitment anwenden.
+- UI-Erweiterungen für Con-Auswahl und Darstellung.
+- Save/Load & QA für Con-spezifische Features.

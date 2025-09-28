@@ -51,3 +51,10 @@
 - Stabilitäts-/Performance-Benchmarks liegen unter definierten Schwellwerten.
 - Abschluss-Regressionstests (manuell + automatisiert) sind dokumentiert und gelaufen.
 - Phase Review abgeschlossen; Merge nach `main` durchgeführt.
+
+### Phase 7 – Silver City Adaptation (Prio 2)
+- `cons.json` wird geladen, validiert und in Domain-Modelle (`ConRef`, `ConModifiers`) überführt.
+- Spielerzustand speichert Con-Zugehörigkeit; Szenariologik respektiert Exclusions.
+- Mindestens drei Con-Modifikatortypen sind funktional nachweisbar (Tests + UI).
+- Con-Auswahl im New-Game-Flow, HUD-Badge und Tooltips sind implementiert.
+- Save/Load erhält alle Con-relevanten Zustände; Dokumentation/Release-Notes aktualisiert.

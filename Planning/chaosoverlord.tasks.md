@@ -27,9 +27,11 @@
 - Provide `CreateNewGame` that initializes `GameState`/`GameStateManager` with multiple players, HQ sectors, start cash, start gang.
 
 ## Task 5 – Avalonia App Shell
+**Status:** ✅ Done – App-Shell steht, Debug-XAML-Fallback & Headless-Smoke-Test sichern Start-Up (2025-09-28).
 - Setup Avalonia App project with CommunityToolkit.Mvvm.
 - Implement `MainViewModel` and placeholder `MapViewModel` (8×8 grid dummy).
 - Bind simple view with placeholder sectors.
+- Headless UI smoke test stellt sicher, dass `MainWindow` mit `MapViewModel` lädt; Debug-Build nutzt Runtime-XAML-Fallback für frühe Binding-Fehler.
 
 ## Task 6 – Dependency Injection
 - Setup `ServiceCollection` in App.
@@ -42,6 +44,40 @@
 - Reference data loads successfully.
 
 ---
+
+# Priority 2 – Silver City Adaptation
+
+> Ziel: Lore- & Copyright-konforme Neuinterpretation („Cons“) der Fraktionen, ohne Phase-1/2-Fortschritt zu blockieren. Umsetzung erfolgt nach Abschluss der Phase-2-Happy-Path-Meilensteine.
+
+## Task S1 – Con Referenzdaten
+**Status:** 🟡 Planned – JSON-Struktur und Domain-Modelle vorbereiten.
+- `ConRef` + `ConModifiers` Modelle in Core.
+- `IDataService`/`EmbeddedJsonDataService` um `cons.json` erweitern.
+- Validierungstest für Referenzdaten.
+
+## Task S2 – Con Auswahl & Szenariofilter
+**Status:** 🟡 Planned – Auswahl im New-Game-Flow & Szenarioeinschränkungen.
+- Player/`GameState` um Con-Zugehörigkeit erweitern.
+- ScenarioService filtert Szenarien basierend auf `scenarioExclusions`.
+- UI: Con-Picker + gesperrte Szenarien (Tooltip).
+
+## Task S3 – Con Modifiers anwenden
+**Status:** 🟡 Planned – Modifikatoren in Services verdrahten.
+- Economy-, Command-, Movement-, Recruitment-Services um Con-Modifier ergänzen.
+- Unique-Item-Pool (Stub) markieren.
+- Tests für mind. drei Modifikatortypen.
+
+## Task S4 – UI Darstellung & Feedback
+**Status:** 🟡 Planned – HUD- und Tooltip-Erweiterungen.
+- Con-Badge/Tooltip im HUD.
+- Detailanzeige im Spielerstatus (aktive Boni, Sperren).
+- Optional: Icons/Assets für Cons.
+
+## Task S5 – Persistenz & QA
+**Status:** 🟡 Planned – Save/Load & Stabilität.
+- Save/Load-Service speichert Con-Zugehörigkeit + Einmal-Boni-Zustand.
+- Integrationstests (New Game → Save → Load mit Con).
+- Dokumentation in `Manual/` und Release Notes ergänzen.
 
 # Chaos Overlords – Phase 2 Tasks (Rundenlogik „Happy Path“)
 
