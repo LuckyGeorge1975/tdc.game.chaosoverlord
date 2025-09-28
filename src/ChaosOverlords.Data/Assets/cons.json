@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "cons": [
+    {
+      "id": "aurum",
+      "name": "Aurum Konsortium",
+      "focus": ["finance", "trade"],
+      "hqDistrict": "La Defense",
+      "modifiers": {
+        "incomeMultiplierBySiteTag": {"cash": 1.20},
+        "influenceDiceBonus": 1
+      },
+      "penalties": {},
+      "scenarioExclusions": ["dominance"],
+      "notes": "+20% Cash von Cash-Sites; Influence effektiv +1 Würfel."
+    },
+    {
+      "id": "neuwerk",
+      "name": "NeuWerk AG",
+      "focus": ["industry", "infrastructure"],
+      "hqDistrict": "The Workbench",
+      "modifiers": {
+        "itemCostMultiplier": 0.75,
+        "gangDefenseBonus": 1
+      },
+      "penalties": {},
+      "scenarioExclusions": ["acceptance"],
+      "notes": "-25% Itemkosten; ausgerüstete Gangs +1 Defense."
+    },
+    {
+      "id": "eidolon",
+      "name": "Eidolon Networks",
+      "focus": ["grid", "data"],
+      "hqDistrict": "The Realm",
+      "modifiers": {
+        "techLevelBonus": 2,
+        "stealthBonus": 1,
+        "detectBonus": 1
+      },
+      "penalties": {},
+      "scenarioExclusions": ["siege"],
+      "notes": "+2 Tech; +1 Stealth/Detect."
+    },
+    {
+      "id": "vitanova",
+      "name": "VitaNova Biotek",
+      "focus": ["healing", "biotech"],
+      "hqDistrict": "The Workbench",
+      "modifiers": {
+        "healRateMultiplier": 1.5,
+        "freeEliteGangUses": 1
+      },
+      "penalties": {},
+      "scenarioExclusions": ["kill_em_all"],
+      "notes": "+50% Heilrate; 1x kostenlose Elite-Gang."
+    },
+    {
+      "id": "arclight",
+      "name": "Arclight Security",
+      "focus": ["military", "security"],
+      "hqDistrict": "La Defense",
+      "modifiers": {
+        "combatBonus": 2,
+        "ownSectorCrackdownChanceMultiplier": 0.5
+      },
+      "penalties": {},
+      "scenarioExclusions": ["greed", "power"],
+      "notes": "+2 Combat auf alle Gangs; Crackdown auf eigenen Sektoren halbiert."
+    },
+    {
+      "id": "satori",
+      "name": "Satori Syndikat",
+      "focus": ["duft", "occult"],
+      "hqDistrict": "The Dump",
+      "modifiers": {
+        "diceBonusForCommands": {"influence": 2, "chaos": 2},
+        "uniqueItemPools": ["flux_items"]
+      },
+      "penalties": {},
+      "scenarioExclusions": ["greed", "dominance"],
+      "notes": "+2 Würfel auf Influence/Chaos; Zugriff auf Flux-Items."
+    },
+    {
+      "id": "metrocore",
+      "name": "MetroCore Transit",
+      "focus": ["logistics", "mobility"],
+      "hqDistrict": "Transit Hubs",
+      "modifiers": {
+        "extraMovesPerTurn": 1,
+        "moveCashCost": 0
+      },
+      "penalties": {},
+      "scenarioExclusions": ["big_man"],
+      "notes": "+1 zusätzliche Bewegung; Move kostet keinen Cash."
+    }
+  ]
+}

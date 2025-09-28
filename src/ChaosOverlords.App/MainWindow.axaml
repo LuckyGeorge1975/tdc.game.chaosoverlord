@@ -2,8 +2,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="1024"
+        d:DesignHeight="768"
+    d:DataContext="{d:DesignInstance vm:MainViewModel, IsDesignTimeCreatable=False}"
+    x:DataType="vm:MainViewModel"
         x:Class="ChaosOverlords.App.MainWindow"
-        Title="ChaosOverlords.App">
-    Welcome to Avalonia!
+        Title="Chaos Overlords">
+    <DockPanel>
+        <!-- Placeholder for upcoming menu bar integration -->
+        <Menu DockPanel.Dock="Top" IsVisible="False" />
+
+    <!-- Placeholder for upcoming status bar integration -->
+    <Border DockPanel.Dock="Bottom"
+        Height="24"
+        IsVisible="False" />
+
+    <ContentControl Content="{Binding CurrentViewModel}" />
+    </DockPanel>
 </Window>
