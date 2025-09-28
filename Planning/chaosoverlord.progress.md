@@ -8,6 +8,7 @@
 | Phase 1 | Task 4 – Scenario Service | Done | ScenarioService + GameStateManager create multi-player GameState, AI/network controllers stubbed awaiting later logic (2025-09-28) |
 | Phase 1 | Task 5 – Avalonia App Shell | Done | App-Shell mit Main-/MapViewModel, Debug-XAML-Fallback und headless Smoke-Test für Startup abgesichert (2025-09-28) |
 | Phase 1 | Task 6 – Dependency Injection | Done | ServiceCollection registriert Daten-/Szenario-Services und liefert MainViewModel/MapViewModel für die App (2025-09-28) |
+| Phase 2 | Task 7 – TurnViewModel & Phasen-State-Machine | Done | TurnViewModel steuert Phasen & Command-Timeline, UI zeigt Slots/States, Buttons gating + Unit-Test abgesichert (2025-09-28) |
 | Priority 2 | Task S1 – Con Referenzdaten | Planned | JSON + Domain-Modelle vorbereiten; wartet auf Abschluss Phase-2-Happy-Path |
 | Priority 2 | Task S2 – Con Auswahl & Szenariofilter | Planned | Con-Picker & Szenariofilter nach Cons; Umsetzung nach S1 |
 | Priority 2 | Task S3 – Con Modifiers anwenden | Planned | Modifier in Economy/Commands/Movement/Recruitment integrieren |

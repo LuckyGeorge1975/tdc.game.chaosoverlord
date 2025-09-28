@@ -14,6 +14,7 @@
 | 2025-09-28 | Silver City Cons Roadmap | Silver-City-Anpassungen als Priority-2-Paket (Phase 7 + Tasks S1–S5) geplant; Umsetzung nach Phase-2-Happy-Path. | Architekturänderungen nicht nötig – bestehende Services (Economy, Commands, Save/Load) werden sukzessive erweitert. |
 | 2025-09-28 | Avalonia App Smoke Coverage | Debug-Build setzt Runtime-XAML-Fallback ein; Headless UI Smoke-Test prüft MainWindow/MapViewModel-Bootstrap. | Stellt sicher, dass Binding-Fehler früh erkannt werden und Startup-Bugs automatisiert auffallen. |
 | 2025-09-28 | Dependency Injection Setup | App nutzt `ServiceCollection`, registriert Daten-/Szenario-Services und ViewModels. | Konsistentes Bootstrapping; erleichtert Tests und spätere Service-Erweiterungen. |
+| 2025-09-28 | Turn State Machine Scope | TurnViewModel + Timeline zeigen Phasenfortschritt; Command-Slots visualisieren Status, konkrete Commands folgen in Task 11. | Erlaubt frühe UI-Validierung ohne Vorgriff auf Command Resolver; End-Turn-Enablement via Unit-Test abgesichert. |
 
 ## Offene Punkte / Beobachtungen
 

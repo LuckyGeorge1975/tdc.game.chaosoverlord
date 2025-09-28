@@ -47,46 +47,12 @@
 
 ---
 
-# Priority 2 – Silver City Adaptation
-
-> Ziel: Lore- & Copyright-konforme Neuinterpretation („Cons“) der Fraktionen, ohne Phase-1/2-Fortschritt zu blockieren. Umsetzung erfolgt nach Abschluss der Phase-2-Happy-Path-Meilensteine.
-
-## Task S1 – Con Referenzdaten
-**Status:** 🟡 Planned – JSON-Struktur und Domain-Modelle vorbereiten.
-- `ConRef` + `ConModifiers` Modelle in Core.
-- `IDataService`/`EmbeddedJsonDataService` um `cons.json` erweitern.
-- Validierungstest für Referenzdaten.
-
-## Task S2 – Con Auswahl & Szenariofilter
-**Status:** 🟡 Planned – Auswahl im New-Game-Flow & Szenarioeinschränkungen.
-- Player/`GameState` um Con-Zugehörigkeit erweitern.
-- ScenarioService filtert Szenarien basierend auf `scenarioExclusions`.
-- UI: Con-Picker + gesperrte Szenarien (Tooltip).
-
-## Task S3 – Con Modifiers anwenden
-**Status:** 🟡 Planned – Modifikatoren in Services verdrahten.
-- Economy-, Command-, Movement-, Recruitment-Services um Con-Modifier ergänzen.
-- Unique-Item-Pool (Stub) markieren.
-- Tests für mind. drei Modifikatortypen.
-
-## Task S4 – UI Darstellung & Feedback
-**Status:** 🟡 Planned – HUD- und Tooltip-Erweiterungen.
-- Con-Badge/Tooltip im HUD.
-- Detailanzeige im Spielerstatus (aktive Boni, Sperren).
-- Optional: Icons/Assets für Cons.
-
-## Task S5 – Persistenz & QA
-**Status:** 🟡 Planned – Save/Load & Stabilität.
-- Save/Load-Service speichert Con-Zugehörigkeit + Einmal-Boni-Zustand.
-- Integrationstests (New Game → Save → Load mit Con).
-- Dokumentation in `Manual/` und Release Notes ergänzen.
-
 # Chaos Overlords – Phase 2 Tasks (Rundenlogik „Happy Path“)
 
 > Ziel: Ein lauffähiger, deterministischer Grund-Loop ohne Kampf/Verstecken, mit Ökonomie/Hire, Befehls-Queue und sichtbarer Phasen-Timeline. Keine Detail-Mechanik-Tuning – nur Happy-Path.
 
 ## Task 7 – TurnViewModel & Phasen-State-Machine
-**Status:** 🟡 Planned  
+**Status:** ✅ Done – Turn state machine with command timeline UI, command gating & unit tests (2025-09-28)  
 **Beschreibung:** Implementiere eine schlanke Runden-State-Machine mit den Rundenphasen: Upkeep/Income → Command → Execution → Hire → Elimination. Abbildung der **Command-Subphasen** (Instant, Combat, Transaction, Chaos, Movement, Control) nur als *Timeline-Slots* im UI (noch keine vollumfängliche Auflösung).  
 **Akzeptanzkriterien:**
 - `TurnViewModel` verwaltet den Phasenfortschritt, kann eine Runde starten/beenden.
@@ -169,6 +135,42 @@
 - Basistoleranz/Income sind pro Klasse konfigurierbar und laufen in Economy/Preview ein.
 **Hinweise:**
 - Werte als `appsettings.json` oder Data-JSON; finale Zahlenabstimmung in Phase 5.
+
+---
+
+# Priority 2 – Silver City Adaptation
+
+> Ziel: Lore- & Copyright-konforme Neuinterpretation („Cons“) der Fraktionen, ohne Phase-1/2-Fortschritt zu blockieren. Umsetzung erfolgt nach Abschluss der Phase-2-Happy-Path-Meilensteine.
+
+## Task S1 – Con Referenzdaten
+**Status:** 🟡 Planned – JSON-Struktur und Domain-Modelle vorbereiten.
+- `ConRef` + `ConModifiers` Modelle in Core.
+- `IDataService`/`EmbeddedJsonDataService` um `cons.json` erweitern.
+- Validierungstest für Referenzdaten.
+
+## Task S2 – Con Auswahl & Szenariofilter
+**Status:** 🟡 Planned – Auswahl im New-Game-Flow & Szenarioeinschränkungen.
+- Player/`GameState` um Con-Zugehörigkeit erweitern.
+- ScenarioService filtert Szenarien basierend auf `scenarioExclusions`.
+- UI: Con-Picker + gesperrte Szenarien (Tooltip).
+
+## Task S3 – Con Modifiers anwenden
+**Status:** 🟡 Planned – Modifikatoren in Services verdrahten.
+- Economy-, Command-, Movement-, Recruitment-Services um Con-Modifier ergänzen.
+- Unique-Item-Pool (Stub) markieren.
+- Tests für mind. drei Modifikatortypen.
+
+## Task S4 – UI Darstellung & Feedback
+**Status:** 🟡 Planned – HUD- und Tooltip-Erweiterungen.
+- Con-Badge/Tooltip im HUD.
+- Detailanzeige im Spielerstatus (aktive Boni, Sperren).
+- Optional: Icons/Assets für Cons.
+
+## Task S5 – Persistenz & QA
+**Status:** 🟡 Planned – Save/Load & Stabilität.
+- Save/Load-Service speichert Con-Zugehörigkeit + Einmal-Boni-Zustand.
+- Integrationstests (New Game → Save → Load mit Con).
+- Dokumentation in `Manual/` und Release Notes ergänzen.
 
 ---
 

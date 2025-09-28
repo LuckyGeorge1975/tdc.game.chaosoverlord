@@ -1,31 +1,23 @@
 namespace ChaosOverlords.App.ViewModels;
 
 /// <summary>
-/// Application shell view model that hosts the currently active screen.
+/// Application shell view model that aggregates the primary screens.
 /// </summary>
 public sealed class MainViewModel : ViewModelBase
 {
-    private ViewModelBase _currentViewModel;
-
-    public MainViewModel(MapViewModel mapViewModel)
+    public MainViewModel(MapViewModel mapViewModel, TurnViewModel turnViewModel)
     {
-        _currentViewModel = mapViewModel ?? throw new ArgumentNullException(nameof(mapViewModel));
+        Map = mapViewModel ?? throw new ArgumentNullException(nameof(mapViewModel));
+        Turn = turnViewModel ?? throw new ArgumentNullException(nameof(turnViewModel));
     }
 
     /// <summary>
-    /// Gets or sets the view model currently displayed by the main window.
+    /// View model representing the city map.
     /// </summary>
-    public ViewModelBase CurrentViewModel
-    {
-        get => _currentViewModel;
-        set => SetProperty(ref _currentViewModel, value ?? throw new ArgumentNullException(nameof(value)));
-    }
+    public MapViewModel Map { get; }
 
     /// <summary>
-    /// Helper used by navigation routines to switch the displayed view model.
+    /// View model managing the active turn state machine.
     /// </summary>
-    public void SetCurrentViewModel(ViewModelBase viewModel)
-    {
-        CurrentViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-    }
+    public TurnViewModel Turn { get; }
 }
