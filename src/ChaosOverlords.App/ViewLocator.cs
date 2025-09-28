@@ -28,7 +28,14 @@ public sealed class ViewLocator : IDataTemplate
             return new TextBlock { Text = name };
         }
 
-        return (Control)Activator.CreateInstance(type)!;
+        try
+        {
+            return (Control)Activator.CreateInstance(type)!;
+        }
+        catch (Exception ex)
+        {
+            return new TextBlock { Text = $"Failed to create view: {type.FullName}\n{ex.Message}" };
+        }
     }
 
     public bool Match(object? data)
