@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -21,21 +22,30 @@ public partial class App : Application
 #if DEBUG
     private static void EnableRuntimeXamlFallback()
     {
+        // Debug-only safeguard: disable compiled XAML assumptions so runtime binding issues surface early.
         const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-        var loaderType = typeof(AvaloniaXamlLoader);
-        var member = loaderType.GetMember("AssumeCompiled", flags).FirstOrDefault();
 
-        switch (member)
+        try
         {
-            case PropertyInfo property when property.CanWrite:
-                property.SetValue(null, false);
-                break;
-            case FieldInfo field:
-                field.SetValue(null, false);
-                break;
-            default:
-                Debug.WriteLine("AvaloniaXamlLoader.AssumeCompiled member not found; runtime XAML fallback unavailable.");
-                break;
+            var loaderType = typeof(AvaloniaXamlLoader);
+            var member = loaderType.GetMember("AssumeCompiled", flags).FirstOrDefault();
+
+            switch (member)
+            {
+                case PropertyInfo property when property.CanWrite:
+                    property.SetValue(null, false);
+                    break;
+                case FieldInfo field:
+                    field.SetValue(null, false);
+                    break;
+                default:
+                    Debug.WriteLine("AvaloniaXamlLoader.AssumeCompiled member not found; runtime XAML fallback unavailable.");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Runtime XAML fallback could not be enabled: {ex.Message}");
         }
     }
 #endif
