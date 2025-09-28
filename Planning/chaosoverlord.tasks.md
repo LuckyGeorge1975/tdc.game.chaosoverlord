@@ -20,9 +20,11 @@
 - Create runtime models: `Game`, `Player`, `Gang`, `Item`, `Sector`.
 
 ## Task 4 – Scenario Service
+**Status:** ✅ Done – Scenario bootstrap service creates seeded multi-player GameState via IScenarioService (2025-09-28).
 - Add `ScenarioConfig` and `ScenarioType` enum.
 - Implement `IScenarioService`.
-- Provide `CreateNewGame` that initializes GameState with HQ, start cash, start gang.
+- Model player slots (Human/Easy/Medium/Hard AI/Network) via `IPlayer` interface + `ExecuteTurnAsync`.
+- Provide `CreateNewGame` that initializes `GameState`/`GameStateManager` with multiple players, HQ sectors, start cash, start gang.
 
 ## Task 5 – Avalonia App Shell
 - Setup Avalonia App project with CommunityToolkit.Mvvm.

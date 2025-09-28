@@ -1,6 +1,6 @@
-using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Players;
 
-namespace ChaosOverlords.Tests.Domain.Game;
+namespace ChaosOverlords.Tests.Domain.Players;
 
 public sealed class PlayerTests
 {
