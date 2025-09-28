@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+    xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+    xmlns:views="clr-namespace:ChaosOverlords.App.Views"
         mc:Ignorable="d"
         d:DesignWidth="1024"
         d:DesignHeight="768"
@@ -14,11 +15,14 @@
         <!-- Placeholder for upcoming menu bar integration -->
         <Menu DockPanel.Dock="Top" IsVisible="False" />
 
-    <!-- Placeholder for upcoming status bar integration -->
-    <Border DockPanel.Dock="Bottom"
-        Height="24"
-        IsVisible="False" />
+        <!-- Placeholder for upcoming status bar integration -->
+        <Border DockPanel.Dock="Bottom"
+                Height="24"
+                IsVisible="False" />
 
-    <ContentControl Content="{Binding CurrentViewModel}" />
+        <Grid ColumnDefinitions="3*,2*">
+            <views:MapView DataContext="{Binding Map}" Margin="8" />
+            <views:TurnView DataContext="{Binding Turn}" Margin="8" Grid.Column="1" />
+        </Grid>
     </DockPanel>
 </Window>

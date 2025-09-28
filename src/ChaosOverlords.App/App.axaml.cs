@@ -83,8 +83,9 @@ public partial class App : Application
         services.AddSingleton<IDataService, EmbeddedJsonDataService>();
         services.AddSingleton<IScenarioService, ScenarioService>();
 
-        services.AddSingleton<MapViewModel>();
-        services.AddSingleton<MainViewModel>();
+    services.AddSingleton<MapViewModel>();
+    services.AddSingleton<TurnViewModel>();
+    services.AddSingleton<MainViewModel>();
 
         _serviceProvider = services.BuildServiceProvider();
     }

@@ -25,7 +25,8 @@ public class AppSmokeTests
             var window = Assert.IsType<MainWindow>(lifetime.MainWindow);
 
             var mainViewModel = Assert.IsType<MainViewModel>(window.DataContext);
-            Assert.IsType<MapViewModel>(mainViewModel.CurrentViewModel);
+            Assert.IsType<MapViewModel>(mainViewModel.Map);
+            Assert.IsType<TurnViewModel>(mainViewModel.Turn);
         }
         finally
         {
