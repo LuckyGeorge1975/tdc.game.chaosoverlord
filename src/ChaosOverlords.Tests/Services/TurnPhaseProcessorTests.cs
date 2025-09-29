@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
@@ -23,8 +24,9 @@ public sealed class TurnPhaseProcessorTests
         var economyService = new TrackingEconomyService();
         var recruitmentService = new NoopRecruitmentService();
         var eventWriter = new TrackingEventWriter();
+    var commandResolutionService = new StubCommandResolutionService();
 
-        using var processor = new TurnPhaseProcessor(controller, session, economyService, recruitmentService, eventWriter);
+    using var processor = new TurnPhaseProcessor(controller, session, economyService, recruitmentService, eventWriter, commandResolutionService);
 
         controller.StartTurn();
 
@@ -141,6 +143,12 @@ public sealed class TurnPhaseProcessorTests
         {
             EconomyEvents.Add((turnNumber, snapshot));
         }
+    }
+
+    private sealed class StubCommandResolutionService : ICommandResolutionService
+    {
+        public CommandExecutionReport Execute(GameState gameState, Guid playerId, int turnNumber)
+            => CommandExecutionReport.Empty(playerId);
     }
 
     private sealed class NoopRecruitmentService : IRecruitmentService

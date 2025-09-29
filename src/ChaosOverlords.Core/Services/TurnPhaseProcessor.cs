@@ -17,8 +17,10 @@ public sealed class TurnPhaseProcessor : IDisposable
     private readonly IEconomyService _economyService;
     private readonly IRecruitmentService _recruitmentService;
     private readonly ITurnEventWriter _eventWriter;
+    private readonly ICommandResolutionService _commandResolutionService;
     private bool _upkeepProcessed;
     private bool _recruitmentRefreshed;
+    private bool _commandsResolved;
     private int _processedTurnNumber;
     private bool _isDisposed;
 
@@ -27,13 +29,15 @@ public sealed class TurnPhaseProcessor : IDisposable
         IGameSession gameSession,
         IEconomyService economyService,
         IRecruitmentService recruitmentService,
-        ITurnEventWriter eventWriter)
+        ITurnEventWriter eventWriter,
+        ICommandResolutionService commandResolutionService)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _gameSession = gameSession ?? throw new ArgumentNullException(nameof(gameSession));
         _economyService = economyService ?? throw new ArgumentNullException(nameof(economyService));
         _recruitmentService = recruitmentService ?? throw new ArgumentNullException(nameof(recruitmentService));
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
+        _commandResolutionService = commandResolutionService ?? throw new ArgumentNullException(nameof(commandResolutionService));
 
         _turnController.StateChanged += OnTurnStateChanged;
         _turnController.TurnCompleted += OnTurnCompleted;
@@ -64,6 +68,7 @@ public sealed class TurnPhaseProcessor : IDisposable
             _processedTurnNumber = turnNumber;
             _upkeepProcessed = false;
             _recruitmentRefreshed = false;
+            _commandsResolved = false;
         }
 
         if (_turnController.CurrentPhase == TurnPhase.Upkeep && !_upkeepProcessed)
@@ -72,12 +77,20 @@ public sealed class TurnPhaseProcessor : IDisposable
             ProcessUpkeep(turnNumber);
             _upkeepProcessed = true;
         }
+
+        if (_turnController.CurrentPhase == TurnPhase.Execution && !_commandsResolved)
+        {
+            EnsureSessionInitialised();
+            ProcessCommands(turnNumber);
+            _commandsResolved = true;
+        }
     }
 
     private void OnTurnCompleted(object? sender, EventArgs e)
     {
         _upkeepProcessed = false;
         _recruitmentRefreshed = false;
+        _commandsResolved = false;
     }
 
     private void ProcessUpkeep(int turnNumber)
@@ -113,6 +126,24 @@ public sealed class TurnPhaseProcessor : IDisposable
                 optionNames);
 
             _eventWriter.Write(turnNumber, TurnPhase.Upkeep, TurnEventType.Recruitment, description);
+        }
+    }
+
+    private void ProcessCommands(int turnNumber)
+    {
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var report = _commandResolutionService.Execute(state, playerId, turnNumber);
+
+        if (report.Entries.Count == 0)
+        {
+            var playerName = state.CurrentPlayer.Name;
+            var description = string.Format(
+                CultureInfo.CurrentCulture,
+                "{0} had no commands to execute.",
+                playerName);
+
+            _eventWriter.Write(turnNumber, TurnPhase.Execution, TurnEventType.Information, description);
         }
     }
 
