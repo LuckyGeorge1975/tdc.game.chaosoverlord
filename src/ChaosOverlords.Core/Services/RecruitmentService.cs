@@ -218,14 +218,10 @@ public sealed class RecruitmentService : IRecruitmentService
     private GangData SelectCandidate(GameState gameState, HashSet<string> reservedNames)
     {
         var available = _gangData.Where(g => !reservedNames.Contains(g.Name)).ToList();
+        // If no available gangs, throw to prevent duplicate names in recruitment pools.
         if (available.Count == 0)
         {
-            available = _gangData.ToList();
-        }
-
-        if (available.Count == 0)
-        {
-            throw new InvalidOperationException("No gang data available for recruitment.");
+            throw new InvalidOperationException("No unique gang data available for recruitment. All gang names are reserved.");
         }
 
         var index = _rngService.NextInt(0, available.Count);
