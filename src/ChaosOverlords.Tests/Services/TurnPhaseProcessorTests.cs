@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
-using ChaosOverlords.Core.Domain.Players;
-using ChaosOverlords.Core.Domain.Scenario;
+using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
+using ChaosOverlords.Core.Domain.Game.Recruitment;
+using ChaosOverlords.Core.Domain.Players;
+using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.Services;
 
 namespace ChaosOverlords.Tests.Services;
@@ -20,15 +22,17 @@ public sealed class TurnPhaseProcessorTests
         var controller = new TurnController();
         var session = new StubGameSession();
         var economyService = new TrackingEconomyService();
+        var recruitmentService = new NoopRecruitmentService();
         var eventWriter = new TrackingEventWriter();
+    var commandResolutionService = new StubCommandResolutionService();
 
-        using var processor = new TurnPhaseProcessor(controller, session, economyService, eventWriter);
+    using var processor = new TurnPhaseProcessor(controller, session, economyService, recruitmentService, eventWriter, commandResolutionService);
 
         controller.StartTurn();
 
         Assert.True(session.InitializeCalled);
         Assert.Equal(1, economyService.CallCount);
-    Assert.NotEmpty(eventWriter.EconomyEvents);
+        Assert.NotEmpty(eventWriter.EconomyEvents);
 
         var guard = 32;
         while (controller.CanAdvancePhase && guard-- > 0)
@@ -129,7 +133,7 @@ public sealed class TurnPhaseProcessorTests
 
     private sealed class TrackingEventWriter : ITurnEventWriter
     {
-    public List<(int TurnNumber, PlayerEconomySnapshot Snapshot)> EconomyEvents { get; } = new();
+        public List<(int TurnNumber, PlayerEconomySnapshot Snapshot)> EconomyEvents { get; } = new();
 
         public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
         {
@@ -139,6 +143,36 @@ public sealed class TurnPhaseProcessorTests
         {
             EconomyEvents.Add((turnNumber, snapshot));
         }
+    }
+
+    private sealed class StubCommandResolutionService : ICommandResolutionService
+    {
+        public CommandExecutionReport Execute(GameState gameState, Guid playerId, int turnNumber)
+            => CommandExecutionReport.Empty(playerId);
+    }
+
+    private sealed class NoopRecruitmentService : IRecruitmentService
+    {
+        public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
+            => CreateSnapshot(playerId, gameState.Game.GetPlayer(playerId).Name);
+
+        public IReadOnlyList<RecruitmentRefreshResult> RefreshPools(GameState gameState, int turnNumber)
+            => Array.Empty<RecruitmentRefreshResult>();
+
+        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
+        {
+            var snapshot = EnsurePool(gameState, playerId, turnNumber);
+            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId, "No recruitment available in test stub.");
+        }
+
+        public RecruitmentDeclineResult Decline(GameState gameState, Guid playerId, Guid optionId, int turnNumber)
+        {
+            var snapshot = EnsurePool(gameState, playerId, turnNumber);
+            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null, "No recruitment available in test stub.");
+        }
+
+        private static RecruitmentPoolSnapshot CreateSnapshot(Guid playerId, string playerName)
+            => new(playerId, playerName, Array.Empty<RecruitmentOptionSnapshot>());
     }
 
 }

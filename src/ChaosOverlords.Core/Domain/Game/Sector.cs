@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ChaosOverlords.Core.GameData;
 
@@ -34,6 +36,11 @@ public sealed class Sector
     public IReadOnlyCollection<Guid> GangIds => new ReadOnlyCollection<Guid>(_gangIds);
 
     /// <summary>
+    /// Projected chaos revenue assigned during the chaos sub-phase.
+    /// </summary>
+    public int ProjectedChaos { get; private set; }
+
+    /// <summary>
     /// Updates the current controller (or clears it) based on campaign actions.
     /// </summary>
     public void SetController(Guid? playerId)
@@ -61,4 +68,20 @@ public sealed class Sector
     /// Removes a gang from the sector, returning whether it was present.
     /// </summary>
     public bool RemoveGang(Guid gangId) => _gangIds.Remove(gangId);
+
+    /// <summary>
+    /// Assigns a projected chaos value to the sector.
+    /// </summary>
+    public void SetChaosProjection(int value)
+    {
+        ProjectedChaos = Math.Max(0, value);
+    }
+
+    /// <summary>
+    /// Clears any existing chaos projection.
+    /// </summary>
+    public void ClearChaosProjection()
+    {
+        ProjectedChaos = 0;
+    }
 }

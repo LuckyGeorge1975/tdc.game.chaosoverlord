@@ -67,6 +67,110 @@
                 </ItemsControl>
             </StackPanel>
 
+            <StackPanel Spacing="8" IsVisible="{Binding IsCommandPanelVisible}">
+                <TextBlock Text="Command Queue" FontWeight="Bold" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="Gang:" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding AvailableGangs}"
+                              SelectedItem="{Binding SelectedGang}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TurnViewModel+GangOptionViewModel">
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBlock Text="Move To:" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding MovementTargets}"
+                              SelectedItem="{Binding SelectedMovementTarget}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TurnViewModel+SectorOptionViewModel">
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Queue Move" Command="{Binding QueueMoveCommand}" />
+                    <Button Content="Queue Control" Command="{Binding QueueControlCommand}" />
+                    <Button Content="Queue Chaos" Command="{Binding QueueChaosCommand}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding CommandStatusMessage}"
+                           FontStyle="Italic"
+                           Foreground="{DynamicResource ThemeAccentBrush}"
+                           IsVisible="{Binding HasCommandStatusMessage}"
+                           TextWrapping="Wrap" />
+
+                <ItemsControl ItemsSource="{Binding QueuedCommands}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TurnViewModel+QueuedCommandViewModel">
+                            <Border Padding="8" Margin="0 0 0 4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding Summary}" FontWeight="Bold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                                    <!-- x:CompileBindings="False" ensures that the binding is not compiled because the datacontext is only visible at runtime. -->
+                                    <Button x:CompileBindings="False" 
+                                            Content="Remove"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding DataContext.RemoveQueuedCommandCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <StackPanel Spacing="8" IsVisible="{Binding IsRecruitmentPanelVisible}">
+                <TextBlock Text="Recruitment" FontWeight="Bold" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="Deploy to:" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding ControlledSectors}"
+                              SelectedItem="{Binding SelectedSector}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TurnViewModel+SectorOptionViewModel">
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding RecruitmentOptions}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TurnViewModel+RecruitmentOptionViewModel">
+                            <Border Padding="8" Margin="0 0 0 4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding GangName}" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding StatusDisplay}" />
+                                    <TextBlock Text="{Binding HiringCost, StringFormat='Hire Cost: {0}'}" />
+                                    <TextBlock Text="{Binding UpkeepCost, StringFormat='Upkeep: {0}'}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Hire"
+                        Command="{Binding HireCommand}"
+                        CommandParameter="{Binding}"
+                        IsEnabled="{Binding IsAvailable}" />
+                    <Button Content="Decline"
+                        Command="{Binding DeclineCommand}"
+                        CommandParameter="{Binding}"
+                        IsEnabled="{Binding IsAvailable}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="{Binding RecruitmentStatusMessage}"
+                           FontStyle="Italic"
+                           Foreground="{DynamicResource ThemeAccentBrush}"
+                           IsVisible="{Binding HasRecruitmentStatusMessage}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
             <StackPanel Spacing="8">
                 <TextBlock Text="Turn Events" FontWeight="Bold" />
                 <ItemsControl ItemsSource="{Binding TurnEvents}">

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using ChaosOverlords.Core.Domain.Game.Commands;
+using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 
@@ -65,6 +67,16 @@ public sealed class GameState
     /// Seed that initialises the deterministic RNG for this game instance.
     /// </summary>
     public int RandomSeed { get; }
+
+    /// <summary>
+    /// Recruitment pools tracking available candidates for each player.
+    /// </summary>
+    public RecruitmentState Recruitment { get; } = new();
+
+    /// <summary>
+    /// Command queues prepared by players for the current turn.
+    /// </summary>
+    public CommandQueueState Commands { get; } = new();
 
     /// <summary>
     /// Identifier of the primary player.

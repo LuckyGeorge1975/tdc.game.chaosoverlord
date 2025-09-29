@@ -85,7 +85,7 @@
 - Spätere Erweiterung: Chaos-Einnahmen werden erst in Phase 3/5 aufgelöst.
 
 ## Task 10 – RecruitmentService (Pool & Hire)
-**Status:** 🟡 Planned  
+**Status:** ✅ Done – Service + Hire-UI verdrahtet, deterministische Pool-Refreshes & Edge-Case-Tests abgeschlossen (2025-09-29)  
 **Beschreibung:** Implementiere Rekrutierungspool (3 Optionen), Hiren/Ablehnen, Kostenabzug, Zufallsnachschub pro Runde. Platzhalter-KI: keine.  
 **Akzeptanzkriterien:**
 - In Hire-Phase erscheint ein Panel mit 3 Gangs.
@@ -96,7 +96,7 @@
 - Tests für: unzureichendes Cash, Doppelhiring gesperrt, Upkeep im Turn der Anwerbung.
 
 ## Task 11 – Command Queue & Resolver (Skeleton)
-**Status:** 🟡 Planned  
+**Status:** ✅ Done – Command queue domain, resolver, and UI queue management delivered with unit tests (2025-09-29)  
 **Beschreibung:** Pro Gang eine Aktion je Runde. Erzeuge Command-Objekte (Move, Control, Chaos – *Chaos nur gestubbt, keine Crackdown-Logik in Phase 2*). Execution-Resolver führt die Befehle in Command-Subphasenreihenfolge aus, ohne Kampf/Verstecken.  
 **Akzeptanzkriterien:**
 - Queue verhindert Mehrfachbefehle je Gang.

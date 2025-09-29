@@ -10,5 +10,6 @@ public enum TurnEventType
     CommandPhaseAdvanced,
     TurnCompleted,
     Information,
-    Economy
+    Economy,
+    Recruitment
 }

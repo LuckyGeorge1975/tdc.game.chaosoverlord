@@ -52,6 +52,9 @@ public sealed class EmbeddedJsonDataService : IDataService
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<GangData> GetGangs() => _gangs;
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

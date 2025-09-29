@@ -89,18 +89,21 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-    services.AddSingleton<IDataService, EmbeddedJsonDataService>();
-    services.AddSingleton<IRngService, DeterministicRngService>();
-    services.AddSingleton<IScenarioService, ScenarioService>();
-    services.AddSingleton<IDefaultScenarioProvider, DefaultScenarioProvider>();
-    services.AddSingleton<IGameSession, GameSession>();
-    services.AddSingleton<IEconomyService, EconomyService>();
+        services.AddSingleton<IDataService, EmbeddedJsonDataService>();
+        services.AddSingleton<IRngService, DeterministicRngService>();
+        services.AddSingleton<IScenarioService, ScenarioService>();
+        services.AddSingleton<IDefaultScenarioProvider, DefaultScenarioProvider>();
+        services.AddSingleton<IGameSession, GameSession>();
+        services.AddSingleton<IEconomyService, EconomyService>();
+        services.AddSingleton<IRecruitmentService, RecruitmentService>();
+        services.AddSingleton<ICommandQueueService, CommandQueueService>();
+        services.AddSingleton<ICommandResolutionService, CommandResolutionService>();
 
-    services.AddSingleton<ITurnEventLog, TurnEventLog>();
-    services.AddSingleton<ITurnEventWriter, TurnEventWriter>();
-    services.AddSingleton<TurnEventRecorder>();
-    services.AddSingleton<TurnPhaseProcessor>();
-    services.AddSingleton<ITurnController, TurnController>();
+        services.AddSingleton<ITurnEventLog, TurnEventLog>();
+        services.AddSingleton<ITurnEventWriter, TurnEventWriter>();
+        services.AddSingleton<TurnEventRecorder>();
+        services.AddSingleton<TurnPhaseProcessor>();
+        services.AddSingleton<ITurnController, TurnController>();
         services.AddSingleton<MapViewModel>();
         services.AddSingleton<TurnViewModel>();
         services.AddSingleton<MainViewModel>();
