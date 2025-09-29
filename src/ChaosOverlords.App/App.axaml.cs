@@ -5,6 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ChaosOverlords.App.ViewModels;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Services;
 using ChaosOverlords.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +65,9 @@ public partial class App : Application
                 throw new InvalidOperationException("Service provider has not been initialized.");
             }
 
+            // Ensure turn event recording is wired before the UI interacts with the controller.
+            _serviceProvider.GetRequiredService<TurnEventRecorder>();
+
             var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
 
             desktop.MainWindow = new MainWindow
@@ -82,8 +86,11 @@ public partial class App : Application
         var services = new ServiceCollection();
 
         services.AddSingleton<IDataService, EmbeddedJsonDataService>();
+        services.AddSingleton<IRngService, DeterministicRngService>();
         services.AddSingleton<IScenarioService, ScenarioService>();
 
+        services.AddSingleton<ITurnEventLog, TurnEventLog>();
+        services.AddSingleton<TurnEventRecorder>();
         services.AddSingleton<ITurnController, TurnController>();
         services.AddSingleton<MapViewModel>();
         services.AddSingleton<TurnViewModel>();

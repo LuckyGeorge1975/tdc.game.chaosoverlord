@@ -15,6 +15,7 @@ public sealed class ScenarioServiceTests
         {
             Type = ScenarioType.KillEmAll,
             Name = "Default",
+            Seed = 12345,
             Players = new List<ScenarioPlayerConfig>
             {
                 new()
@@ -112,48 +113,51 @@ public sealed class ScenarioServiceTests
             }
         };
 
-        var scenarioService = new ScenarioService(new StubDataService(gangs, sites));
+        var rng = new StubRngService();
+        var scenarioService = new ScenarioService(new StubDataService(gangs, sites), rng);
 
         var state = await scenarioService.CreateNewGameAsync(config, CancellationToken.None);
 
         Assert.Equal(config, state.Scenario);
-    Assert.Equal(2, state.PlayerOrder.Count);
-    Assert.IsType<Player>(state.PrimaryPlayer);
-    Assert.Equal("Player One", state.PrimaryPlayer.Name);
-    Assert.Equal(250, state.PrimaryPlayer.Cash);
+        Assert.Equal(config.Seed, state.RandomSeed);
+        Assert.Equal(config.Seed, rng.Seed);
+        Assert.Equal(2, state.PlayerOrder.Count);
+        Assert.IsType<Player>(state.PrimaryPlayer);
+        Assert.Equal("Player One", state.PrimaryPlayer.Name);
+        Assert.Equal(250, state.PrimaryPlayer.Cash);
 
-    Assert.Equal(state.PrimaryPlayerId, state.CurrentPlayer.Id);
-    Assert.Equal(2, state.Game.Players.Count);
-    Assert.Equal(2, state.Game.Gangs.Count);
+        Assert.Equal(state.PrimaryPlayerId, state.CurrentPlayer.Id);
+        Assert.Equal(2, state.Game.Players.Count);
+        Assert.Equal(2, state.Game.Gangs.Count);
 
-    var playerOneSector = state.Game.GetSector("D4");
-    Assert.Equal(state.PrimaryPlayerId, playerOneSector.ControllingPlayerId);
+        var playerOneSector = state.Game.GetSector("D4");
+        Assert.Equal(state.PrimaryPlayerId, playerOneSector.ControllingPlayerId);
         Assert.Single(playerOneSector.GangIds);
 
-    var cpuPlayer = state.PlayerOrder[1];
-    Assert.IsType<AiPlayer>(cpuPlayer);
+        var cpuPlayer = state.PlayerOrder[1];
+        Assert.IsType<AiPlayer>(cpuPlayer);
         Assert.Equal(150, cpuPlayer.Cash);
 
         var cpuSector = state.Game.GetSector("E5");
-    Assert.Equal(cpuPlayer.Id, cpuSector.ControllingPlayerId);
+        Assert.Equal(cpuPlayer.Id, cpuSector.ControllingPlayerId);
         Assert.Single(cpuSector.GangIds);
 
-    var humanGang = state.Game.Gangs.Values.Single(g => g.OwnerId == state.PrimaryPlayerId);
+        var humanGang = state.Game.Gangs.Values.Single(g => g.OwnerId == state.PrimaryPlayerId);
         Assert.Equal("Hackers", humanGang.Data.Name);
 
-    var cpuGang = state.Game.Gangs.Values.Single(g => g.OwnerId == cpuPlayer.Id);
+        var cpuGang = state.Game.Gangs.Values.Single(g => g.OwnerId == cpuPlayer.Id);
         Assert.Equal("Bruisers", cpuGang.Data.Name);
 
-    state.AdvanceToNextPlayer();
-    Assert.Equal(cpuPlayer.Id, state.CurrentPlayer.Id);
+        state.AdvanceToNextPlayer();
+        Assert.Equal(cpuPlayer.Id, state.CurrentPlayer.Id);
 
-    state.AdvanceTurn();
-    Assert.Equal(state.PrimaryPlayerId, state.CurrentPlayer.Id);
+        state.AdvanceTurn();
+        Assert.Equal(state.PrimaryPlayerId, state.CurrentPlayer.Id);
 
-    var manager = new GameStateManager(state);
-    await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
-    manager.AdvanceToNextPlayer();
-    await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
+        var manager = new GameStateManager(state);
+        await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
+        manager.AdvanceToNextPlayer();
+        await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
     }
 
     [Fact]
@@ -201,7 +205,7 @@ public sealed class ScenarioServiceTests
             }
         };
 
-        var scenarioService = new ScenarioService(new StubDataService(gangs, sites: Array.Empty<SiteData>()));
+        var scenarioService = new ScenarioService(new StubDataService(gangs, sites: Array.Empty<SiteData>()), new StubRngService());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => scenarioService.CreateNewGameAsync(config, CancellationToken.None));
     }
@@ -222,7 +226,7 @@ public sealed class ScenarioServiceTests
                 new() { Name = playerOne.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "A1" },
                 new() { Name = playerTwo.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "B2" }
             }
-        }, [playerOne, playerTwo], 0);
+        }, [playerOne, playerTwo], 0, randomSeed: 42);
 
         var manager = new GameStateManager(state);
 
@@ -265,6 +269,25 @@ public sealed class ScenarioServiceTests
 
         public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(_itemTypes);
+    }
+
+    private sealed class StubRngService : IRngService
+    {
+        public int Seed { get; private set; }
+
+        public bool IsInitialised { get; private set; }
+
+        public void Reset(int seed)
+        {
+            Seed = seed;
+            IsInitialised = true;
+        }
+
+        public int NextInt() => Seed;
+
+        public int NextInt(int minInclusive, int maxExclusive) => minInclusive;
+
+        public double NextDouble() => 0.0;
     }
 
     private sealed class TrackingPlayer : PlayerBase

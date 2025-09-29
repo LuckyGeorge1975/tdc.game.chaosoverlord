@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
@@ -8,9 +9,16 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 /// Default implementation that wires reference data into runtime game state for freshly created campaigns.
 /// </summary>
-public sealed class ScenarioService(IDataService dataService) : IScenarioService
+public sealed class ScenarioService : IScenarioService
 {
-    private readonly IDataService _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+    private readonly IDataService _dataService;
+    private readonly IRngService _rngService;
+
+    public ScenarioService(IDataService dataService, IRngService rngService)
+    {
+        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+        _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
+    }
 
     public async Task<GameState> CreateNewGameAsync(ScenarioConfig config, CancellationToken cancellationToken = default)
     {
@@ -62,7 +70,15 @@ public sealed class ScenarioService(IDataService dataService) : IScenarioService
             startingIndex = 0;
         }
 
-        return new GameState(game, config, players, startingIndex);
+        var seed = config.Seed ?? RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+        if (seed == 0)
+        {
+            seed = 1;
+        }
+
+        _rngService.Reset(seed);
+
+        return new GameState(game, config, players, startingIndex, seed);
     }
 
     private static void ValidateConfig(ScenarioConfig config)

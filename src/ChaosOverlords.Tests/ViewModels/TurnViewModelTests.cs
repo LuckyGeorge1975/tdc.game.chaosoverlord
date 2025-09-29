@@ -1,5 +1,6 @@
 using ChaosOverlords.App.ViewModels;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Events;
 using Xunit;
 
 namespace ChaosOverlords.Tests.ViewModels;
@@ -10,7 +11,7 @@ public class TurnViewModelTests
     public void EndTurnCommand_is_enabled_in_elimination_phase()
     {
     var controller = new TurnController();
-    var viewModel = new TurnViewModel(controller);
+    using var viewModel = new TurnViewModel(controller, new TurnEventLog());
 
         Assert.False(viewModel.EndTurnCommand.CanExecute(null));
 
