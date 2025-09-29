@@ -11,3 +11,4 @@
 | Phase 2 | Task 7 – TurnViewModel & Phasen-State-Machine | Done | TurnViewModel steuert Phasen & Command-Timeline, UI zeigt Slots/States, Buttons gating + Unit-Test abgesichert (2025-09-28) |
 | Phase 2 | Task 8 – RngService & Turn-Event-Log | Done | Deterministic `IRngService`, seeded via GameState; turn event log records controller state transitions (2025-09-29) |
 | Phase 2 | Task 9 – EconomyService (Upkeep & Income) | Done | EconomyService applies upkeep/tax/site cash, turn log captures per-player snapshots, unit tests cover mixed cases (2025-09-29) |
+| Phase 2 | Task 10 – RecruitmentService (Pool & Hire) | In Progress | Recruitment service + Hire UI scaffolded; deterministic pool refresh + view-model hooks under test (2025-09-29) |

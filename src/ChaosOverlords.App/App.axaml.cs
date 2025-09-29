@@ -95,6 +95,7 @@ public partial class App : Application
     services.AddSingleton<IDefaultScenarioProvider, DefaultScenarioProvider>();
     services.AddSingleton<IGameSession, GameSession>();
     services.AddSingleton<IEconomyService, EconomyService>();
+    services.AddSingleton<IRecruitmentService, RecruitmentService>();
 
     services.AddSingleton<ITurnEventLog, TurnEventLog>();
     services.AddSingleton<ITurnEventWriter, TurnEventWriter>();

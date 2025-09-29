@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
@@ -13,8 +15,10 @@ public sealed class TurnPhaseProcessor : IDisposable
     private readonly ITurnController _turnController;
     private readonly IGameSession _gameSession;
     private readonly IEconomyService _economyService;
+    private readonly IRecruitmentService _recruitmentService;
     private readonly ITurnEventWriter _eventWriter;
     private bool _upkeepProcessed;
+    private bool _recruitmentRefreshed;
     private int _processedTurnNumber;
     private bool _isDisposed;
 
@@ -22,11 +26,13 @@ public sealed class TurnPhaseProcessor : IDisposable
         ITurnController turnController,
         IGameSession gameSession,
         IEconomyService economyService,
+        IRecruitmentService recruitmentService,
         ITurnEventWriter eventWriter)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _gameSession = gameSession ?? throw new ArgumentNullException(nameof(gameSession));
         _economyService = economyService ?? throw new ArgumentNullException(nameof(economyService));
+        _recruitmentService = recruitmentService ?? throw new ArgumentNullException(nameof(recruitmentService));
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
 
         _turnController.StateChanged += OnTurnStateChanged;
@@ -57,6 +63,7 @@ public sealed class TurnPhaseProcessor : IDisposable
         {
             _processedTurnNumber = turnNumber;
             _upkeepProcessed = false;
+            _recruitmentRefreshed = false;
         }
 
         if (_turnController.CurrentPhase == TurnPhase.Upkeep && !_upkeepProcessed)
@@ -70,14 +77,42 @@ public sealed class TurnPhaseProcessor : IDisposable
     private void OnTurnCompleted(object? sender, EventArgs e)
     {
         _upkeepProcessed = false;
+        _recruitmentRefreshed = false;
     }
 
     private void ProcessUpkeep(int turnNumber)
     {
+        if (!_recruitmentRefreshed)
+        {
+            RefreshRecruitment(turnNumber);
+            _recruitmentRefreshed = true;
+        }
+
         var report = _economyService.ApplyUpkeep(_gameSession.GameState, turnNumber);
         foreach (var snapshot in report.PlayerSnapshots)
         {
             _eventWriter.WriteEconomy(turnNumber, TurnPhase.Upkeep, snapshot);
+        }
+    }
+
+    private void RefreshRecruitment(int turnNumber)
+    {
+        var results = _recruitmentService.RefreshPools(_gameSession.GameState, turnNumber);
+        foreach (var result in results)
+        {
+            if (!result.HasChanges)
+            {
+                continue;
+            }
+
+            var optionNames = string.Join(", ", result.Pool.Options.Select(o => o.GangName));
+            var description = string.Format(
+                CultureInfo.CurrentCulture,
+                "{0}: recruitment pool refreshed ({1})",
+                result.Pool.PlayerName,
+                optionNames);
+
+            _eventWriter.Write(turnNumber, TurnPhase.Upkeep, TurnEventType.Recruitment, description);
         }
     }
 
