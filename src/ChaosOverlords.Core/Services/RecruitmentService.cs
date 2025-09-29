@@ -14,14 +14,22 @@ public sealed class RecruitmentService : IRecruitmentService
 {
     private const int PoolSize = 3;
 
-    private readonly IDataService _dataService;
+    private readonly IReadOnlyList<GangData> _gangData;
     private readonly IRngService _rngService;
-    private IReadOnlyList<GangData>? _cachedGangData;
 
     public RecruitmentService(IDataService dataService, IRngService rngService)
     {
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+        if (dataService is null)
+        {
+            throw new ArgumentNullException(nameof(dataService));
+        }
+
         _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
+        _gangData = dataService.GetGangs();
+        if (_gangData is null || _gangData.Count == 0)
+        {
+            throw new InvalidOperationException("Gang data must be available to initialise recruitment service.");
+        }
     }
 
     public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
@@ -71,12 +79,12 @@ public sealed class RecruitmentService : IRecruitmentService
         }
 
         var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
-        if (!game.TryGetPlayer(playerId, out var player))
+        if (!game.TryGetPlayer(playerId, out var player) || player is null)
         {
             throw new InvalidOperationException($"Player '{playerId}' was not found in the game state.");
         }
 
-        var resolvedPlayer = player ?? throw new InvalidOperationException($"Player lookup for '{playerId}' returned null.");
+        var resolvedPlayer = player;
 
         if (!game.TryGetSector(sectorId, out var targetSector))
         {
@@ -209,11 +217,10 @@ public sealed class RecruitmentService : IRecruitmentService
 
     private GangData SelectCandidate(GameState gameState, HashSet<string> reservedNames)
     {
-        var gangs = GetGangData();
-        var available = gangs.Where(g => !reservedNames.Contains(g.Name)).ToList();
+        var available = _gangData.Where(g => !reservedNames.Contains(g.Name)).ToList();
         if (available.Count == 0)
         {
-            available = gangs.ToList();
+            available = _gangData.ToList();
         }
 
         if (available.Count == 0)
@@ -242,16 +249,6 @@ public sealed class RecruitmentService : IRecruitmentService
         }
 
         return reserved;
-    }
-
-    private IReadOnlyList<GangData> GetGangData()
-    {
-        if (_cachedGangData is null)
-        {
-            _cachedGangData = _dataService.GetGangsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
-        return _cachedGangData;
     }
 
     private RecruitmentPoolSnapshot CreatePoolSnapshot(GameState gameState, Guid playerId, RecruitmentPool pool, string? playerName = null)

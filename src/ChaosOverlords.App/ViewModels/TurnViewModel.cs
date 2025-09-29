@@ -437,12 +437,10 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
 
     private void EnsureSessionInitialised()
     {
-        if (_gameSession.IsInitialized)
+        if (!_gameSession.IsInitialized)
         {
-            return;
+            throw new InvalidOperationException("Game session has not been initialised.");
         }
-
-        _gameSession.InitializeAsync().GetAwaiter().GetResult();
     }
 
     partial void OnSelectedSectorChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
