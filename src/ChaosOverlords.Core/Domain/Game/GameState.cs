@@ -17,7 +17,8 @@ public sealed class GameState
         Game game,
         ScenarioConfig scenario,
         IReadOnlyList<IPlayer> playerOrder,
-        int startingPlayerIndex = 0)
+        int startingPlayerIndex = 0,
+        int randomSeed = 0)
     {
         Game = game ?? throw new ArgumentNullException(nameof(game));
         Scenario = scenario ?? throw new ArgumentNullException(nameof(scenario));
@@ -40,6 +41,8 @@ public sealed class GameState
         _startingPlayerIndex = startingPlayerIndex;
         _currentPlayerIndex = startingPlayerIndex;
 
+        RandomSeed = randomSeed;
+
         PrimaryPlayer = _playerOrder.OfType<Player>().FirstOrDefault() ?? _playerOrder[0];
     }
 
@@ -57,6 +60,11 @@ public sealed class GameState
     /// Primary (human-controlled) player.
     /// </summary>
     public IPlayer PrimaryPlayer { get; }
+
+    /// <summary>
+    /// Seed that initialises the deterministic RNG for this game instance.
+    /// </summary>
+    public int RandomSeed { get; }
 
     /// <summary>
     /// Identifier of the primary player.

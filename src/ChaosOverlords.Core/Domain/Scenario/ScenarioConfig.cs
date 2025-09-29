@@ -21,6 +21,11 @@ public sealed record ScenarioConfig
     /// Optional predefined map layout. When empty the scenario service will derive the map from player HQ sectors.
     /// </summary>
     public IReadOnlyList<string> MapSectorIds { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Optional deterministic seed. When omitted the scenario service will generate one.
+    /// </summary>
+    public int? Seed { get; init; }
 }
 
 /// <summary>
