@@ -218,36 +218,14 @@ public sealed class RecruitmentService : IRecruitmentService
     private GangData SelectCandidate(GameState gameState, HashSet<string> reservedNames)
     {
         var available = _gangData.Where(g => !reservedNames.Contains(g.Name)).ToList();
-        // If no available gangs, allow duplicate names with suffixes as a fallback.
+        // If no available gangs, throw to prevent duplicate names in recruitment pools.
         if (available.Count == 0)
         {
-            // All names are reserved, so pick a random gang and generate a unique name with a suffix.
-            var allGangs = _gangData.ToList();
-            var index = _rngService.NextInt(0, allGangs.Count);
-            var baseGang = allGangs[index];
-            var baseName = baseGang.Name;
-            int suffix = 2;
-            string newName;
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            do
-            {
-                newName = $"{baseName} ({suffix})";
-                suffix++;
-            } while (reservedNames.Contains(newName));
-
-            // Create a new GangData instance with the suffixed name, copying other properties.
-            var gangWithSuffix = new GangData(
-                name: newName,
-                description: baseGang.Description,
-                cost: baseGang.Cost,
-                stats: baseGang.Stats,
-                sprite: baseGang.Sprite
-            );
-            return gangWithSuffix;
+            throw new InvalidOperationException("No unique gang data available for recruitment. All gang names are reserved.");
         }
 
-        var idx = _rngService.NextInt(0, available.Count);
-        var candidate = available[idx];
+        var index = _rngService.NextInt(0, available.Count);
+        var candidate = available[index];
         return candidate;
     }
 
