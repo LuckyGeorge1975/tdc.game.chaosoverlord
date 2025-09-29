@@ -65,8 +65,12 @@ public partial class App : Application
                 throw new InvalidOperationException("Service provider has not been initialized.");
             }
 
-            // Ensure turn event recording is wired before the UI interacts with the controller.
+            // Ensure core services are ready before the UI interacts with the controller.
+            var session = _serviceProvider.GetRequiredService<IGameSession>();
+            session.InitializeAsync().GetAwaiter().GetResult();
+
             _serviceProvider.GetRequiredService<TurnEventRecorder>();
+            _serviceProvider.GetRequiredService<TurnPhaseProcessor>();
 
             var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
 
@@ -85,13 +89,18 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        services.AddSingleton<IDataService, EmbeddedJsonDataService>();
-        services.AddSingleton<IRngService, DeterministicRngService>();
-        services.AddSingleton<IScenarioService, ScenarioService>();
+    services.AddSingleton<IDataService, EmbeddedJsonDataService>();
+    services.AddSingleton<IRngService, DeterministicRngService>();
+    services.AddSingleton<IScenarioService, ScenarioService>();
+    services.AddSingleton<IDefaultScenarioProvider, DefaultScenarioProvider>();
+    services.AddSingleton<IGameSession, GameSession>();
+    services.AddSingleton<IEconomyService, EconomyService>();
 
-        services.AddSingleton<ITurnEventLog, TurnEventLog>();
-        services.AddSingleton<TurnEventRecorder>();
-        services.AddSingleton<ITurnController, TurnController>();
+    services.AddSingleton<ITurnEventLog, TurnEventLog>();
+    services.AddSingleton<ITurnEventWriter, TurnEventWriter>();
+    services.AddSingleton<TurnEventRecorder>();
+    services.AddSingleton<TurnPhaseProcessor>();
+    services.AddSingleton<ITurnController, TurnController>();
         services.AddSingleton<MapViewModel>();
         services.AddSingleton<TurnViewModel>();
         services.AddSingleton<MainViewModel>();

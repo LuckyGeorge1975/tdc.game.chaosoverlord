@@ -64,7 +64,7 @@
 - Eventing via `IEventAggregator`/Messenger (CommunityToolkit.Mvvm) für UI-Updates.
 
 ## Task 8 – RngService (deterministisch) & Turn-Event-Log
-**Status:** 🟡 Planned  
+**Status:** ✅ Done – Seeded `IRngService` + turn event log wired through recorder/writer (2025-09-29)  
 **Beschreibung:** Erzeuge einen zentralen `IRngService` (Seed im `GameState`). Lege ein Event-Log an (`TurnEvent`, Typ + Payload) und protokolliere wichtige Ereignisse (Upkeep/Income, Hire, Control-Gewinne/Verluste, geplante Crackdowns als Platzhalter).  
 **Akzeptanzkriterien:**
 - Identische Seeds → identische Ereignisse (Smoke-Test).
@@ -74,7 +74,7 @@
 - Log nur *anhängen*; Rotation auf N Runden vorsehen.
 
 ## Task 9 – EconomyService (Upkeep & Income)
-**Status:** 🟡 Planned  
+**Status:** ✅ Done – EconomyService applies upkeep/tax/site cash, logs snapshots, tests in place (2025-09-29)  
 **Beschreibung:** Implementiere die Berechnung von Upkeep (Summe Gang-Upkeep), Sektorsteuer (+1 pro kontrolliertem Sektor), sowie Site-Cash-Modifier (positiv/negativ). Bribe/Snitch/Einkäufe werden *angekündigt*, fließen in die Vorschau ein (s. Task 11).  
 **Akzeptanzkriterien:**
 - Upkeep/Income werden in Upkeep-Phase angewendet und im Log erfasst.
@@ -115,6 +115,7 @@
 - Rote Zahlen = Kosten, graue = Einnahmen.
 **Hinweise:**
 - Bindings aus `EconomyService` und `ProjectedChaos` pro Sektor.
+- Wirtschaftliche Updates aus Task 9 im UI sichtbarer machen (z. B. Aggregation der Turn-Log-Einträge in einer Finance-Übersicht).
 - Später: echte Chaos-Auszahlung & Crackdown (Phase 5).
 
 ## Task 13 – Phasen-Timeline UI (Befehlsvisualisierung)
