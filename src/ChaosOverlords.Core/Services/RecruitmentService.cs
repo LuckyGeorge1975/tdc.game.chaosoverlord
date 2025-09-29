@@ -91,7 +91,7 @@ public sealed class RecruitmentService : IRecruitmentService
             return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId, sectorId, "Target sector not found.");
         }
 
-        var sector = targetSector ?? throw new InvalidOperationException($"Sector '{sectorId}' lookup returned null.");
+        var sector = targetSector;
 
         if (sector.ControllingPlayerId != playerId)
         {
