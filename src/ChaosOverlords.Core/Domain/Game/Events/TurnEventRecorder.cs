@@ -76,7 +76,7 @@ public sealed class TurnEventRecorder : IDisposable
 
     private TurnEvent CreateEvent(int turnNumber, TurnPhase phase, CommandPhase? commandPhase, TurnEventType type, string description)
     {
-        var timestamp = DateTimeOffset.UnixEpoch.AddMilliseconds(_sequenceNumber);
+        var timestamp = DateTimeOffset.UtcNow;
         _sequenceNumber++;
         return new TurnEvent(turnNumber, phase, commandPhase, type, description, timestamp);
     }
