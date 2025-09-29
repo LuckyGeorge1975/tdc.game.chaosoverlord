@@ -29,3 +29,5 @@ Use this workflow for every new phase or task. Treat it as the default checklist
 - Always keep branches small and focused on a single task.
 - Rebase or merge regularly from the parent phase branch to minimize drift.
 - When handing work off (PRs or reviews), reference this workflow to show each step is complete.
+- After finishing a task, open a pull request from the task branch into the corresponding phase branch. The user will handle the PR and review via GitHub Copilot online.
+- After a phase is completed, open a pull request from the phase branch into `main`. The user will handle the PR and review via GitHub Copilot online.

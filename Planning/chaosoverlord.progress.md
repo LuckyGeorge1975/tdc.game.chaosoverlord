@@ -9,8 +9,5 @@
 | Phase 1 | Task 5 – Avalonia App Shell | Done | App-Shell mit Main-/MapViewModel, Debug-XAML-Fallback und headless Smoke-Test für Startup abgesichert (2025-09-28) |
 | Phase 1 | Task 6 – Dependency Injection | Done | ServiceCollection registriert Daten-/Szenario-Services und liefert MainViewModel/MapViewModel für die App (2025-09-28) |
 | Phase 2 | Task 7 – TurnViewModel & Phasen-State-Machine | Done | TurnViewModel steuert Phasen & Command-Timeline, UI zeigt Slots/States, Buttons gating + Unit-Test abgesichert (2025-09-28) |
-| Priority 2 | Task S1 – Con Referenzdaten | Planned | JSON + Domain-Modelle vorbereiten; wartet auf Abschluss Phase-2-Happy-Path |
-| Priority 2 | Task S2 – Con Auswahl & Szenariofilter | Planned | Con-Picker & Szenariofilter nach Cons; Umsetzung nach S1 |
-| Priority 2 | Task S3 – Con Modifiers anwenden | Planned | Modifier in Economy/Commands/Movement/Recruitment integrieren |
-| Priority 2 | Task S4 – UI Darstellung & Feedback | Planned | HUD-Badge & Tooltips ergänzen |
-| Priority 2 | Task S5 – Persistenz & QA | Planned | Save/Load + Tests/Doku für Con-Features |
+| Phase 2 | Task 8 – RngService & Turn-Event-Log | Done | Deterministic `IRngService`, seeded via GameState; turn event log records controller state transitions (2025-09-29) |
+| Phase 2 | Task 9 – EconomyService (Upkeep & Income) | Done | EconomyService applies upkeep/tax/site cash, turn log captures per-player snapshots, unit tests cover mixed cases (2025-09-29) |
