@@ -13,6 +13,11 @@ public interface IDataService
     Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Retrieves all gang data records synchronously when asynchronous access is not feasible.
+    /// </summary>
+    IReadOnlyList<GangData> GetGangs();
+
+    /// <summary>
     /// Retrieves all item data records.
     /// </summary>
     Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default);

@@ -261,6 +261,8 @@ public sealed class ScenarioServiceTests
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(_gangs);
 
+        public IReadOnlyList<GangData> GetGangs() => _gangs;
+
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(_items);
 
