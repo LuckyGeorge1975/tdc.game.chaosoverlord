@@ -295,7 +295,7 @@ public class TurnViewModelTests
         private static RecruitmentPoolSnapshot BuildSnapshot(GameState gameState, Guid playerId, IReadOnlyList<RecruitmentOptionSnapshot> options)
         {
             var player = gameState.Game.GetPlayer(playerId);
-            var cloned = options.Select(option => option with { }).ToList();
+            var cloned = options.ToList();
             return new RecruitmentPoolSnapshot(playerId, player.Name, cloned);
         }
     }
