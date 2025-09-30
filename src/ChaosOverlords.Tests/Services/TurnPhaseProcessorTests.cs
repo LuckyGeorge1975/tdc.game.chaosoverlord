@@ -175,28 +175,4 @@ public sealed class TurnPhaseProcessorTests
             => new(playerId, playerName, Array.Empty<RecruitmentOptionSnapshot>());
     }
 
-    private sealed class NoopRecruitmentService : IRecruitmentService
-    {
-        public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
-            => CreateSnapshot(playerId, gameState.Game.GetPlayer(playerId).Name);
-
-        public IReadOnlyList<RecruitmentRefreshResult> RefreshPools(GameState gameState, int turnNumber)
-            => Array.Empty<RecruitmentRefreshResult>();
-
-        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
-        {
-            var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId, "No recruitment available in test stub.");
-        }
-
-        public RecruitmentDeclineResult Decline(GameState gameState, Guid playerId, Guid optionId, int turnNumber)
-        {
-            var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null, "No recruitment available in test stub.");
-        }
-
-        private static RecruitmentPoolSnapshot CreateSnapshot(Guid playerId, string playerName)
-            => new(playerId, playerName, Array.Empty<RecruitmentOptionSnapshot>());
-    }
-
 }
