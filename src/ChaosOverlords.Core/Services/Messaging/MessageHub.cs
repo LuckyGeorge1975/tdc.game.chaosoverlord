@@ -45,7 +45,7 @@ public sealed class MessageHub : IMessageHub
         ISubscription[] snapshot;
         lock (subscribers)
         {
-            snapshot = subscribers.Where(s => !s.IsDisposed).ToArray();
+            snapshot = subscribers.ToArray();
         }
 
         foreach (var subscription in snapshot)
