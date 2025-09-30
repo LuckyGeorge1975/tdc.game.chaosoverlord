@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sections="clr-namespace:ChaosOverlords.App.ViewModels.Sections"
+             x:Class="ChaosOverlords.App.Views.CommandTimelineView"
+             x:DataType="sections:CommandTimelineSectionViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Command Timeline" FontWeight="Bold" />
+    <ItemsControl ItemsSource="{Binding Phases}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="sections:CommandPhaseEntryViewModel">
+                    <Border Classes="command-phase" Margin="4">
+                        <StackPanel>
+                            <TextBlock Classes="phase-name" Text="{Binding DisplayName}" />
+                            <TextBlock Classes="phase-state" Text="{Binding State}" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

@@ -7,6 +7,7 @@ using ChaosOverlords.App.ViewModels;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Services;
+using ChaosOverlords.Core.Services.Messaging;
 using ChaosOverlords.Data;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -97,7 +98,9 @@ public partial class App : Application
         services.AddSingleton<IEconomyService, EconomyService>();
         services.AddSingleton<IRecruitmentService, RecruitmentService>();
         services.AddSingleton<ICommandQueueService, CommandQueueService>();
-        services.AddSingleton<ICommandResolutionService, CommandResolutionService>();
+    services.AddSingleton<ICommandResolutionService, CommandResolutionService>();
+    services.AddSingleton<IFinancePreviewService, FinancePreviewService>();
+    services.AddSingleton<IMessageHub, MessageHub>();
 
         services.AddSingleton<ITurnEventLog, TurnEventLog>();
         services.AddSingleton<ITurnEventWriter, TurnEventWriter>();

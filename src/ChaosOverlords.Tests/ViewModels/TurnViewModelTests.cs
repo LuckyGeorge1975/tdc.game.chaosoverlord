@@ -10,6 +10,7 @@ using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.Services;
+using ChaosOverlords.Core.Services.Messaging;
 using System.Linq;
 using Xunit;
 using ChaosOverlords.Core.Domain.Game.Commands;
@@ -26,9 +27,10 @@ public class TurnViewModelTests
         var recruitmentService = new NoopRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new NullEventWriter();
-        var commandQueueService = new DummyCommandQueueService();
+    var commandQueueService = new DummyCommandQueueService();
+    var financePreviewService = new StubFinancePreviewService();
 
-        using var viewModel = new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService);
+    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
 
         Assert.False(viewModel.EndTurnCommand.CanExecute(null));
 
@@ -61,9 +63,10 @@ public class TurnViewModelTests
         var recruitmentService = new RecordingRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new RecordingEventWriter(eventLog);
-        var commandQueueService = new DummyCommandQueueService();
+    var commandQueueService = new DummyCommandQueueService();
+    var financePreviewService = new StubFinancePreviewService();
 
-        using var viewModel = new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService);
+    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
 
         controller.StartTurn();
         AdvanceToPhase(controller, TurnPhase.Hire);
@@ -95,9 +98,10 @@ public class TurnViewModelTests
         var recruitmentService = new RecordingRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new RecordingEventWriter(eventLog);
-        var commandQueueService = new DummyCommandQueueService();
+    var commandQueueService = new DummyCommandQueueService();
+        var financePreviewService = new StubFinancePreviewService();
 
-        using var viewModel = new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService);
+    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
 
         controller.StartTurn();
         AdvanceToPhase(controller, TurnPhase.Hire);
@@ -116,6 +120,42 @@ public class TurnViewModelTests
         Assert.Contains("Declined", viewModel.RecruitmentStatusMessage!, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(eventWriter.Events, e => e.Type == TurnEventType.Recruitment && e.Description.Contains("declined", StringComparison.OrdinalIgnoreCase));
         Assert.False(viewModel.HireCommand.CanExecute(option));
+    }
+
+    [Fact]
+    public void FinancePreview_PopulatesCityAndSectorCollections()
+    {
+        var controller = new TurnController();
+        var session = new StubGameSession();
+        var recruitmentService = new NoopRecruitmentService();
+        var eventLog = new TurnEventLog();
+        var eventWriter = new NullEventWriter();
+        var commandQueueService = new DummyCommandQueueService();
+        var financePreviewService = new StubFinancePreviewService();
+
+        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
+
+        controller.StartTurn();
+        AdvanceToPhase(controller, TurnPhase.Command);
+
+        Assert.True(viewModel.IsFinancePreviewVisible);
+        Assert.NotEmpty(viewModel.CityFinanceCategories);
+        Assert.NotEmpty(viewModel.SectorFinance);
+        Assert.Contains(viewModel.CityFinanceCategories, category => category.DisplayName == "Upkeep");
+        Assert.Contains(viewModel.SectorFinance, sector => sector.DisplayName.StartsWith("Sector", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static TurnViewModel CreateViewModel(
+        ITurnController controller,
+        ITurnEventLog eventLog,
+        IGameSession session,
+        IRecruitmentService recruitmentService,
+        ITurnEventWriter eventWriter,
+        ICommandQueueService commandQueueService,
+        IFinancePreviewService financePreviewService)
+    {
+        var messageHub = new MessageHub();
+        return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService, messageHub);
     }
 
     private sealed class StubGameSession : IGameSession
@@ -222,6 +262,37 @@ public class TurnViewModelTests
         public CommandQueueResult Remove(GameState gameState, Guid playerId, Guid gangId, int turnNumber)
         {
             return new CommandQueueResult(CommandQueueRequestStatus.Success, "Remove", GetQueue(gameState, playerId));
+        }
+    }
+
+    private sealed class StubFinancePreviewService : IFinancePreviewService
+    {
+        public FinanceProjection BuildProjection(GameState gameState, Guid playerId)
+        {
+            var player = gameState.Game.GetPlayer(playerId);
+
+            var cityCategories = new List<FinanceCategory>
+            {
+                new(FinanceCategoryType.Upkeep, "Upkeep", -5),
+                new(FinanceCategoryType.SectorTax, "Sector Tax", 2),
+                new(FinanceCategoryType.SiteProtection, "Site Protection", 3),
+                new(FinanceCategoryType.ChaosEstimate, "Chaos (Estimate)", 1),
+                new(FinanceCategoryType.CashAdjustment, "Cash Adjustment", 1)
+            };
+
+            var sectorCategories = new List<FinanceCategory>
+            {
+                new(FinanceCategoryType.Upkeep, "Upkeep", -2),
+                new(FinanceCategoryType.SiteProtection, "Site Protection", 3),
+                new(FinanceCategoryType.ChaosEstimate, "Chaos (Estimate)", 0)
+            };
+
+            var sectors = new List<FinanceSectorProjection>
+            {
+                new("Sector-1", "Sector 1", sectorCategories)
+            };
+
+            return new FinanceProjection(playerId, player.Name, cityCategories, sectors);
         }
     }
 
