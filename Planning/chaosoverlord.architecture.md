@@ -24,8 +24,8 @@ This document captures the current structure of the Chaos Overlords remaster so 
 
 | Project | Responsibility | Key Types |
 | --- | --- | --- |
-| `ChaosOverlords.App` | Avalonia desktop shell, dependency injection bootstrap, presentation logic via MVVM | `App`, `Program`, `MainViewModel`, `MapViewModel`, `TurnViewModel` |
-| `ChaosOverlords.Core` | Domain entities, scenario bootstrapping, turn controller, services, logging, economy | `Game`, `GameState`, `GameStateManager`, `TurnController`, `ScenarioService`, `GameSession`, `DeterministicRngService`, `EconomyService`, `TurnEventLog`, `TurnEventWriter`, `TurnPhaseProcessor` |
+| `ChaosOverlords.App` | Avalonia desktop shell, dependency injection bootstrap, presentation logic via MVVM | `App`, `Program`, `MainViewModel`, `MapViewModel`, `TurnViewModel`, section view models (`TurnManagementSectionViewModel`, `CommandTimelineSectionViewModel`, `FinancePreviewSectionViewModel`, `RecruitmentSectionViewModel`, `CommandQueueSectionViewModel`, `TurnEventsSectionViewModel`) |
+| `ChaosOverlords.Core` | Domain entities, scenario bootstrapping, turn controller, services, logging, economy | `Game`, `GameState`, `GameStateManager`, `TurnController`, `ScenarioService`, `GameSession`, `DeterministicRngService`, `EconomyService`, `FinancePreviewService`, `CommandQueueService`, `CommandResolutionService`, `MessageHub`, `TurnEventLog`, `TurnEventWriter`, `TurnPhaseProcessor` |
 | `ChaosOverlords.Data` | Static game data (gangs, items, sites) embedded in assembly, loader implementation | `EmbeddedJsonDataService`, JSON asset files |
 | `ChaosOverlords.Tests` | Automated verification for core logic and UI smoke tests | `ScenarioServiceTests`, `DeterministicRngServiceTests`, `TurnViewModelTests`, `EconomyServiceTests`, `TurnPhaseProcessorTests`, `AppSmokeTests` |
 
@@ -45,6 +45,10 @@ This document captures the current structure of the Chaos Overlords remaster so 
   - Lazily initializes a campaign using `IScenarioService` and `IDefaultScenarioProvider`.
   - Exposes the active `GameState` and `GameStateManager` for consumers.
   - Ensures initialization occurs exactly once per app lifetime (until disposal).
+
+### Messaging & Coordination
+- **`IMessageHub`** → **`MessageHub`**: Lightweight publish/subscribe hub used to decouple services and presentation components. The hub lives in Core so both services and view models can exchange notifications without direct references.
+- **App Messaging Records** (`CommandTimelineUpdatedMessage`, `TurnSummaryChangedMessage`): Simple payloads published by `TurnViewModel` to update section view models.
 
 ### Game Runtime State
 - **`Game`**: Aggregates runtime entities and manages cross-references (players, gangs, items, sectors).
@@ -73,6 +77,17 @@ This document captures the current structure of the Chaos Overlords remaster so 
   - Ensures the `IGameSession` is initialized when a turn starts.
   - Invokes `IEconomyService` exactly once during the Upkeep phase and forwards the resulting snapshots to the turn event log via `ITurnEventWriter`.
 
+### Finance Preview
+- **`IFinancePreviewService`** → **`FinancePreviewService`**:
+  - Builds deterministic projections for upcoming income/expenses per player using the current `GameState`.
+  - Aggregates city-wide categories (`FinanceCategory`) and sector-specific projections (`FinanceSectorProjection`), producing a `FinanceProjection` consumed by the UI.
+- **Finance Preview Models**:
+  - `FinanceCategoryType`, `FinanceCategory`, `FinanceSectorProjection`, `FinanceProjection` describe line items, sector breakdowns, and total adjustments while preserving determinism.
+
+### Command Queue & Resolution
+- **`ICommandQueueService`** → **`CommandQueueService`**: Maintains per-gang command assignments, ensuring one action per turn.
+- **`ICommandResolutionService`** → **`CommandResolutionService`**: Executes queued commands in timeline order, emitting summaries for the UI via the message hub and event log.
+
 ### Event Logging
 - **`TurnEventType`** enum: Includes `TurnStarted`, `PhaseAdvanced`, `CommandPhaseAdvanced`, `TurnCompleted`, `Information`, and `Economy`.
 - **`TurnEvent`**: Immutable record representing a single log entry (turn, phase, description, timestamp).
@@ -93,9 +108,10 @@ This document captures the current structure of the Chaos Overlords remaster so 
 - **`App`**: Avalonia application entry point. Configures services, ensures `GameSession`, `TurnEventRecorder`, and `TurnPhaseProcessor` are ready before `MainWindow` is shown.
 - **`MainWindow` / Views**: Standard Avalonia window bound to `MainViewModel`.
 - **ViewModels**:
-  - `MainViewModel`: Aggregates child view models.
+  - `MainViewModel`: Aggregates child view models and exposes the composed turn dashboard.
   - `MapViewModel`: Placeholder 8×8 grid; future hook for real sector state.
-  - `TurnViewModel`: Observes `ITurnController` and `ITurnEventLog` to expose phase/timeline state and recent events. Economy log entries from Task 9 appear here automatically.
+  - `TurnViewModel`: Observes `ITurnController`, `ITurnEventLog`, and Core services to project turn state, finance projections, recruitment pool, and command queue. It publishes summary messages through `IMessageHub` so section view models stay synchronized.
+  - Section ViewModels (`TurnManagementSectionViewModel`, `CommandTimelineSectionViewModel`, `FinancePreviewSectionViewModel`, `RecruitmentSectionViewModel`, `CommandQueueSectionViewModel`, `TurnEventsSectionViewModel`): Encapsulate UI bindings per dashboard panel, subscribing to the message hub or owner view model for updates.
 
 ## Tests
 - **Core verification**: `ScenarioServiceTests`, `DeterministicRngServiceTests`, `EconomyServiceTests`, `TurnPhaseProcessorTests`.
@@ -121,8 +137,16 @@ This document captures the current structure of the Chaos Overlords remaster so 
    - Calls `EconomyService.ApplyUpkeep()` on the active `GameState`.
    - Receives an `EconomyReport`; writes each snapshot via `TurnEventWriter.WriteEconomy()`.
 4. `TurnEventLog` raises `EventsChanged` → `TurnViewModel` refreshes its observable list; UI now shows economy results for the turn.
-5. Subsequent calls to `AdvancePhaseCommand` progress through Command → Execution → Hire → Elimination.
-6. When `TurnController.EndTurn()` fires, `TurnEventRecorder` logs completion and resets state for the next round.
+5. `TurnViewModel` publishes `CommandTimelineUpdatedMessage` payloads through the message hub, keeping the command timeline section in sync with the controller.
+6. `TurnViewModel` requests a fresh `FinanceProjection` from `IFinancePreviewService`, updating city/sector previews for the active player.
+7. Subsequent calls to `AdvancePhaseCommand` progress through Command → Execution → Hire → Elimination.
+8. When `TurnController.EndTurn()` fires, `TurnEventRecorder` logs completion and resets state for the next round.
+
+### Finance Preview Flow
+1. `TurnViewModel` observes `ITurnController.StateChanged` and `IGameSession.GameState` updates.
+2. Whenever the active player or phase changes, the view model calls `IFinancePreviewService.BuildProjection()` with the seeded `GameState` and player id.
+3. The resulting `FinanceProjection` populates shared observable collections. Section view models (city + sector panels) mirror these via property-changed notifications.
+4. UI bindings format positive/negative amounts and update the total cash adjustment heading.
 
 ### Data Retrieval Flow
 - `ScenarioService` invokes `IDataService.GetGangsAsync()` / `GetSitesAsync()` during campaign creation.
@@ -136,4 +160,4 @@ This document captures the current structure of the Chaos Overlords remaster so 
 
 ---
 
-This overview will evolve as upcoming tasks (recruitment, command queue, finance preview, cons) land. Please keep it in sync when introducing new services or modifying interaction patterns.
+This overview will evolve as upcoming tasks (timeline polish, sector class metadata, Silver City cons) land. Please keep it in sync when introducing new services or modifying interaction patterns.

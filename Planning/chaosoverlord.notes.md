@@ -16,10 +16,13 @@
 | 2025-09-28 | Dependency Injection Setup | App nutzt `ServiceCollection`, registriert Daten-/Szenario-Services und ViewModels. | Konsistentes Bootstrapping; erleichtert Tests und spätere Service-Erweiterungen. |
 | 2025-09-28 | Turn State Machine Scope | TurnViewModel + Timeline zeigen Phasenfortschritt; Command-Slots visualisieren Status, konkrete Commands folgen in Task 11. | Erlaubt frühe UI-Validierung ohne Vorgriff auf Command Resolver; End-Turn-Enablement via Unit-Test abgesichert. |
 | 2025-09-29 | Command Queue Resolver & UI Binding | CommandQueue/Resolution services implementiert, TurnPhaseProcessor integriert; XAML-Remove-Binding bleibt mit Kommentar und `x:CompileBindings="False"`, da der Parent-Kontext nur zur Laufzeit vorliegt. | Sicherer Skeleton-Resolver für Move/Control/Chaos bereit; UI-Binding-Dokumentation vermeidet zukünftige Irrtümer. |
+| 2025-09-30 | Turn Dashboard Modularisierung | TurnViewModel teilt Funktionen auf sechs Section-ViewModels auf; zentraler `IMessageHub` synchronisiert Timeline/Turn Summary ohne harte Dependencies. | Verbessert Testbarkeit & Wiederverwendung, neue Panels (Timeline, Finance Preview, Commands) abonnieren nur benötigte Daten. |
+| 2025-09-30 | Finance Preview Architektur | `IFinancePreviewService` aggregiert deterministische Vorschau-Daten (City/Sector) aus GameState; UI nutzt gemeinsame ObservableCollections. | Klarer Ort für künftige Modifier (Cons, Items), vermeidet Duplikation der Berechnungslogik im UI. |
 
 ## Offene Punkte / Beobachtungen
 
 - Remote `origin` ist eingerichtet (`feature/*` → GitHub); Branch-Strategie weiterhin: Feature-Branches von `dev`, Phase-Abschlüsse mergen nach `main`.
+- Task 14 (Sektorklassen/Basistoleranz) steht noch aus; Finance Preview zeigt bis dahin neutrale Werte.
 
 ## Task 4 – Out-of-Scope Elemente
 - Silver City Cons (Priority 2): Umsetzung folgt nach Phase-2-Happy-Path; kein Major Rewrite erforderlich, Erweiterungen bleiben additiv.
