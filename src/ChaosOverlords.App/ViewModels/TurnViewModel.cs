@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Services;
@@ -22,6 +23,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private readonly IGameSession _gameSession;
     private readonly IRecruitmentService _recruitmentService;
     private readonly ITurnEventWriter _eventWriter;
+    private readonly ICommandQueueService _commandQueueService;
     private bool _isDisposed;
     private bool _recruitmentInitialised;
 
@@ -30,13 +32,15 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         ITurnEventLog eventLog,
         IGameSession gameSession,
         IRecruitmentService recruitmentService,
-        ITurnEventWriter eventWriter)
+        ITurnEventWriter eventWriter,
+        ICommandQueueService commandQueueService)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
         _gameSession = gameSession ?? throw new ArgumentNullException(nameof(gameSession));
         _recruitmentService = recruitmentService ?? throw new ArgumentNullException(nameof(recruitmentService));
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
+        _commandQueueService = commandQueueService ?? throw new ArgumentNullException(nameof(commandQueueService));
 
         CommandTimeline = new ObservableCollection<CommandPhaseViewModel>(
             _turnController.CommandPhases.Select(p => new CommandPhaseViewModel(p.Phase, p.State)));
@@ -44,9 +48,13 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         TurnEvents = new ObservableCollection<TurnEventViewModel>();
         RecruitmentOptions = new ObservableCollection<RecruitmentOptionViewModel>();
         ControlledSectors = new ObservableCollection<SectorOptionViewModel>();
+        AvailableGangs = new ObservableCollection<GangOptionViewModel>();
+        MovementTargets = new ObservableCollection<SectorOptionViewModel>();
+        QueuedCommands = new ObservableCollection<QueuedCommandViewModel>();
 
         SyncFromController();
         UpdateRecruitmentPanelState();
+        UpdateCommandPanelState();
         UpdateTurnEvents();
 
         _turnController.StateChanged += OnControllerStateChanged;
@@ -104,6 +112,24 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     /// </summary>
     public bool HasRecruitmentStatusMessage => !string.IsNullOrWhiteSpace(RecruitmentStatusMessage);
 
+    [ObservableProperty]
+    private bool _isCommandPanelVisible;
+
+    [ObservableProperty]
+    private GangOptionViewModel? _selectedGang;
+
+    [ObservableProperty]
+    private SectorOptionViewModel? _selectedMovementTarget;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCommandStatusMessage))]
+    private string? _commandStatusMessage;
+
+    /// <summary>
+    /// Indicates whether any command status message should be shown in the UI.
+    /// </summary>
+    public bool HasCommandStatusMessage => !string.IsNullOrWhiteSpace(CommandStatusMessage);
+
     /// <summary>
     /// Ordered collection of command sub-phases exposed to the timeline UI.
     /// </summary>
@@ -123,6 +149,21 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     /// Sectors controlled by the active player that can receive recruits.
     /// </summary>
     public ObservableCollection<SectorOptionViewModel> ControlledSectors { get; }
+
+    /// <summary>
+    /// Gangs controlled by the active player available for command assignment.
+    /// </summary>
+    public ObservableCollection<GangOptionViewModel> AvailableGangs { get; }
+
+    /// <summary>
+    /// Valid movement targets for the selected gang during the command phase.
+    /// </summary>
+    public ObservableCollection<SectorOptionViewModel> MovementTargets { get; }
+
+    /// <summary>
+    /// Commands currently queued for the active player.
+    /// </summary>
+    public ObservableCollection<QueuedCommandViewModel> QueuedCommands { get; }
 
     [RelayCommand(CanExecute = nameof(CanStartTurn))]
     private void StartTurn() => _turnController.StartTurn();
@@ -249,6 +290,89 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         RefreshRecruitmentCommands();
     }
 
+    [RelayCommand(CanExecute = nameof(CanQueueMove))]
+    private void QueueMove()
+    {
+        if (SelectedGang is null || SelectedMovementTarget is null)
+        {
+            return;
+        }
+
+        EnsureSessionInitialised();
+
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var result = _commandQueueService.QueueMove(
+            state,
+            playerId,
+            SelectedGang.GangId,
+            SelectedMovementTarget.SectorId,
+            _turnController.TurnNumber);
+
+        ApplyCommandQueueResult(result);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanQueueSimpleCommand))]
+    private void QueueControl()
+    {
+        if (SelectedGang is null)
+        {
+            return;
+        }
+
+        EnsureSessionInitialised();
+
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var result = _commandQueueService.QueueControl(
+            state,
+            playerId,
+            SelectedGang.GangId,
+            SelectedGang.SectorId,
+            _turnController.TurnNumber);
+
+        ApplyCommandQueueResult(result);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanQueueSimpleCommand))]
+    private void QueueChaos()
+    {
+        if (SelectedGang is null)
+        {
+            return;
+        }
+
+        EnsureSessionInitialised();
+
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var result = _commandQueueService.QueueChaos(
+            state,
+            playerId,
+            SelectedGang.GangId,
+            SelectedGang.SectorId,
+            _turnController.TurnNumber);
+
+        ApplyCommandQueueResult(result);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRemoveQueuedCommand))]
+    private void RemoveQueuedCommand(QueuedCommandViewModel command)
+    {
+        if (command is null)
+        {
+            return;
+        }
+
+        EnsureSessionInitialised();
+
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var result = _commandQueueService.Remove(state, playerId, command.GangId, _turnController.TurnNumber);
+
+        ApplyCommandQueueResult(result);
+    }
+
     private bool CanStartTurn() => _turnController.CanStartTurn;
 
     private bool CanAdvancePhase() => _turnController.CanAdvancePhase;
@@ -261,10 +385,20 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private bool CanDecline(RecruitmentOptionViewModel? option)
         => option is not null && option.IsAvailable;
 
+    private bool CanQueueMove()
+        => IsCommandPhaseInteractive() && SelectedGang is not null && SelectedMovementTarget is not null;
+
+    private bool CanQueueSimpleCommand()
+        => IsCommandPhaseInteractive() && SelectedGang is not null;
+
+    private bool CanRemoveQueuedCommand(QueuedCommandViewModel? command)
+        => IsCommandPhaseInteractive() && command is not null;
+
     private void OnControllerStateChanged(object? sender, EventArgs e)
     {
         SyncFromController();
         UpdateRecruitmentPanelState();
+        UpdateCommandPanelState();
     }
 
     private void OnEventLogChanged(object? sender, EventArgs e) => UpdateTurnEvents();
@@ -296,6 +430,277 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         StartTurnCommand.NotifyCanExecuteChanged();
         AdvancePhaseCommand.NotifyCanExecuteChanged();
         EndTurnCommand.NotifyCanExecuteChanged();
+        RefreshCommandCommands();
+    }
+
+    private void UpdateRecruitmentPanelState()
+    {
+        if (!_turnController.IsTurnActive || _turnController.CurrentPhase != TurnPhase.Hire)
+        {
+            HideRecruitmentPanel();
+            return;
+        }
+
+        if (!_gameSession.IsInitialized)
+        {
+            return;
+        }
+
+        var state = _gameSession.GameState;
+        if (state.CurrentPlayer.Id != state.PrimaryPlayerId)
+        {
+            HideRecruitmentPanel();
+            return;
+        }
+
+        if (_recruitmentInitialised && RecruitmentOptions.Count > 0)
+        {
+            return;
+        }
+
+        var snapshot = _recruitmentService.EnsurePool(state, state.CurrentPlayer.Id, _turnController.TurnNumber);
+        ApplyRecruitmentSnapshot(snapshot);
+        LoadControlledSectors(state.CurrentPlayer.Id);
+
+        if (string.IsNullOrWhiteSpace(RecruitmentStatusMessage))
+        {
+            RecruitmentStatusMessage = "Select a sector and recruit a gang.";
+        }
+    }
+
+    private void UpdateCommandPanelState()
+    {
+        if (!_gameSession.IsInitialized)
+        {
+            HideCommandPanel();
+            return;
+        }
+
+        var state = _gameSession.GameState;
+        if (state.CurrentPlayer.Id != state.PrimaryPlayerId)
+        {
+            HideCommandPanel();
+            return;
+        }
+
+        IsCommandPanelVisible = true;
+
+        LoadAvailableGangs(state);
+        var snapshot = _commandQueueService.GetQueue(state, state.CurrentPlayer.Id);
+        ApplyQueueSnapshot(snapshot);
+        UpdateMovementTargets(state);
+        RefreshCommandCommands();
+    }
+
+    private void ApplyRecruitmentSnapshot(RecruitmentPoolSnapshot snapshot)
+    {
+        var ordered = snapshot.Options.OrderBy(o => o.SlotIndex).ToList();
+        if (RecruitmentOptions.Count != ordered.Count)
+        {
+            RecruitmentOptions.Clear();
+            foreach (var option in ordered)
+            {
+                RecruitmentOptions.Add(new RecruitmentOptionViewModel(option, HireCommand, DeclineCommand));
+            }
+        }
+        else
+        {
+            for (var i = 0; i < ordered.Count; i++)
+            {
+                RecruitmentOptions[i].Update(ordered[i]);
+            }
+        }
+
+        _recruitmentInitialised = true;
+        IsRecruitmentPanelVisible = true;
+        RefreshRecruitmentCommands();
+    }
+
+    private void ApplyCommandQueueResult(CommandQueueResult result)
+    {
+        CommandStatusMessage = result.Message;
+        ApplyQueueSnapshot(result.Snapshot);
+        RefreshCommandCommands();
+    }
+
+    private void ApplyQueueSnapshot(CommandQueueSnapshot snapshot)
+    {
+        QueuedCommands.Clear();
+        foreach (var entry in snapshot.Commands)
+        {
+            QueuedCommands.Add(new QueuedCommandViewModel(entry));
+        }
+    }
+
+    private void LoadControlledSectors(Guid playerId)
+    {
+        var sectors = _gameSession.GameState.Game.Sectors.Values
+            .Where(s => s.ControllingPlayerId == playerId)
+            .OrderBy(s => s.Id, StringComparer.Ordinal)
+            .Select(s => new SectorOptionViewModel(s.Id))
+            .ToList();
+
+        ControlledSectors.Clear();
+        foreach (var sector in sectors)
+        {
+            ControlledSectors.Add(sector);
+        }
+
+        if (ControlledSectors.Count == 0)
+        {
+            SelectedSector = null;
+            if (string.IsNullOrWhiteSpace(RecruitmentStatusMessage))
+            {
+                RecruitmentStatusMessage = "No controlled sectors available for deployment.";
+            }
+        }
+        else
+        {
+            if (SelectedSector is null || ControlledSectors.All(s => s.SectorId != SelectedSector.SectorId))
+            {
+                SelectedSector = ControlledSectors[0];
+            }
+        }
+    }
+
+    private void LoadAvailableGangs(GameState state)
+    {
+        var playerId = state.CurrentPlayer.Id;
+        var gangs = state.Game.Gangs.Values
+            .Where(g => g.OwnerId == playerId)
+            .OrderBy(g => g.Data.Name, StringComparer.Ordinal)
+            .Select(g => new GangOptionViewModel(g.Id, g.Data.Name, g.SectorId))
+            .ToList();
+
+        var selectedId = SelectedGang?.GangId;
+        AvailableGangs.Clear();
+        foreach (var gang in gangs)
+        {
+            AvailableGangs.Add(gang);
+        }
+
+        if (selectedId.HasValue)
+        {
+            var existing = AvailableGangs.FirstOrDefault(g => g.GangId == selectedId.Value);
+            if (existing is not null && !ReferenceEquals(existing, SelectedGang))
+            {
+                SelectedGang = existing;
+            }
+        }
+
+        if (SelectedGang is null && AvailableGangs.Count > 0)
+        {
+            SelectedGang = AvailableGangs[0];
+        }
+        else if (AvailableGangs.Count == 0)
+        {
+            SelectedGang = null;
+        }
+    }
+
+    private void UpdateMovementTargets(GameState state)
+    {
+        MovementTargets.Clear();
+
+        if (SelectedGang is null)
+        {
+            SelectedMovementTarget = null;
+            return;
+        }
+
+        if (!state.Game.TryGetGang(SelectedGang.GangId, out var gang) || gang is null)
+        {
+            SelectedMovementTarget = null;
+            return;
+        }
+
+        var targets = state.Game.Sectors.Values
+            .Where(s => SectorGrid.AreAdjacent(gang.SectorId, s.Id))
+            .OrderBy(s => s.Id, StringComparer.Ordinal)
+            .Select(s => new SectorOptionViewModel(s.Id))
+            .ToList();
+
+        foreach (var target in targets)
+        {
+            MovementTargets.Add(target);
+        }
+
+        if (MovementTargets.Count == 0)
+        {
+            SelectedMovementTarget = null;
+        }
+        else if (SelectedMovementTarget is null || MovementTargets.All(s => s.SectorId != SelectedMovementTarget.SectorId))
+        {
+            SelectedMovementTarget = MovementTargets[0];
+        }
+    }
+
+    private void HideRecruitmentPanel()
+    {
+        if (!IsRecruitmentPanelVisible && RecruitmentOptions.Count == 0)
+        {
+            return;
+        }
+
+        IsRecruitmentPanelVisible = false;
+        RecruitmentOptions.Clear();
+        ControlledSectors.Clear();
+        SelectedSector = null;
+        _recruitmentInitialised = false;
+        RecruitmentStatusMessage = null;
+        RefreshRecruitmentCommands();
+    }
+
+    private void HideCommandPanel()
+    {
+        if (!IsCommandPanelVisible && AvailableGangs.Count == 0 && QueuedCommands.Count == 0)
+        {
+            return;
+        }
+
+        IsCommandPanelVisible = false;
+        AvailableGangs.Clear();
+        MovementTargets.Clear();
+        QueuedCommands.Clear();
+        SelectedGang = null;
+        SelectedMovementTarget = null;
+        CommandStatusMessage = null;
+        RefreshCommandCommands();
+    }
+
+    private void RefreshRecruitmentCommands()
+    {
+        HireCommand.NotifyCanExecuteChanged();
+        DeclineCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RefreshCommandCommands()
+    {
+        QueueMoveCommand.NotifyCanExecuteChanged();
+        QueueControlCommand.NotifyCanExecuteChanged();
+        QueueChaosCommand.NotifyCanExecuteChanged();
+        RemoveQueuedCommandCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool IsCommandPhaseInteractive()
+    {
+        if (!_turnController.IsTurnActive)
+        {
+            return false;
+        }
+
+        if (_turnController.CurrentPhase != TurnPhase.Command)
+        {
+            return false;
+        }
+
+        if (!_gameSession.IsInitialized)
+        {
+            return false;
+        }
+
+        var state = _gameSession.GameState;
+        return state.CurrentPlayer.Id == state.PrimaryPlayerId;
     }
 
     private void UpdateRecruitmentPanelState()
@@ -451,6 +856,57 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         }
     }
 
+    partial void OnSelectedGangChanged(GangOptionViewModel? oldValue, GangOptionViewModel? newValue)
+    {
+        if (oldValue == newValue)
+        {
+            return;
+        }
+
+        if (!_gameSession.IsInitialized)
+        {
+            SelectedMovementTarget = null;
+            return;
+        }
+
+        UpdateMovementTargets(_gameSession.GameState);
+        RefreshCommandCommands();
+    }
+
+    partial void OnSelectedMovementTargetChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
+    {
+        if (oldValue == newValue)
+        {
+            return;
+        }
+
+        RefreshCommandCommands();
+    }
+
+    partial void OnIsCommandPanelVisibleChanged(bool oldValue, bool newValue)
+    {
+        if (!newValue)
+        {
+            CommandStatusMessage = null;
+        }
+    }
+
+    private void EnsureSessionInitialised()
+    {
+        if (!_gameSession.IsInitialized)
+        {
+            throw new InvalidOperationException("Game session has not been initialised.");
+        }
+    }
+
+    partial void OnSelectedSectorChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
+    {
+        if (oldValue != newValue)
+        {
+            RefreshRecruitmentCommands();
+        }
+    }
+
     public sealed partial class CommandPhaseViewModel : ObservableObject
     {
         public CommandPhaseViewModel(CommandPhase phase, CommandPhaseState state)
@@ -561,5 +1017,159 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         public string SectorId { get; }
 
         public string DisplayName => SectorId;
+    }
+
+    public sealed partial class RecruitmentOptionViewModel : ObservableObject
+    {
+        public RecruitmentOptionViewModel(
+            RecruitmentOptionSnapshot snapshot,
+            IRelayCommand<RecruitmentOptionViewModel> hireCommand,
+            IRelayCommand<RecruitmentOptionViewModel> declineCommand)
+        {
+            SlotIndex = snapshot.SlotIndex;
+            HireCommand = hireCommand ?? throw new ArgumentNullException(nameof(hireCommand));
+            DeclineCommand = declineCommand ?? throw new ArgumentNullException(nameof(declineCommand));
+            Update(snapshot);
+        }
+
+        public int SlotIndex { get; }
+
+        public IRelayCommand<RecruitmentOptionViewModel> HireCommand { get; }
+
+        public IRelayCommand<RecruitmentOptionViewModel> DeclineCommand { get; }
+
+        [ObservableProperty]
+        private Guid _optionId;
+
+        [ObservableProperty]
+        private string _gangName = string.Empty;
+
+        [ObservableProperty]
+        private int _hiringCost;
+
+        [ObservableProperty]
+        private int _upkeepCost;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusDisplay))]
+        [NotifyPropertyChangedFor(nameof(IsAvailable))]
+        [NotifyPropertyChangedFor(nameof(IsDeclined))]
+        [NotifyPropertyChangedFor(nameof(IsHired))]
+        private RecruitmentOptionState _state;
+
+        public string StatusDisplay => State.ToString();
+
+        public bool IsAvailable => State == RecruitmentOptionState.Available;
+
+        public bool IsDeclined => State == RecruitmentOptionState.Declined;
+
+        public bool IsHired => State == RecruitmentOptionState.Hired;
+
+        public void Update(RecruitmentOptionSnapshot snapshot)
+        {
+            OptionId = snapshot.OptionId;
+            GangName = snapshot.GangName;
+            HiringCost = snapshot.HiringCost;
+            UpkeepCost = snapshot.UpkeepCost;
+            State = snapshot.State;
+        }
+    }
+
+    public sealed class SectorOptionViewModel
+    {
+        public SectorOptionViewModel(string sectorId)
+        {
+            SectorId = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
+        }
+
+        public string SectorId { get; }
+
+        public string DisplayName => SectorId;
+    }
+
+    public sealed class GangOptionViewModel
+    {
+        public GangOptionViewModel(Guid gangId, string name, string sectorId)
+        {
+            GangId = gangId;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            SectorId = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
+        }
+
+        public Guid GangId { get; }
+
+        public string Name { get; }
+
+        public string SectorId { get; }
+
+        public string DisplayName => string.Format(CultureInfo.CurrentCulture, "{0} ({1})", Name, SectorId);
+    }
+
+    public sealed class QueuedCommandViewModel
+    {
+        public QueuedCommandViewModel(PlayerCommandSnapshot snapshot)
+        {
+            if (snapshot is null)
+            {
+                throw new ArgumentNullException(nameof(snapshot));
+            }
+
+            CommandId = snapshot.CommandId;
+            GangId = snapshot.GangId;
+            GangName = snapshot.GangName;
+            Kind = snapshot.Kind;
+            Phase = snapshot.Phase;
+            SourceSectorId = snapshot.SourceSectorId;
+            TargetSectorId = snapshot.TargetSectorId;
+            ProjectedChaos = snapshot.ProjectedChaos;
+            Description = snapshot.Description ?? BuildDescription(snapshot);
+        }
+
+        public Guid CommandId { get; }
+
+        public Guid GangId { get; }
+
+        public string GangName { get; }
+
+        public PlayerCommandKind Kind { get; }
+
+        public CommandPhase Phase { get; }
+
+        public string? SourceSectorId { get; }
+
+        public string? TargetSectorId { get; }
+
+        public int ProjectedChaos { get; }
+
+        public string Description { get; }
+
+        public string Summary => string.Format(
+            CultureInfo.CurrentCulture,
+            "{0} – {1}: {2}",
+            GangName,
+            Phase,
+            Description);
+
+        private static string BuildDescription(PlayerCommandSnapshot snapshot)
+        {
+            return snapshot.Kind switch
+            {
+                PlayerCommandKind.Move => string.Format(
+                    CultureInfo.CurrentCulture,
+                    "Move from {0} to {1}",
+                    snapshot.SourceSectorId,
+                    snapshot.TargetSectorId),
+                PlayerCommandKind.Control => string.Format(
+                    CultureInfo.CurrentCulture,
+                    "Control {0}",
+                    snapshot.TargetSectorId),
+                PlayerCommandKind.Chaos => string.Format(
+                    CultureInfo.CurrentCulture,
+                    "Chaos {0} in {1}",
+                    snapshot.ProjectedChaos,
+                    snapshot.TargetSectorId),
+                _ => snapshot.Kind.ToString()
+            };
+        }
     }
 }
