@@ -134,7 +134,7 @@ public sealed class ScenarioService : IScenarioService
 
             if (!sectorIds.Add(player.HeadquartersSectorId))
             {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Duplicate headquarters sector '{0}' detected.", player.HeadquartersSectorId), nameof(config));
+                throw new ArgumentException($"Duplicate headquarters sector '{player.HeadquartersSectorId}' detected.", nameof(config));
             }
 
             if (string.IsNullOrWhiteSpace(player.StartingGangName))
