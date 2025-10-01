@@ -1,188 +1,43 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+			 xmlns:views="clr-namespace:ChaosOverlords.App.Views"
              mc:Ignorable="d"
              x:Class="ChaosOverlords.App.Views.TurnView"
              x:DataType="vm:TurnViewModel">
-    <UserControl.Styles>
-        <Style Selector="Border.command-phase">
-            <Setter Property="Padding" Value="8" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-        <Style Selector="Border.command-phase TextBlock.phase-name">
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="Border.command-phase TextBlock.phase-state">
-            <Setter Property="FontStyle" Value="Italic" />
-            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-        </Style>
-    </UserControl.Styles>
+	<UserControl.Styles>
+		<Style Selector="Border.command-phase">
+			<Setter Property="Padding" Value="8" />
+			<Setter Property="CornerRadius" Value="4" />
+			<Setter Property="Margin" Value="0" />
+			<Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+			<Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+			<Setter Property="BorderThickness" Value="1" />
+		</Style>
+		<Style Selector="Border.command-phase TextBlock.phase-name">
+			<Setter Property="FontWeight" Value="Bold" />
+		</Style>
+		<Style Selector="Border.command-phase TextBlock.phase-state">
+			<Setter Property="FontStyle" Value="Italic" />
+			<Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+		</Style>
+	</UserControl.Styles>
 
-    <Border Padding="16">
-        <StackPanel Spacing="16">
-            <StackPanel Spacing="4">
-                <TextBlock Text="Turn Management" FontSize="20" FontWeight="Bold" />
-                <TextBlock Text="Control the turn phases and keep track of the command flow." FontSize="14" />
-            </StackPanel>
+	<Border Padding="16">
+		<StackPanel Spacing="16">
+			<views:TurnManagementView DataContext="{Binding TurnManagement}" />
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Start Turn" Command="{Binding StartTurnCommand}" />
-                <Button Content="Next Phase" Command="{Binding AdvancePhaseCommand}" />
-                <Button Content="End Turn" Command="{Binding EndTurnCommand}" />
-            </StackPanel>
+			<views:CommandTimelineView DataContext="{Binding CommandTimeline}" />
 
-            <Border Padding="12" CornerRadius="4" Background="{DynamicResource ThemeControlLowBrush}">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="{Binding TurnCounterDisplay}" FontWeight="Bold" />
-                    <TextBlock Text="{Binding CurrentPhaseDisplay}" />
-                    <TextBlock Text="{Binding ActiveCommandPhaseDisplay, StringFormat='Active Command Phase: {0}'}"
-                               IsVisible="{Binding HasActiveCommandPhase}" />
-                </StackPanel>
-            </Border>
+			<views:FinancePreviewView DataContext="{Binding FinancePreview}" />
 
-            <StackPanel Spacing="8">
-                <TextBlock Text="Command Timeline" FontWeight="Bold" />
-                <ItemsControl ItemsSource="{Binding CommandTimeline}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TurnViewModel+CommandPhaseViewModel">
-                            <Border Classes="command-phase" Margin="4">
-                                <StackPanel>
-                                    <TextBlock Classes="phase-name" Text="{Binding DisplayName}" />
-                                    <TextBlock Classes="phase-state" Text="{Binding State}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+			<views:CommandQueueView DataContext="{Binding CommandQueue}" />
 
-            <StackPanel Spacing="8" IsVisible="{Binding IsCommandPanelVisible}">
-                <TextBlock Text="Command Queue" FontWeight="Bold" />
+			<views:RecruitmentView DataContext="{Binding Recruitment}" />
 
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock Text="Gang:" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding AvailableGangs}"
-                              SelectedItem="{Binding SelectedGang}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:TurnViewModel+GangOptionViewModel">
-                                <TextBlock Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <TextBlock Text="Move To:" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding MovementTargets}"
-                              SelectedItem="{Binding SelectedMovementTarget}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:TurnViewModel+SectorOptionViewModel">
-                                <TextBlock Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Queue Move" Command="{Binding QueueMoveCommand}" />
-                    <Button Content="Queue Control" Command="{Binding QueueControlCommand}" />
-                    <Button Content="Queue Chaos" Command="{Binding QueueChaosCommand}" />
-                </StackPanel>
-
-                <TextBlock Text="{Binding CommandStatusMessage}"
-                           FontStyle="Italic"
-                           Foreground="{DynamicResource ThemeAccentBrush}"
-                           IsVisible="{Binding HasCommandStatusMessage}"
-                           TextWrapping="Wrap" />
-
-                <ItemsControl ItemsSource="{Binding QueuedCommands}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TurnViewModel+QueuedCommandViewModel">
-                            <Border Padding="8" Margin="0 0 0 4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Summary}" FontWeight="Bold" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
-                                    <!-- x:CompileBindings="False" ensures that the binding is not compiled because the datacontext is only visible at runtime. -->
-                                    <Button x:CompileBindings="False" 
-                                            Content="Remove"
-                                            HorizontalAlignment="Left"
-                                            Command="{Binding DataContext.RemoveQueuedCommandCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-
-            <StackPanel Spacing="8" IsVisible="{Binding IsRecruitmentPanelVisible}">
-                <TextBlock Text="Recruitment" FontWeight="Bold" />
-
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock Text="Deploy to:" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding ControlledSectors}"
-                              SelectedItem="{Binding SelectedSector}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:TurnViewModel+SectorOptionViewModel">
-                                <TextBlock Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
-
-                <ItemsControl ItemsSource="{Binding RecruitmentOptions}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TurnViewModel+RecruitmentOptionViewModel">
-                            <Border Padding="8" Margin="0 0 0 4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding GangName}" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding StatusDisplay}" />
-                                    <TextBlock Text="{Binding HiringCost, StringFormat='Hire Cost: {0}'}" />
-                                    <TextBlock Text="{Binding UpkeepCost, StringFormat='Upkeep: {0}'}" />
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Hire"
-                        Command="{Binding HireCommand}"
-                        CommandParameter="{Binding}"
-                        IsEnabled="{Binding IsAvailable}" />
-                    <Button Content="Decline"
-                        Command="{Binding DeclineCommand}"
-                        CommandParameter="{Binding}"
-                        IsEnabled="{Binding IsAvailable}" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <TextBlock Text="{Binding RecruitmentStatusMessage}"
-                           FontStyle="Italic"
-                           Foreground="{DynamicResource ThemeAccentBrush}"
-                           IsVisible="{Binding HasRecruitmentStatusMessage}"
-                           TextWrapping="Wrap" />
-            </StackPanel>
-
-            <StackPanel Spacing="8">
-                <TextBlock Text="Turn Events" FontWeight="Bold" />
-                <ItemsControl ItemsSource="{Binding TurnEvents}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TurnViewModel+TurnEventViewModel">
-                            <Border Padding="8" Margin="0 0 0 4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
-                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </StackPanel>
-    </Border>
+			<views:TurnEventsView DataContext="{Binding TurnEventsPanel}" />
+		</StackPanel>
+	</Border>
 </UserControl>

@@ -6,21 +6,22 @@ using ChaosOverlords.Core.GameData;
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Represents a single tile on the city map, optionally tied to immutable <see cref="SiteData"/> for bonuses.
+/// Represents a single tile on the city map tied to immutable <see cref="SiteData"/> for bonuses.
 /// </summary>
 public sealed class Sector
 {
     private readonly List<Guid> _gangIds = new();
 
-    public Sector(string id, SiteData? site = null, Guid? controllingPlayerId = null)
+    public Sector(string id, SiteData site, Guid? controllingPlayerId = null)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
             throw new ArgumentException("Sector id cannot be null or whitespace.", nameof(id));
         }
 
+        Site = site ?? throw new ArgumentNullException(nameof(site));
+
         Id = id;
-        Site = site;
         ControllingPlayerId = controllingPlayerId;
     }
 
@@ -29,7 +30,17 @@ public sealed class Sector
     /// <summary>
     /// Immutable site data that defines passive bonuses when the sector is controlled.
     /// </summary>
-    public SiteData? Site { get; }
+    public SiteData Site { get; }
+
+    /// <summary>
+    /// Passive income provided by the sector's site each upkeep.
+    /// </summary>
+    public int Income => Site.Cash;
+
+    /// <summary>
+    /// Baseline tolerance contributed by the sector's site.
+    /// </summary>
+    public int Tolerance => Site.Tolerance;
 
     public Guid? ControllingPlayerId { get; private set; }
 

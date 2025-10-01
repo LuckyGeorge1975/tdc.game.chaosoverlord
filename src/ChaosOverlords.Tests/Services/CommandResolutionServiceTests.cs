@@ -15,6 +15,7 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class CommandResolutionServiceTests
 {
+
     [Fact]
     public void Execute_ResolvesCommandsAndClearsQueue()
     {
@@ -79,10 +80,10 @@ public sealed class CommandResolutionServiceTests
 
         var sectors = new[]
         {
-            new Sector("A1", controllingPlayerId: playerId),
-            new Sector("A2"),
-            new Sector("B1"),
-            new Sector("C1", site: new SiteData { Name = "Mall", Cash = 0, Support = 0 })
+            new Sector("A1", CreateSite("A1 Block"), playerId),
+            new Sector("A2", CreateSite("A2 Block")),
+            new Sector("B1", CreateSite("B1 Block")),
+            new Sector("C1", new SiteData { Name = "Mall", Cash = 0, Support = 0, Tolerance = 0 })
         };
 
         var game = new Game(new IPlayer[] { player }, sectors, new[] { chaosGang, moveGang, controlGang });
@@ -110,6 +111,14 @@ public sealed class CommandResolutionServiceTests
     }
 
     private sealed record CommandContext(GameState State, Guid PlayerId, Gang ChaosGang, Gang MoveGang, Gang ControlGang);
+
+    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0) => new()
+    {
+        Name = name,
+        Cash = cash,
+        Tolerance = tolerance,
+        Support = support
+    };
 
     private sealed class RecordingEventWriter : ITurnEventWriter
     {

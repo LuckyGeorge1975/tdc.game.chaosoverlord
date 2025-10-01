@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using ChaosOverlords.App.Messaging;
+using ChaosOverlords.App.ViewModels.Sections;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Events;
+using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Services;
+using ChaosOverlords.Core.Services.Messaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -24,6 +28,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private readonly IRecruitmentService _recruitmentService;
     private readonly ITurnEventWriter _eventWriter;
     private readonly ICommandQueueService _commandQueueService;
+    private readonly IFinancePreviewService _financePreviewService;
+    private readonly IMessageHub _messageHub;
     private bool _isDisposed;
     private bool _recruitmentInitialised;
 
@@ -33,7 +39,9 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         IGameSession gameSession,
         IRecruitmentService recruitmentService,
         ITurnEventWriter eventWriter,
-        ICommandQueueService commandQueueService)
+        ICommandQueueService commandQueueService,
+        IFinancePreviewService financePreviewService,
+        IMessageHub messageHub)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
@@ -41,9 +49,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         _recruitmentService = recruitmentService ?? throw new ArgumentNullException(nameof(recruitmentService));
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
         _commandQueueService = commandQueueService ?? throw new ArgumentNullException(nameof(commandQueueService));
-
-        CommandTimeline = new ObservableCollection<CommandPhaseViewModel>(
-            _turnController.CommandPhases.Select(p => new CommandPhaseViewModel(p.Phase, p.State)));
+        _financePreviewService = financePreviewService ?? throw new ArgumentNullException(nameof(financePreviewService));
+        _messageHub = messageHub ?? throw new ArgumentNullException(nameof(messageHub));
 
         TurnEvents = new ObservableCollection<TurnEventViewModel>();
         RecruitmentOptions = new ObservableCollection<RecruitmentOptionViewModel>();
@@ -51,6 +58,21 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         AvailableGangs = new ObservableCollection<GangOptionViewModel>();
         MovementTargets = new ObservableCollection<SectorOptionViewModel>();
         QueuedCommands = new ObservableCollection<QueuedCommandViewModel>();
+        CityFinanceCategories = new ObservableCollection<FinanceCategoryViewModel>();
+        SectorFinance = new ObservableCollection<FinanceSectorViewModel>();
+
+        TurnManagement = new TurnManagementSectionViewModel(
+            _messageHub,
+            StartTurnCommand,
+            AdvancePhaseCommand,
+            EndTurnCommand);
+
+        CommandTimeline = new CommandTimelineSectionViewModel(_messageHub);
+
+        FinancePreview = new FinancePreviewSectionViewModel(this);
+        CommandQueue = new CommandQueueSectionViewModel(this);
+        Recruitment = new RecruitmentSectionViewModel(this);
+    TurnEventsPanel = new TurnEventsSectionViewModel(TurnEvents);
 
         SyncFromController();
         UpdateRecruitmentPanelState();
@@ -80,6 +102,18 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     /// Human-friendly representation of the turn counter (starting at 1).
     /// </summary>
     public string TurnCounterDisplay => $"Turn {TurnNumber}";
+
+    public TurnManagementSectionViewModel TurnManagement { get; }
+
+    public CommandTimelineSectionViewModel CommandTimeline { get; }
+
+    public FinancePreviewSectionViewModel FinancePreview { get; }
+
+    public CommandQueueSectionViewModel CommandQueue { get; }
+
+    public RecruitmentSectionViewModel Recruitment { get; }
+
+    public TurnEventsSectionViewModel TurnEventsPanel { get; }
 
     [ObservableProperty]
     private bool _isTurnActive;
@@ -130,10 +164,28 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     /// </summary>
     public bool HasCommandStatusMessage => !string.IsNullOrWhiteSpace(CommandStatusMessage);
 
+    [ObservableProperty]
+    private bool _isFinancePreviewVisible;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FinancePreviewHeading))]
+    private string? _financePreviewPlayerName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CityNetChangeDisplay))]
+    private int _cityNetChange;
+
     /// <summary>
-    /// Ordered collection of command sub-phases exposed to the timeline UI.
+    /// Heading describing which player's finances are shown.
     /// </summary>
-    public ObservableCollection<CommandPhaseViewModel> CommandTimeline { get; }
+    public string FinancePreviewHeading => FinancePreviewPlayerName is null
+        ? "Finance Preview"
+        : string.Format(CultureInfo.CurrentCulture, "{0}'s Finance Preview", FinancePreviewPlayerName);
+
+    /// <summary>
+    /// Signed city-wide net change formatted for display.
+    /// </summary>
+    public string CityNetChangeDisplay => FormatAmount(CityNetChange);
 
     /// <summary>
     /// Events recorded during recent turns.
@@ -164,6 +216,16 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     /// Commands currently queued for the active player.
     /// </summary>
     public ObservableCollection<QueuedCommandViewModel> QueuedCommands { get; }
+
+    /// <summary>
+    /// City-wide finance categories for the active player.
+    /// </summary>
+    public ObservableCollection<FinanceCategoryViewModel> CityFinanceCategories { get; }
+
+    /// <summary>
+    /// Finance projections for each controlled sector.
+    /// </summary>
+    public ObservableCollection<FinanceSectorViewModel> SectorFinance { get; }
 
     [RelayCommand(CanExecute = nameof(CanStartTurn))]
     private void StartTurn() => _turnController.StartTurn();
@@ -411,26 +473,34 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         TurnNumber = _turnController.TurnNumber;
 
         var phases = _turnController.CommandPhases;
-        if (CommandTimeline.Count != phases.Count)
-        {
-            CommandTimeline.Clear();
-            foreach (var phase in phases)
-            {
-                CommandTimeline.Add(new CommandPhaseViewModel(phase.Phase, phase.State));
-            }
-        }
-        else
-        {
-            for (var i = 0; i < phases.Count; i++)
-            {
-                CommandTimeline[i].State = phases[i].State;
-            }
-        }
+        PublishCommandTimeline(phases);
+        PublishTurnSummary();
 
         StartTurnCommand.NotifyCanExecuteChanged();
         AdvancePhaseCommand.NotifyCanExecuteChanged();
         EndTurnCommand.NotifyCanExecuteChanged();
         RefreshCommandCommands();
+        UpdateFinancePreview();
+    }
+
+    private void PublishTurnSummary()
+    {
+        var message = new TurnSummaryChangedMessage(TurnNumber, CurrentPhase, ActiveCommandPhase, IsTurnActive);
+        _messageHub.Publish(message);
+    }
+
+    private void PublishCommandTimeline(IReadOnlyList<CommandPhaseProgress> phases)
+    {
+        if (phases is null)
+        {
+            throw new ArgumentNullException(nameof(phases));
+        }
+
+        var snapshots = phases
+            .Select(phase => new CommandPhaseSnapshot(phase.Phase, phase.State))
+            .ToArray();
+
+        _messageHub.Publish(new CommandTimelineUpdatedMessage(snapshots));
     }
 
     private void UpdateRecruitmentPanelState()
@@ -483,13 +553,90 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        IsCommandPanelVisible = true;
-
         LoadAvailableGangs(state);
         var snapshot = _commandQueueService.GetQueue(state, state.CurrentPlayer.Id);
         ApplyQueueSnapshot(snapshot);
         UpdateMovementTargets(state);
         RefreshCommandCommands();
+        UpdateFinancePreview();
+
+        if (IsCommandPhaseInteractive())
+        {
+            IsCommandPanelVisible = true;
+        }
+        else
+        {
+            HideCommandPanel();
+        }
+    }
+
+    private void UpdateFinancePreview()
+    {
+        if (!_gameSession.IsInitialized)
+        {
+            ClearFinancePreview();
+            return;
+        }
+
+        var state = _gameSession.GameState;
+        if (state.PrimaryPlayerId == Guid.Empty)
+        {
+            ClearFinancePreview();
+            return;
+        }
+
+        FinanceProjection projection;
+        try
+        {
+            projection = _financePreviewService.BuildProjection(state, state.PrimaryPlayerId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception in BuildProjection: {ex}");
+            ClearFinancePreview();
+            return;
+        }
+
+        FinancePreviewPlayerName = projection.PlayerName;
+        CityNetChange = projection.NetCashAdjustment;
+        ApplyCityCategories(projection.CityCategories);
+        ApplySectorProjections(projection.Sectors);
+        IsFinancePreviewVisible = true;
+    }
+
+    private void ApplyCityCategories(IReadOnlyList<FinanceCategory> categories)
+    {
+        CityFinanceCategories.Clear();
+        foreach (var category in categories)
+        {
+            CityFinanceCategories.Add(new FinanceCategoryViewModel(category));
+        }
+    }
+
+    private void ApplySectorProjections(IReadOnlyList<FinanceSectorProjection> sectors)
+    {
+        SectorFinance.Clear();
+        foreach (var sector in sectors)
+        {
+            SectorFinance.Add(new FinanceSectorViewModel(sector));
+        }
+    }
+
+    private void ClearFinancePreview()
+    {
+        if (CityFinanceCategories.Count > 0)
+        {
+            CityFinanceCategories.Clear();
+        }
+
+        if (SectorFinance.Count > 0)
+        {
+            SectorFinance.Clear();
+        }
+
+        CityNetChange = 0;
+        FinancePreviewPlayerName = null;
+        IsFinancePreviewVisible = false;
     }
 
     private void ApplyRecruitmentSnapshot(RecruitmentPoolSnapshot snapshot)
@@ -514,6 +661,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         _recruitmentInitialised = true;
         IsRecruitmentPanelVisible = true;
         RefreshRecruitmentCommands();
+        UpdateFinancePreview();
     }
 
     private void ApplyCommandQueueResult(CommandQueueResult result)
@@ -521,6 +669,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         CommandStatusMessage = result.Message;
         ApplyQueueSnapshot(result.Snapshot);
         RefreshCommandCommands();
+        UpdateFinancePreview();
     }
 
     private void ApplyQueueSnapshot(CommandQueueSnapshot snapshot)
@@ -674,6 +823,13 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         DeclineCommand.NotifyCanExecuteChanged();
     }
 
+    private static string FormatAmount(int amount)
+    {
+        return amount > 0
+            ? string.Format(CultureInfo.CurrentCulture, "+{0}", amount)
+            : amount.ToString(CultureInfo.CurrentCulture);
+    }
+
     private void RefreshCommandCommands()
     {
         QueueMoveCommand.NotifyCanExecuteChanged();
@@ -712,6 +868,12 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
 
         _turnController.StateChanged -= OnControllerStateChanged;
         _eventLog.EventsChanged -= OnEventLogChanged;
+        TurnManagement.Dispose();
+        CommandTimeline.Dispose();
+        FinancePreview.Dispose();
+        CommandQueue.Dispose();
+        Recruitment.Dispose();
+        TurnEventsPanel.Dispose();
         _isDisposed = true;
     }
 
@@ -725,22 +887,6 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         foreach (var entry in _eventLog.Events.OrderByDescending(e => e.TurnNumber).ThenByDescending(e => e.Timestamp))
         {
             TurnEvents.Add(new TurnEventViewModel(entry));
-        }
-    }
-
-    private void EnsureSessionInitialised()
-    {
-        if (!_gameSession.IsInitialized)
-        {
-            throw new InvalidOperationException("Game session has not been initialised.");
-        }
-    }
-
-    partial void OnSelectedSectorChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
-    {
-        if (oldValue != newValue)
-        {
-            RefreshRecruitmentCommands();
         }
     }
 
@@ -779,26 +925,77 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public sealed partial class CommandPhaseViewModel : ObservableObject
+    private void EnsureSessionInitialised()
     {
-        public CommandPhaseViewModel(CommandPhase phase, CommandPhaseState state)
+        if (!_gameSession.IsInitialized)
         {
-            Phase = phase;
-            _state = state;
+            throw new InvalidOperationException("Game session has not been initialised.");
+        }
+    }
+
+    partial void OnSelectedSectorChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
+    {
+        if (oldValue != newValue)
+        {
+            RefreshRecruitmentCommands();
+        }
+    }
+
+    public sealed class FinanceCategoryViewModel
+    {
+        public FinanceCategoryViewModel(FinanceCategory category)
+        {
+            if (category is null)
+            {
+                throw new ArgumentNullException(nameof(category));
+            }
+
+            Type = category.Type;
+            DisplayName = category.DisplayName;
+            Amount = category.Amount;
+            AmountDisplay = FormatAmount(category.Amount);
+            IsExpense = category.IsExpense;
+            IsIncome = category.IsIncome;
         }
 
-        public CommandPhase Phase { get; }
+        public FinanceCategoryType Type { get; }
 
-        public string DisplayName => Phase.ToString();
+        public string DisplayName { get; }
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsActive))]
-        [NotifyPropertyChangedFor(nameof(IsCompleted))]
-        private CommandPhaseState _state;
+        public int Amount { get; }
 
-        public bool IsActive => State == CommandPhaseState.Active;
+        public string AmountDisplay { get; }
 
-        public bool IsCompleted => State == CommandPhaseState.Completed;
+        public bool IsExpense { get; }
+
+        public bool IsIncome { get; }
+    }
+
+    public sealed class FinanceSectorViewModel
+    {
+        public FinanceSectorViewModel(FinanceSectorProjection projection)
+        {
+            if (projection is null)
+            {
+                throw new ArgumentNullException(nameof(projection));
+            }
+
+            SectorId = projection.SectorId;
+            DisplayName = projection.DisplayName;
+            NetChange = projection.NetChange;
+            NetChangeDisplay = FormatAmount(projection.NetChange);
+            Categories = projection.Categories.Select(category => new FinanceCategoryViewModel(category)).ToList();
+        }
+
+        public string SectorId { get; }
+
+        public string DisplayName { get; }
+
+        public int NetChange { get; }
+
+        public string NetChangeDisplay { get; }
+
+        public IReadOnlyList<FinanceCategoryViewModel> Categories { get; }
     }
 
     public sealed class TurnEventViewModel

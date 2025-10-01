@@ -13,6 +13,7 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class CommandQueueServiceTests
 {
+
     [Fact]
     public void QueueMove_AddsCommand_WhenInputIsValid()
     {
@@ -78,9 +79,9 @@ public sealed class CommandQueueServiceTests
         var player = new Player(playerId, "Player One");
         var sectors = new[]
         {
-            new Sector("A1", controllingPlayerId: playerId),
-            new Sector("A2"),
-            new Sector("B2")
+            new Sector("A1", CreateSite("A1 Block"), playerId),
+            new Sector("A2", CreateSite("A2 Block")),
+            new Sector("B2", CreateSite("B2 Block"))
         };
 
         var gangData = new GangData
@@ -116,4 +117,11 @@ public sealed class CommandQueueServiceTests
         var state = new GameState(game, scenario, new List<IPlayer> { player }, startingPlayerIndex: 0, randomSeed: 42);
         return (state, playerId, gang);
     }
+
+    private static SiteData CreateSite(string name) => new()
+    {
+        Name = name,
+        Cash = 0,
+        Tolerance = 0
+    };
 }

@@ -15,6 +15,7 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class RecruitmentServiceTests
 {
+
     [Fact]
     public void EnsurePool_CreatesThreeDistinctOptions()
     {
@@ -87,7 +88,7 @@ public sealed class RecruitmentServiceTests
     private static GameState CreateGameState(int cash = 500)
     {
         var player = new Player(Guid.NewGuid(), "Player One", cash);
-        var sector = new Sector("A1", controllingPlayerId: player.Id);
+        var sector = new Sector("A1", CreateSiteData("A1 HQ"), controllingPlayerId: player.Id);
         var game = new Game(new IPlayer[] { player }, new[] { sector });
         var scenario = new ScenarioConfig
         {
@@ -122,10 +123,16 @@ public sealed class RecruitmentServiceTests
     private sealed class TestDataService : IDataService
     {
         private readonly IReadOnlyList<GangData> _gangs;
+        private readonly IReadOnlyList<SiteData> _sites;
 
         public TestDataService(IReadOnlyList<GangData> gangs)
         {
             _gangs = gangs;
+            _sites = new List<SiteData>
+            {
+                CreateSiteData("A1 HQ"),
+                CreateSiteData("Neutral"),
+            };
         }
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
@@ -137,11 +144,31 @@ public sealed class RecruitmentServiceTests
             => Task.FromResult<IReadOnlyList<ItemData>>(Array.Empty<ItemData>());
 
         public Task<IReadOnlyList<SiteData>> GetSitesAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<SiteData>>(Array.Empty<SiteData>());
+            => Task.FromResult(_sites);
 
         public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyDictionary<int, ItemTypeData>>(new Dictionary<int, ItemTypeData>());
+
+        public Task<SectorConfigurationData> GetSectorConfigurationAsync(CancellationToken cancellationToken = default)
+        {
+            var configuration = new SectorConfigurationData
+            {
+                Sectors = new List<SectorDefinitionData>
+                {
+                    new() { Id = "A1", SiteName = "A1 HQ" }
+                }
+            };
+
+            return Task.FromResult(configuration);
+        }
     }
+
+    private static SiteData CreateSiteData(string name) => new()
+    {
+        Name = name,
+        Cash = 2,
+        Tolerance = 1
+    };
 
     private sealed class SequenceRngService : IRngService
     {

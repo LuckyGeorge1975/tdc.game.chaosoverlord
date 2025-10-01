@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
@@ -10,6 +11,7 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class EconomyServiceTests
 {
+
     [Fact]
     public void ApplyUpkeep_AdjustsPlayerCashAndProducesSnapshot()
     {
@@ -26,25 +28,25 @@ public sealed class EconomyServiceTests
 
         Assert.Equal(1, report.TurnNumber);
 
-        // Player one: upkeep 5, sector income 2, site income 3 => net 0 (200 -> 200)
+    // Player one: upkeep 5, sector income 5 => net 0 (200 -> 200)
         Assert.Equal(5, playerOneSnapshot.Upkeep);
-        Assert.Equal(2, playerOneSnapshot.SectorIncome);
-        Assert.Equal(3, playerOneSnapshot.SiteIncome);
+    Assert.Equal(5, playerOneSnapshot.SectorIncome);
+    Assert.Equal(0, playerOneSnapshot.SiteIncome);
         Assert.Equal(0, playerOneSnapshot.NetChange);
         Assert.Equal(200, playerOneSnapshot.EndingCash);
 
-        // Player two: upkeep 3, sector income 1, site income -2 => net -4 (150 -> 146)
+    // Player two: upkeep 3, sector income -1 => net -4 (150 -> 146)
         Assert.Equal(3, playerTwoSnapshot.Upkeep);
-        Assert.Equal(1, playerTwoSnapshot.SectorIncome);
-        Assert.Equal(-2, playerTwoSnapshot.SiteIncome);
+    Assert.Equal(-1, playerTwoSnapshot.SectorIncome);
+    Assert.Equal(0, playerTwoSnapshot.SiteIncome);
         Assert.Equal(-4, playerTwoSnapshot.NetChange);
         Assert.Equal(146, playerTwoSnapshot.EndingCash);
 
         Assert.Equal(200, playerOne.Cash);
         Assert.Equal(146, playerTwo.Cash);
         Assert.Equal(8, report.TotalUpkeep);
-        Assert.Equal(3, report.TotalSectorIncome);
-        Assert.Equal(1, report.TotalSiteIncome);
+    Assert.Equal(4, report.TotalSectorIncome);
+    Assert.Equal(0, report.TotalSiteIncome);
         Assert.Equal(-4, report.TotalNetChange); // matches sum of nets
     }
 
@@ -76,62 +78,14 @@ public sealed class EconomyServiceTests
 
         var sectors = new List<Sector>
         {
-            new("A1", new SiteData
-            {
-                Name = "Arena",
-                Resistance = 1,
-                Support = 1,
-                Tolerance = 1,
-                Cash = 3,
-                Combat = 0,
-                Defense = 0,
-                Stealth = 0,
-                Detect = 0,
-                Chaos = 0,
-                Control = 0,
-                Heal = 0,
-                Influence = 0,
-                Research = 0,
-                Strength = 0,
-                BladeMelee = 0,
-                Ranged = 0,
-                Fighting = 0,
-                MartialArts = 0,
-                EquipmentDiscountPercent = 0,
-                EnablesResearchThroughTechLevel = 0,
-                Security = 0
-            }, playerOne.Id),
-            new("B2", null, playerOne.Id),
-            new("C3", new SiteData
-            {
-                Name = "Night Market",
-                Resistance = 1,
-                Support = 1,
-                Tolerance = 1,
-                Cash = -2,
-                Combat = 0,
-                Defense = 0,
-                Stealth = 0,
-                Detect = 0,
-                Chaos = 0,
-                Control = 0,
-                Heal = 0,
-                Influence = 0,
-                Research = 0,
-                Strength = 0,
-                BladeMelee = 0,
-                Ranged = 0,
-                Fighting = 0,
-                MartialArts = 0,
-                EquipmentDiscountPercent = 0,
-                EnablesResearchThroughTechLevel = 0,
-                Security = 0
-            }, playerTwo.Id)
+            new("A1", CreateSite("Arena", cash: 3, tolerance: 1, support: 1), playerOne.Id),
+            new("B2", CreateSite("Warehouse", cash: 2), playerOne.Id),
+            new("C3", CreateSite("Night Market", cash: -1, tolerance: 1, support: 1), playerTwo.Id)
         };
 
         if (includeNeutralSectors)
         {
-            sectors.Add(new Sector("D4"));
+            sectors.Add(new Sector("D4", CreateSite("Old Docks")));
         }
 
         var gangs = new List<Gang>
@@ -231,4 +185,12 @@ public sealed class EconomyServiceTests
         var state = new GameState(game, scenario, new List<IPlayer> { playerOne, playerTwo }, 0, randomSeed: 1);
         return (state, 1);
     }
+
+    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0) => new()
+    {
+        Name = name,
+        Cash = cash,
+        Tolerance = tolerance,
+        Support = support
+    };
 }

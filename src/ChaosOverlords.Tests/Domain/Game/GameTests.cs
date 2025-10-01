@@ -6,11 +6,12 @@ namespace ChaosOverlords.Tests.Domain.Game;
 
 public sealed class GameTests
 {
+
     [Fact]
     public void AddGang_RegistersAcrossState()
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
-        var sector = new Sector("A1", CreateSiteData());
+    var sector = new Sector("A1", CreateSiteData());
         var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);
@@ -27,8 +28,8 @@ public sealed class GameTests
     public void MoveGang_MovesBetweenSectors()
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
-        var origin = new Sector("A1", CreateSiteData());
-        var target = new Sector("B2", CreateSiteData());
+    var origin = new Sector("A1", CreateSiteData());
+    var target = new Sector("B2", CreateSiteData());
         var game = new Core.Domain.Game.Game([player], [origin, target]);
 
         var gang = CreateGang(player.Id, origin.Id);
@@ -45,7 +46,7 @@ public sealed class GameTests
     public void RegisterItem_AttachesItemToGang()
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
-        var sector = new Sector("A1", CreateSiteData());
+    var sector = new Sector("A1", CreateSiteData());
         var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);
@@ -65,7 +66,7 @@ public sealed class GameTests
     public void RemoveItem_DetachesFromGang()
     {
         var player = new Player(Guid.NewGuid(), "Player 1", 100);
-        var sector = new Sector("A1", CreateSiteData());
+    var sector = new Sector("A1", CreateSiteData());
         var game = new Core.Domain.Game.Game([player], [sector]);
 
         var gang = CreateGang(player.Id, sector.Id);

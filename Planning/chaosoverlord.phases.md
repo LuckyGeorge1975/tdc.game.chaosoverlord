@@ -10,10 +10,13 @@
 - Display map placeholder (8×8 sectors).
 
 ## Phase 2 – Rundenlogik „Happy Path“
-- TurnViewModel to manage phases.
-- EconomyService: upkeep & income.
-- RecruitmentService: refill pool, hire gang.
-- CommandResolver: queue and execute commands (stub).
+**Status:** ✅ Completed (2025-10-01) – Turn dashboard modularisiert (MessageHub + Abschnitt-ViewModels), Finance Preview & Timeline live, alle Tasks 7–14 ausgeliefert; Chaos-Auszahlung bleibt explizit Phase 3/5.
+- TurnViewModel steuert Phasen inkl. Command-Subphasen (✅).
+- EconomyService: upkeep & income inkl. Event-Log (✅).
+- RecruitmentService: Pool-Refresh, Hire/Ablehnen, deterministisch (✅).
+- Command Queue/Resolver: Move/Control/Chaos (Stub) + Timeline-Visualisierung (✅).
+- Finance Preview: City/Sector-Projektion als eigener Abschnitt (✅).
+- Map & Sector Basisklassen/Toleranz (Task 14) (✅ via site-driven stats).
 
 ## Phase 3 – Kernaktionen
 - Implement Influence, Research, Equip, Move.

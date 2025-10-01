@@ -86,7 +86,7 @@ public sealed class RecruitmentService : IRecruitmentService
 
         var resolvedPlayer = player;
 
-        if (!game.TryGetSector(sectorId, out var targetSector))
+        if (!game.TryGetSector(sectorId, out var targetSector) || targetSector is null)
         {
             return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId, sectorId, "Target sector not found.");
         }
@@ -186,7 +186,7 @@ public sealed class RecruitmentService : IRecruitmentService
     {
         return new RecruitmentPool(PoolSize, slotIndex =>
         {
-            var gang = SelectCandidate(gameState, reservedNames);
+            var gang = SelectCandidate(reservedNames);
             reservedNames.Add(gang.Name);
             return new RecruitmentOption(slotIndex, gang, turnNumber);
         });
@@ -201,7 +201,7 @@ public sealed class RecruitmentService : IRecruitmentService
 
             if (option.NeedsRefresh(turnNumber))
             {
-                var gang = SelectCandidate(gameState, reservedNames);
+                var gang = SelectCandidate(reservedNames);
                 option.Replace(gang, turnNumber);
                 reservedNames.Add(gang.Name);
                 changed = true;
@@ -215,18 +215,30 @@ public sealed class RecruitmentService : IRecruitmentService
         return changed;
     }
 
-    private GangData SelectCandidate(GameState gameState, HashSet<string> reservedNames)
+    private GangData SelectCandidate(HashSet<string> reservedNames)
     {
         var available = _gangData.Where(g => !reservedNames.Contains(g.Name)).ToList();
-        // If no available gangs, throw to prevent duplicate names in recruitment pools.
+
         if (available.Count == 0)
         {
-            throw new InvalidOperationException("No unique gang data available for recruitment. All gang names are reserved.");
+            var allGangs = _gangData;
+            var index = _rngService.NextInt(0, allGangs.Count);
+            var baseGang = allGangs[index];
+            var baseName = baseGang.Name;
+            var suffix = 2;
+            var uniqueName = baseName;
+
+            while (reservedNames.Contains(uniqueName))
+            {
+                uniqueName = $"{baseName} ({suffix})";
+                suffix++;
+            }
+
+            return baseGang with { Name = uniqueName };
         }
 
-        var index = _rngService.NextInt(0, available.Count);
-        var candidate = available[index];
-        return candidate;
+        var idx = _rngService.NextInt(0, available.Count);
+        return available[idx];
     }
 
     private HashSet<string> CollectReservedNames(GameState gameState)
