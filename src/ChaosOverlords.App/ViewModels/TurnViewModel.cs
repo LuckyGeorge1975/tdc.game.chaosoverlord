@@ -590,8 +590,9 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         {
             projection = _financePreviewService.BuildProjection(state, state.PrimaryPlayerId);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Exception in BuildProjection: {ex}");
             ClearFinancePreview();
             return;
         }
