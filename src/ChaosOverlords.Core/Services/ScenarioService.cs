@@ -265,7 +265,7 @@ public sealed class ScenarioService : IScenarioService
         {
             if (!_lookup.TryGetValue(siteName, out var site))
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Configured site '{0}' was not found in the site data.", siteName));
+                throw new InvalidOperationException($"Configured site '{siteName}' was not found in the site data.");
             }
 
             RemoveFromAvailable(site.Name);
