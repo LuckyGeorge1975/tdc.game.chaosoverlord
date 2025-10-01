@@ -137,7 +137,7 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
         var rowLetter = char.ToUpperInvariant(sectorId[0]);
         if (rowLetter < 'A' || rowLetter > 'Z')
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Sector '{0}' contains an invalid row identifier.", sectorId));
+            throw new InvalidOperationException($"Sector '{sectorId}' contains an invalid row identifier.");
         }
 
         if (!int.TryParse(sectorId[1..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var column) || column < 1)
