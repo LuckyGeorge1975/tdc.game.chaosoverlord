@@ -13,6 +13,7 @@ using ChaosOverlords.Core.Services;
 using ChaosOverlords.Core.Services.Messaging;
 using System.Linq;
 using Xunit;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.GameData;
 
@@ -238,6 +239,10 @@ public class TurnViewModelTests
         public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
         {
         }
+
+        public void WriteAction(ActionResult result)
+        {
+        }
     }
 
     private sealed class DummyCommandQueueService : ICommandQueueService
@@ -394,6 +399,13 @@ public class TurnViewModelTests
 
         public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
         {
+        }
+
+        public void WriteAction(ActionResult result)
+        {
+            var entry = new TurnEvent(result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase, TurnEventType.Action, result.ToString(), DateTimeOffset.UtcNow);
+            Events.Add(entry);
+            _log.Append(entry);
         }
     }
 

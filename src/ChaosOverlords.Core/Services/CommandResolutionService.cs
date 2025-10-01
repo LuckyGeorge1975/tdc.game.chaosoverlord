@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Events;
 
@@ -23,10 +24,12 @@ public sealed class CommandResolutionService : ICommandResolutionService
     };
 
     private readonly ITurnEventWriter _eventWriter;
+    private readonly IRngService _rng;
 
-    public CommandResolutionService(ITurnEventWriter eventWriter)
+    public CommandResolutionService(ITurnEventWriter eventWriter, IRngService rng)
     {
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
+        _rng = rng ?? throw new ArgumentNullException(nameof(rng));
     }
 
     public CommandExecutionReport Execute(GameState gameState, Guid playerId, int turnNumber)
@@ -138,16 +141,54 @@ public sealed class CommandResolutionService : ICommandResolutionService
         var netScore = controlPower - incomePenalty - supportPenalty;
         var success = netScore >= 1;
 
+        var modifiers = new List<ActionModifier>
+        {
+            new("Control", gang.TotalStats.Control),
+            new("Strength", gang.TotalStats.Strength)
+        };
+
+        if (incomePenalty > 0)
+        {
+            modifiers.Add(new ActionModifier("Income Penalty", -incomePenalty));
+        }
+
+        if (supportPenalty > 0)
+        {
+            modifiers.Add(new ActionModifier("Support Penalty", -supportPenalty));
+        }
+
+        modifiers.Add(new ActionModifier("Net Score", netScore));
+
+        var difficulty = new ActionDifficulty(50);
+        var targetLabel = sector.Site is null
+            ? sector.Id
+            : string.Format(CultureInfo.CurrentCulture, "{0} ({1})", sector.Id, sector.Site.Name);
+
+        var actionContext = new ActionContext(
+            turnNumber,
+            gang.Id,
+            gang.Data.Name,
+            "Control Attempt",
+            TurnPhase.Execution,
+            CommandPhase.Control,
+            difficulty,
+            modifiers,
+            targetId: sector.Id,
+            targetName: targetLabel);
+
+        var roll = _rng.RollPercent();
+        var forcedOutcome = success ? ActionCheckOutcome.AutomaticSuccess : ActionCheckOutcome.AutomaticFailure;
+        var actionResult = ActionResult.FromRoll(actionContext, roll, forcedOutcome);
+        _eventWriter.WriteAction(actionResult);
+
         if (success)
         {
             sector.SetController(command.PlayerId);
             var message = string.Format(CultureInfo.CurrentCulture, "{0} secured control of {1}.", gang.Data.Name, sector.Id);
-            _eventWriter.Write(turnNumber, TurnPhase.Execution, TurnEventType.Information, message, CommandPhase.Control);
             return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Completed, message);
         }
 
         var failureMessage = string.Format(CultureInfo.CurrentCulture, "{0} failed to control {1}.", gang.Data.Name, sector.Id);
-        _eventWriter.Write(turnNumber, TurnPhase.Execution, TurnEventType.Information, failureMessage, CommandPhase.Control);
         return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, failureMessage);
     }
 

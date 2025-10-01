@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using Xunit;
 
 namespace ChaosOverlords.Tests.Services;
@@ -209,5 +211,23 @@ public sealed class RecruitmentServiceTests
         }
 
         public double NextDouble() => 0.0;
+
+        public PercentileRollResult RollPercent()
+        {
+            IsInitialised = true;
+            return new PercentileRollResult(1);
+        }
+
+        public DiceRollResult RollDice(int diceCount, int sides, int modifier = 0)
+        {
+            IsInitialised = true;
+            var rolls = new int[Math.Max(1, diceCount)];
+            for (var i = 0; i < rolls.Length; i++)
+            {
+                rolls[i] = NextInt(1, sides <= 1 ? 2 : sides + 1);
+            }
+
+            return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, "stub");
+        }
     }
 }

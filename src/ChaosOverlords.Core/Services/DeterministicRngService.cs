@@ -1,4 +1,8 @@
 using System;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Text;
+using ChaosOverlords.Core.Domain.Game.Actions;
 
 namespace ChaosOverlords.Core.Services;
 
@@ -55,6 +59,37 @@ public sealed class DeterministicRngService : IRngService
         return (NextUInt64() >> 11) * (1.0 / (1UL << 53));
     }
 
+    public PercentileRollResult RollPercent()
+    {
+        EnsureInitialised();
+        var roll = NextInt(1, 101);
+        return new PercentileRollResult(roll);
+    }
+
+    public DiceRollResult RollDice(int diceCount, int sides, int modifier = 0)
+    {
+        EnsureInitialised();
+
+        if (diceCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(diceCount), diceCount, "At least one die must be rolled.");
+        }
+
+        if (sides <= 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sides), sides, "Dice must have at least two sides.");
+        }
+
+        var rolls = new int[diceCount];
+        for (var i = 0; i < diceCount; i++)
+        {
+            rolls[i] = NextInt(1, sides + 1);
+        }
+
+        var expression = FormatExpression(diceCount, sides, modifier);
+        return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, expression);
+    }
+
     private ulong NextUInt64()
     {
         var s1 = _state0;
@@ -74,6 +109,26 @@ public sealed class DeterministicRngService : IRngService
         {
             throw new InvalidOperationException("RNG has not been initialised with a seed.");
         }
+    }
+
+    private static string FormatExpression(int diceCount, int sides, int modifier)
+    {
+        var builder = new StringBuilder();
+        builder.Append(diceCount.ToString(CultureInfo.InvariantCulture));
+        builder.Append('d');
+        builder.Append(sides.ToString(CultureInfo.InvariantCulture));
+
+        if (modifier > 0)
+        {
+            builder.Append('+');
+            builder.Append(modifier.ToString(CultureInfo.InvariantCulture));
+        }
+        else if (modifier < 0)
+        {
+            builder.Append(modifier.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 
     private struct SplitMix64

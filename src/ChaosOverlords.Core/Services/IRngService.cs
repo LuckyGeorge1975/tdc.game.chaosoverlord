@@ -1,4 +1,5 @@
 using System;
+using ChaosOverlords.Core.Domain.Game.Actions;
 
 namespace ChaosOverlords.Core.Services;
 
@@ -36,4 +37,14 @@ public interface IRngService
     /// Returns a double in the range [0, 1).
     /// </summary>
     double NextDouble();
+
+    /// <summary>
+    /// Returns a percentile roll (1-100 inclusive).
+    /// </summary>
+    PercentileRollResult RollPercent();
+
+    /// <summary>
+    /// Rolls a configurable number of dice and returns the aggregated result.
+    /// </summary>
+    DiceRollResult RollDice(int diceCount, int sides, int modifier = 0);
 }

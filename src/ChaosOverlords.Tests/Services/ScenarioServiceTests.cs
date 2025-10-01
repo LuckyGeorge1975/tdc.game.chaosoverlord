@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
@@ -395,6 +397,24 @@ public sealed class ScenarioServiceTests
         public int NextInt(int minInclusive, int maxExclusive) => minInclusive;
 
         public double NextDouble() => 0.0;
+
+        public PercentileRollResult RollPercent()
+        {
+            IsInitialised = true;
+            return new PercentileRollResult(1);
+        }
+
+        public DiceRollResult RollDice(int diceCount, int sides, int modifier = 0)
+        {
+            IsInitialised = true;
+            var rolls = new int[Math.Max(1, diceCount)];
+            for (var i = 0; i < rolls.Length; i++)
+            {
+                rolls[i] = 1;
+            }
+
+            return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, "stub");
+        }
     }
 
     private sealed class TrackingPlayer : PlayerBase

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
@@ -138,6 +139,7 @@ public sealed class TurnPhaseProcessorTests
     private sealed class TrackingEventWriter : ITurnEventWriter
     {
         public List<(int TurnNumber, PlayerEconomySnapshot Snapshot)> EconomyEvents { get; } = new();
+        public List<ActionResult> ActionEvents { get; } = new();
 
         public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
         {
@@ -146,6 +148,11 @@ public sealed class TurnPhaseProcessorTests
         public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
         {
             EconomyEvents.Add((turnNumber, snapshot));
+        }
+
+        public void WriteAction(ActionResult result)
+        {
+            ActionEvents.Add(result);
         }
     }
 

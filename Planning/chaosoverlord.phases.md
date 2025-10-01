@@ -19,7 +19,7 @@
 - Map & Sector Basisklassen/Toleranz (Task 14) (✅ via site-driven stats).
 
 ## Phase 3 – Kernaktionen
-**Status:** 🟡 Planned – Fokus auf Player-Aktionen, vorbereitet durch Tasks 15–19.
+**Status:** � In Progress – Task 15 liefert ActionFramework & Dice Utilities, weitere Kernaktionen (Movement/Influence/Research/Equip) folgen gemäß Tasks 16–19.
 - ActionFramework + Dice Utilities liefern deterministische Checks.
 - Move-, Influence-, Research- und Equip-Kommandos erweitern den Happy Path.
 - UI/Logging decken neue Aktionen ab; Smoke-Test validiert einen kompletten Aktionszyklus.

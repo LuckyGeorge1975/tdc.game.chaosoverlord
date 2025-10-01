@@ -1,3 +1,4 @@
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Economy;
 
 namespace ChaosOverlords.Core.Domain.Game.Events;
@@ -16,4 +17,9 @@ public interface ITurnEventWriter
     /// Writes an economy-specific event describing upkeep results for a player.
     /// </summary>
     void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot);
+
+    /// <summary>
+    /// Writes an action resolution event with dice information.
+    /// </summary>
+    void WriteAction(ActionResult result);
 }

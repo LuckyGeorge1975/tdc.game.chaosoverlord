@@ -170,12 +170,13 @@
 
 ## Task 15 – Action Resolution Framework & Dice Utilities
 
-**Status:** 🟡 Planned – Fundament für alle nachfolgenden Kernaktionen.
+**Status:** � In Progress – ActionContext/ActionResult-Modelle, Dice-Rolls im IRngService und Turn-Log-Ausgabe sind implementiert; weitere Aktionen bauen darauf auf.
 
 - Implementiere ein generisches `ActionContext`/`ActionResult`-Modell inklusive Erfolgs-/Fehlschlag-Enums.
 - Ergänze `IRngService` um Prüfmethoden (z. B. `RollPercent`, `RollDice`), die deterministisch logging-fähige Würfelwürfe liefern.
 - Stelle Hilfsklassen bereit (z. B. `ActionDifficulty`, Modifikatoren) und schreibe Unit-Tests für Grenzfälle (Min/Max, automatische Erfolge/Fehlschläge).
 - Log-Ausgabe (Turn Event Log) erhält strukturierte Einträge mit Würfelwerten und Modifikatoren.
+- **Zwischenstand 2025-10-01:** Framework-Basistypen + Tests vorhanden, Control-Command schreibt nun strukturierte Action-Logs; weitere Commands folgen in Tasks 16/17.
 
 ## Task 16 – Movement & Map Interaction Upgrade
 

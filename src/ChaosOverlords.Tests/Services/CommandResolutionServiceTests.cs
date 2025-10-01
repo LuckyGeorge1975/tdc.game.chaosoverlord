@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
@@ -19,8 +20,10 @@ public sealed class CommandResolutionServiceTests
     [Fact]
     public void Execute_ResolvesCommandsAndClearsQueue()
     {
-        var writer = new RecordingEventWriter();
-        var service = new CommandResolutionService(writer);
+    var writer = new RecordingEventWriter();
+    var rng = new DeterministicRngService();
+    rng.Reset(123);
+    var service = new CommandResolutionService(writer, rng);
         var context = CreateContext();
         var queue = context.State.Commands.GetOrCreate(context.PlayerId);
 
@@ -55,8 +58,10 @@ public sealed class CommandResolutionServiceTests
     [Fact]
     public void Execute_ReturnsEmptyReport_WhenQueueMissing()
     {
-        var writer = new RecordingEventWriter();
-        var service = new CommandResolutionService(writer);
+    var writer = new RecordingEventWriter();
+    var rng = new DeterministicRngService();
+    rng.Reset(321);
+    var service = new CommandResolutionService(writer, rng);
         var context = CreateContext();
 
         var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
@@ -131,6 +136,11 @@ public sealed class CommandResolutionServiceTests
 
         public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
         {
+        }
+
+        public void WriteAction(ActionResult result)
+        {
+            Events.Add((result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase, TurnEventType.Action, result.ToString()));
         }
     }
 }
