@@ -36,6 +36,7 @@ public sealed class ScenarioService : IScenarioService
         var seed = config.Seed ?? RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
         if (seed == 0)
         {
+            // Seed value 0 is reserved or may cause issues with some RNG implementations, so we replace it with 1.
             seed = 1;
         }
 
