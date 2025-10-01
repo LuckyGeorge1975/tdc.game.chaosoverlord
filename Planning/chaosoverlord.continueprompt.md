@@ -14,16 +14,16 @@
 
 ## Current State & Open Threads
 1. **Chaos Payout Placeholder**
-   - Finance preview currently exposes a deterministic "Chaos (Estimate)" column sourced from `Sector.ProjectedChaos`; actual payouts/crackdown hooks remain future work (Phase 3/5), but keep the placeholder accurate as the command resolver evolves.
+   - Finance preview currently exposes a deterministic "Chaos (Estimate)" column sourced from `Sector.ProjectedChaos`; real payouts/crackdown hooks migrate into Phase 3 (Tasks 17 & 19) and Phase 5.
 2. **Command Queue Polish**
-   - With the message hub in place, evaluate whether additional timeline states or user feedback is needed when commands execute (e.g., highlight failures, integrate event log summaries).
-3. **Testing Footprint**
-   - TurnViewModel unit tests cover the finance/timeline wiring via stub services. Consider adding integration-level coverage once Task 14 adjusts sector economics.
+   - With the message hub in place, evaluate whether additional timeline states or user feedback is needed when commands execute (e.g., highlight failures, integrate event log summaries). Tie enhancements into Task 19.
+3. **Action Framework Design**
+   - Before implementing individual core actions, align on shared `ActionContext`, dice helpers, and logging contracts (Task 15). Decisions here affect all downstream mechanics.
 
 ## Suggested Next Steps for the Incoming Agent
-1. Flesh out chaos payout & crackdown hooks (Phase 3 scope) while keeping current projections deterministic.
-2. Explore additional feedback in the command timeline/event log linkage, especially for failed actions or multi-gang conflicts.
-3. Expand testing coverage (integration or snapshot-style) now that sector/tooltips, finance preview, and command queue are all live.
+1. Kick off Task 15: prototype the action/dice framework, including deterministic logging and unit tests.
+2. Draft UX updates for Movement/Influence commands (Tasks 16–17) ensuring timeline/map affordances are identified early.
+3. Outline additional integration tests or smoke flows covering the forthcoming action loop (Task 19) so they can be implemented alongside features.
 
 ## Validation / Build Status
 - `dotnet test` passes on `P2_HappyPath` after site-driven sector refactor and tooltip/UI updates (2025-10-01).

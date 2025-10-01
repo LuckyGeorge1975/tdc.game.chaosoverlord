@@ -164,6 +164,99 @@
 
 ---
 
+# Chaos Overlords – Phase 3 Tasks (Kernaktionen)
+
+> Ziel: Die zentralen Spieleraktionen (Influence, Research, Equip, erweiterte Bewegung) implementieren, einschließlich Würfel-/Check-Utilities und deterministischer Logging-Pipeline. Fokus auf Happy-Path ohne komplexe Gegenreaktionen.
+
+## Task 15 – Action Resolution Framework & Dice Utilities
+
+**Status:** 🟡 Planned – Fundament für alle nachfolgenden Kernaktionen.
+
+- Implementiere ein generisches `ActionContext`/`ActionResult`-Modell inklusive Erfolgs-/Fehlschlag-Enums.
+- Ergänze `IRngService` um Prüfmethoden (z. B. `RollPercent`, `RollDice`), die deterministisch logging-fähige Würfelwürfe liefern.
+- Stelle Hilfsklassen bereit (z. B. `ActionDifficulty`, Modifikatoren) und schreibe Unit-Tests für Grenzfälle (Min/Max, automatische Erfolge/Fehlschläge).
+- Log-Ausgabe (Turn Event Log) erhält strukturierte Einträge mit Würfelwerten und Modifikatoren.
+
+## Task 16 – Movement & Map Interaction Upgrade
+
+**Status:** 🟡 Planned – Bewegung erweitert über den Phase-2-Stub hinaus.
+
+- Erweitere Move-Command um mehrschrittige Pfade, Blockaden (feindliche Kontrolle), und Kosten (z. B. Energie/Chaos-Projektion Reset).
+- Füge Karteninteraktionen hinzu: Offenlegen von Sector-Details beim Betreten, Aktualisierung von Fog/Intel-Platzhaltern.
+- Aktualisiere CommandResolver + Tests für neue Pfadvalidierungen, inklusive RNG-gestützter Escape-Rolls (an Action-Framework angebunden).
+- UI: MapView markiert legale Ziele; Timeline/Event-Log spiegelt neue Bewegungsresultate.
+
+## Task 17 – Influence Actions (Control & Support Shifts)
+
+**Status:** 🟡 Planned – Einflussaktionen als deterministische Checks.
+
+- Implementiere Influence-Command (z. B. Propaganda/Bribe) basierend auf Gang-Werten, Sector-Tolerance und Site-Support.
+- Verwende ActionFramework/Dice Utilities; Erfolg modifiziert Sector-Kontrolle oder Support besser/weniger tolerant.
+- Finance Preview berücksichtigt kurzfristige Einflusskosten und künftige Steueränderungen.
+- Tests decken Erfolg, Fehlschlag, kritische Ergebnisse sowie Event-Log-Einträge ab.
+
+## Task 18 – Research & Equipment Management
+
+**Status:** 🟡 Planned – Tech- und Ausrüstungsfluss vorbereiten.
+
+- Erweiterung von `RecruitmentService`/neuen Services um Research-Punkte, Equipment-Produktion und Einkauf.
+- Implementiere Equip/Unequip-Aktion inkl. Inventar, Kostenabzug, Stat-Aktualisierung am Gang.
+- Aktualisiere Finance Preview (Equipment/Research-Spalten) und TurnViewModel-Bindings.
+- Tests für Inventargrenzen, doppelte Ausrüstung, Research-Payout.
+
+## Task 19 – UI & Logging Integration für Kernaktionen
+
+**Status:** 🟡 Planned – Sichtbarkeit der neuen Aktionen sicherstellen.
+
+- CommandTimeline und TurnManagement-Panel erhalten neue Slots/Badges für Influence/Research/Equip-Aktionen.
+- Map/Recruitment/Finance-Views zeigen Ergebnisse (z. B. neue Boni, laufende Projekte) mit Tooltips.
+- TurnEventLog fasst Kernaktionen pro Phase zusammen; Export/Replay bleibt deterministisch.
+- Smoke-Test-Szenario, das einen kompletten Kernaktions-Zyklus durchläuft.
+
+---
+
+# Chaos Overlords – Phase 4 Tasks (Kampf & Verstecken)
+
+> Ziel: Kampf- und Stealth-Mechaniken inklusive UI-Feedback, basierend auf dem ActionFramework aus Phase 3.
+
+## Task 20 – Combat Resolution Engine
+
+**Status:** 🟡 Planned – Grundgerüst für Attack/Terminate.
+
+- Implementiere Kampfausgang (Attack, Counter, Terminate) auf Basis von Gang-Stats, Ausrüstung und Terrain-Boni.
+- Unterstütze Mehr-Gang-Konflikte (Allies vs. Enemies) und wende deterministische Würfelwürfe an.
+- Liefere CombatReport mit Einzelschritten (Rolls, Modifikatoren, Schaden) für UI & Tests.
+- Unit-Tests für typische Szenarien (Übermacht, knapper Sieg, kritischer Fehlschlag).
+
+## Task 21 – Hide & Search Mechanics
+
+**Status:** 🟡 Planned – Stealth-Checks und Gegenmaßnahmen.
+
+- Implementiere Hide-Command (Gang versteckt sich, Chaos sinkt) und Search-Command (Gegenaktionen der Gegner/Polizei).
+- Nutze ActionFramework: Erfolgswahrscheinlichkeiten basieren auf Stealth/Detect/Support.
+- Stelle sicher, dass versteckte Gangs spezielle Regeln für Combat/Influence/Movement erhalten.
+- Tests für Sucherfolge, fehlgeschlagene Suche, gestaffelte Mehrfachsuchen.
+
+## Task 22 – Combat & Stealth UI
+
+**Status:** 🟡 Planned – Spielerfeedback für Actions.
+
+- Erstelle modale Dialoge/Overlays für Combat/Hiding mit Schritt-für-Schritt-Anzeige der Würfelwürfe.
+- Timeline markiert laufende Gefechte; MapView zeigt Konfliktstatus (Icons, Farbmarkierungen).
+- Accessibility: Tastatursteuerung, Tooltips (Roll breakdown), Logging-Links zu Event-History.
+- UI-Snapshot-Tests/Automation zur Validierung von Bindings.
+
+## Task 23 – Event Log & Economy Integration
+
+**Status:** 🟡 Planned – Nachwirkungen der Kämpfe abbilden.
+
+- TurnEventLog gruppiert Kampf-/Hide-Ereignisse, inkl. Loot/Schaden, und verweist auf Replay.
+- EconomyService erhält Hooks für Kampfkosten (medizinische Kosten, Ausrüstungsschäden).
+- Finance Preview greift auf Kampf-/Stealth-Resultate zu (z. B. Ausgaben für Heal/Equipment).
+- Regression-/Integrationstests über einen vollständigen Kampf+Hide Turn.
+
+---
+
 # Priority 2 – Silver City Adaptation
 
 > Ziel: Lore- & Copyright-konforme Neuinterpretation („Cons“) der Fraktionen, ohne Phase-1/2-Fortschritt zu blockieren. Umsetzung erfolgt nach Abschluss der Phase-2-Happy-Path-Meilensteine.

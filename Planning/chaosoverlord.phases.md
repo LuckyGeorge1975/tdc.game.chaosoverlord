@@ -19,14 +19,16 @@
 - Map & Sector Basisklassen/Toleranz (Task 14) (✅ via site-driven stats).
 
 ## Phase 3 – Kernaktionen
-- Implement Influence, Research, Equip, Move.
-- Dice/Check utilities.
-- Map interactions.
+**Status:** 🟡 Planned – Fokus auf Player-Aktionen, vorbereitet durch Tasks 15–19.
+- ActionFramework + Dice Utilities liefern deterministische Checks.
+- Move-, Influence-, Research- und Equip-Kommandos erweitern den Happy Path.
+- UI/Logging decken neue Aktionen ab; Smoke-Test validiert einen kompletten Aktionszyklus.
 
 ## Phase 4 – Kampf & Verstecken/Aufspüren
-- Attack & Terminate resolution.
-- Hide & Search.
-- Combat dialogs.
+**Status:** 🟡 Planned – Aufbauend auf Phase-3-Framework (Tasks 20–23).
+- Combat Engine (Attack, Terminate) inkl. deterministischer Reports.
+- Hide/Search-Mechaniken mit Stealth/Detect Checks.
+- UI-Overlays & Event-Log-Integration für Gefechte/Stealth.
 
 ## Phase 5 – Polizei & Szenarien
 - Crackdown system (Chaos vs. Tolerance).

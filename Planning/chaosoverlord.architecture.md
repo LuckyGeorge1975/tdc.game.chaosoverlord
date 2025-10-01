@@ -87,6 +87,7 @@ This document captures the current structure of the Chaos Overlords remaster so 
 ### Command Queue & Resolution
 - **`ICommandQueueService`** → **`CommandQueueService`**: Maintains per-gang command assignments, ensuring one action per turn.
 - **`ICommandResolutionService`** → **`CommandResolutionService`**: Executes queued commands in timeline order, emitting summaries for the UI via the message hub and event log.
+- **Phase 3 Preview – Action Framework**: Upcoming tasks introduce shared `ActionContext`/`ActionResult` models, deterministic dice helpers, and extended command handlers (Movement, Influence, Research, Equip). Keep resolution logic loosely coupled so new actions can plug in without rewriting existing queue infrastructure.
 
 ### Event Logging
 - **`TurnEventType`** enum: Includes `TurnStarted`, `PhaseAdvanced`, `CommandPhaseAdvanced`, `TurnCompleted`, `Information`, and `Economy`.

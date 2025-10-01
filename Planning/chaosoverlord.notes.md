@@ -19,11 +19,13 @@
 | 2025-09-30 | Turn Dashboard Modularisierung | TurnViewModel teilt Funktionen auf sechs Section-ViewModels auf; zentraler `IMessageHub` synchronisiert Timeline/Turn Summary ohne harte Dependencies. | Verbessert Testbarkeit & Wiederverwendung, neue Panels (Timeline, Finance Preview, Commands) abonnieren nur benötigte Daten. |
 | 2025-09-30 | Finance Preview Architektur | `IFinancePreviewService` aggregiert deterministische Vorschau-Daten (City/Sector) aus GameState; UI nutzt gemeinsame ObservableCollections. | Klarer Ort für künftige Modifier (Cons, Items), vermeidet Duplikation der Berechnungslogik im UI. |
 | 2025-10-01 | Sektor-Klassen vs. Site-Daten | Klassenspezifische Basistoleranz wurde durch vollständig site-basierte Werte ersetzt. `ScenarioService` weist jedem Sektor deterministisch `SiteData` zu; MapView + Tooltips zeigen Name/Modifier, Economy & Finance lesen direkt aus den Site-Werten. | Reduziert Redundanz (keine getrennten Klassen-Tabellen nötig), garantiert, dass alle 64 Sektoren spielbereit sind und deterministische Seeds bleiben erhalten. |
+| 2025-10-01 | Phase-3/4 Roadmap | Phase-3-Aufgaben (ActionFramework, Movement/Influence/Research/Equip) und Phase-4-Aufgaben (Combat/Hide/Search) wurden detailliert geplant. Tasks 15–23 dienen als Leitplanken für deterministische Kernaktionen und kommende Kampfmechaniken. | Sichert, dass der Übergang von Happy-Path zu Kernaktionen fokussiert bleibt und UI/Logging-Auswirkungen früh berücksichtigt werden. |
 
 ## Offene Punkte / Beobachtungen
 
 - Remote `origin` ist eingerichtet (`feature/*` → GitHub); Branch-Strategie weiterhin: Feature-Branches von `dev`, Phase-Abschlüsse mergen nach `main`.
 - Chaos-Payout bleibt ein Platzhalter; echte Auszahlung + Crackdown-Hooks werden in Phase 3 adressiert.
+- Prüfen, ob zusätzliche Integrationstests nach Umsetzung des ActionFrameworks benötigt werden (Phase 3 Task 19).
 
 ## Task 4 – Out-of-Scope Elemente
 - Silver City Cons (Priority 2): Umsetzung folgt nach Phase-2-Happy-Path; kein Major Rewrite erforderlich, Erweiterungen bleiben additiv.
