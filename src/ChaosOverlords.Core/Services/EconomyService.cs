@@ -35,10 +35,8 @@ public sealed class EconomyService : IEconomyService
             var upkeep = gangs.Where(g => g.OwnerId == player.Id).Sum(g => g.Data.UpkeepCost);
 
             var controlledSectors = sectors.Where(s => s.ControllingPlayerId == player.Id).ToList();
-            var sectorIncome = controlledSectors.Count;
-            var siteIncome = controlledSectors
-                .Where(s => s.Site is not null)
-                .Sum(s => s.Site!.Cash);
+            var sectorIncome = controlledSectors.Sum(s => s.Site?.Cash ?? 0);
+            var siteIncome = 0;
 
             ApplyCashAdjustments(player, upkeep, sectorIncome, siteIncome);
 

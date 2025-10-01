@@ -15,3 +15,4 @@
 | Phase 2 | Task 11 – Command Queue & Resolver (Skeleton) | Done | Command queue/service/resolver wired into turn processor, UI queue management with comment-preserving binding, new unit tests passing (2025-09-29) |
 | Phase 2 | Task 12 – Finance Preview (City & Sector) | Done | FinancePreviewService projects city/sector deltas, TurnViewModel exposes shared collections, new section view model renders panel (2025-09-30) |
 | Phase 2 | Task 13 – Phasen-Timeline UI (Befehlsvisualisierung) | Done | MessageHub broadcasts timeline snapshots, CommandTimeline section updates reactively, panel styled for phase states (2025-09-30) |
+| Phase 2 | Task 14 – Map & Sector-Model: Klassen & Basistoleranz | Done | Sector state now site-driven; all sectors seeded with SiteData feeding map tooltips and economy/finance previews (2025-10-01) |

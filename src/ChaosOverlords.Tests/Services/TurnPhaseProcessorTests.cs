@@ -11,11 +11,13 @@ using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.Services;
+using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class TurnPhaseProcessorTests
 {
+
     [Fact]
     public void StartTurn_TriggersUpkeepOncePerTurn()
     {
@@ -58,8 +60,8 @@ public sealed class TurnPhaseProcessorTests
         {
             var playerOne = new Player(Guid.NewGuid(), "Player One", 100);
             var playerTwo = new Player(Guid.NewGuid(), "Player Two", 100);
-            var sectorOne = new Sector("A1", controllingPlayerId: playerOne.Id);
-            var sectorTwo = new Sector("B2", controllingPlayerId: playerTwo.Id);
+            var sectorOne = new Sector("A1", CreateSite("A1 Hub"), controllingPlayerId: playerOne.Id);
+            var sectorTwo = new Sector("B2", CreateSite("B2 Hub"), controllingPlayerId: playerTwo.Id);
             var game = new Game(new IPlayer[] { playerOne, playerTwo }, new[] { sectorOne, sectorTwo });
             var scenario = new ScenarioConfig
             {
@@ -107,6 +109,8 @@ public sealed class TurnPhaseProcessorTests
             return Task.CompletedTask;
         }
     }
+
+    private static SiteData CreateSite(string name) => new() { Name = name, Cash = 1, Tolerance = 1 };
 
     private sealed class TrackingEconomyService : IEconomyService
     {

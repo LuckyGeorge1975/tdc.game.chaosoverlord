@@ -5,10 +5,11 @@ namespace ChaosOverlords.Tests.Domain.Game;
 
 public sealed class SectorTests
 {
+
     [Fact]
     public void PlaceGang_AddsGangId()
     {
-    var sector = new Sector("A1", CreateSiteData());
+        var sector = new Sector("A1", CreateSiteData());
         var gang = CreateGang();
 
         sector.PlaceGang(gang);
@@ -19,7 +20,7 @@ public sealed class SectorTests
     [Fact]
     public void RemoveGang_RemovesMatchingId()
     {
-    var sector = new Sector("A1", CreateSiteData());
+        var sector = new Sector("A1", CreateSiteData());
         var gang = CreateGang();
         sector.PlaceGang(gang);
 
@@ -32,7 +33,7 @@ public sealed class SectorTests
     [Fact]
     public void SetController_UpdatesController()
     {
-    var sector = new Sector("A1", CreateSiteData());
+        var sector = new Sector("A1", CreateSiteData());
         var playerId = Guid.NewGuid();
 
         sector.SetController(playerId);

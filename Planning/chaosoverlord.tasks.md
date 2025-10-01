@@ -151,12 +151,16 @@
 
 ## Task 14 – Map & Sector-Model: Klassen & Basistoleranz (Read-Only)
 
-**Status:** 🟡 Planned**Beschreibung:** Ergänze `SectorState` um Sektorklasse (Lower…Upper) und Basistoleranz/Income als *Konstanten* oder *Config* (noch keine Snitch/Bribe-Dynamik).**Akzeptanzkriterien:**
+**Status:** ✅ Done – Sector economics driven by site metadata; map/finance panels reflect site income & tolerance (2025-10-01).
+
+**Beschreibung:** Ergänze `SectorState` um Sektorklasse (Lower…Upper) und Basistoleranz/Income als *Konstanten* oder *Config* (noch keine Snitch/Bribe-Dynamik).
+
+**Akzeptanzkriterien:**
 
 - Sektorklasse wird in der Map angezeigt (dezente Badges/Legend).
 - Basistoleranz/Income sind pro Klasse konfigurierbar und laufen in Economy/Preview ein.
-  **Hinweise:**
-- Werte als `appsettings.json` oder Data-JSON; finale Zahlenabstimmung in Phase 5.
+
+**Resultat:** Klassendefinitionen wurden auf site-getriebene Statistikwerte umgestellt. Jeder Sektor besitzt nun deterministischen `SiteData`-Seed (inkl. Income/Tolerance). MapView zeigt Site-Namen direkt, Tooltips listen sämtliche Modifikatoren. Economy- und Finance-Services lesen die Werte aus den Sites, wodurch Placeholder-Klassendaten obsolet sind.
 
 ---
 

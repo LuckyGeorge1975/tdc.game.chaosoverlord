@@ -12,6 +12,7 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class FinancePreviewServiceTests
 {
+
     [Fact]
     public void BuildProjection_ComputesCityAndSectorBreakdown()
     {
@@ -26,27 +27,29 @@ public sealed class FinancePreviewServiceTests
         Assert.Equal(8, projection.CityCategories.Count);
 
         Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -5);
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 2);
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 3);
+        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 3);
+        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
         Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 3);
 
         var netCategory = Assert.Single(projection.CityCategories, category => category.Type == FinanceCategoryType.CashAdjustment);
-        Assert.Equal(3, netCategory.Amount);
-        Assert.Equal(3, projection.NetCashAdjustment);
+        Assert.Equal(1, netCategory.Amount);
+        Assert.Equal(1, projection.NetCashAdjustment);
 
         Assert.Equal(2, projection.Sectors.Count);
 
         var sectorA1 = projection.Sectors.Single(sector => sector.SectorId == "A1");
         Assert.Equal("A1 – Neon Hub", sectorA1.DisplayName);
-        Assert.Equal(4, sectorA1.NetChange);
+        Assert.Equal(3, sectorA1.NetChange);
         Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -3);
-        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 4);
+        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 4);
+        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
         Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 2);
 
         var sectorB2 = projection.Sectors.Single(sector => sector.SectorId == "B2");
-        Assert.Equal(-1, sectorB2.NetChange);
+        Assert.Equal(-2, sectorB2.NetChange);
         Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -2);
-        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == -1);
+        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == -1);
+        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
     }
 
     [Fact]
@@ -81,9 +84,9 @@ public sealed class FinancePreviewServiceTests
         var primaryPlayer = new Player(Guid.NewGuid(), "Player One", 120);
         var enemyPlayer = new Player(Guid.NewGuid(), "Player Two", 90);
 
-        var sectorA1 = new Sector("A1", new SiteData { Name = "Neon Hub", Cash = 4 }, primaryPlayer.Id);
-        var sectorB2 = new Sector("B2", new SiteData { Name = "Midnight Exchange", Cash = -1 }, primaryPlayer.Id);
-        var sectorC3 = new Sector("C3", null, enemyPlayer.Id);
+        var sectorA1 = new Sector("A1", new SiteData { Name = "Neon Hub", Cash = 4, Tolerance = 2 }, primaryPlayer.Id);
+        var sectorB2 = new Sector("B2", new SiteData { Name = "Midnight Exchange", Cash = -1, Tolerance = 1 }, primaryPlayer.Id);
+        var sectorC3 = new Sector("C3", new SiteData { Name = "Shadow Market", Cash = 0, Tolerance = 1 }, enemyPlayer.Id);
 
         var gangOne = new Gang(Guid.NewGuid(), new GangData { Name = "Ghosts", HiringCost = 10, UpkeepCost = 3 }, primaryPlayer.Id, sectorA1.Id);
         var gangTwo = new Gang(Guid.NewGuid(), new GangData { Name = "Rogues", HiringCost = 8, UpkeepCost = 2 }, primaryPlayer.Id, sectorB2.Id);

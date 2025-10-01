@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+             x:Class="ChaosOverlords.App.Views.SectorView"
+             x:DataType="vm:MapViewModel+SectorTileViewModel">
+    <UserControl.Styles>
+        <Style Selector="Border.root">
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.sector-id">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.metric-label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="root"
+        ToolTip.Tip="{Binding SiteTooltip}"
+        ToolTip.Placement="Pointer">
+      <Grid RowDefinitions="Auto,Auto,Auto"
+              ColumnDefinitions="*">
+            <StackPanel Grid.Row="0" Spacing="2">
+                <TextBlock Classes="sector-id"
+                           Text="{Binding Label}" />
+                <TextBlock Classes="metric-label"
+                           Text="{Binding OwnerDisplay}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Margin="0,6,0,0" Spacing="2">
+                <TextBlock Classes="metric-label"
+                           Text="{Binding SiteDisplay}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <TextBlock Classes="metric-label"
+                               Text="{Binding IncomeDisplay}" />
+                    <TextBlock Classes="metric-label"
+                               Text="{Binding ToleranceDisplay}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Margin="0,6,0,0" Spacing="2">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <TextBlock Classes="metric-label"
+                               Text="{Binding GangDisplay}" />
+                    <TextBlock Classes="metric-label"
+                               Text="{Binding ChaosDisplay}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

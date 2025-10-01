@@ -60,7 +60,7 @@ This document captures the current structure of the Chaos Overlords remaster so 
 - **Players**: `PlayerBase` (common bookkeeping), `Player` (human), `AiPlayer`, `NetworkPlayer` (stubs for future networking).
 - **`Gang`**: Runtime gang with stat aggregation and equipment management.
 - **`Item`**: Equipment with stat modifiers.
-- **`Sector`**: Map tile optionally linked to `SiteData`, tracks occupying gangs and controlling player.
+- **`Sector`**: Map tile deterministically linked to immutable `SiteData`, tracks occupying gangs and controlling player while exposing derived income/tolerance values.
 - **`StatSheet` / `StatBreakdown`**: Value objects summarizing stats and their sources.
 
 ### Randomness
@@ -109,7 +109,7 @@ This document captures the current structure of the Chaos Overlords remaster so 
 - **`MainWindow` / Views**: Standard Avalonia window bound to `MainViewModel`.
 - **ViewModels**:
   - `MainViewModel`: Aggregates child view models and exposes the composed turn dashboard.
-  - `MapViewModel`: Placeholder 8×8 grid; future hook for real sector state.
+  - `MapViewModel`: Projects the deterministic 8×8 sector grid backed by `SectorConfigurationData`; each tile displays its assigned `SiteData` (name, income, tolerance) and publishes tooltip details.
   - `TurnViewModel`: Observes `ITurnController`, `ITurnEventLog`, and Core services to project turn state, finance projections, recruitment pool, and command queue. It publishes summary messages through `IMessageHub` so section view models stay synchronized.
   - Section ViewModels (`TurnManagementSectionViewModel`, `CommandTimelineSectionViewModel`, `FinancePreviewSectionViewModel`, `RecruitmentSectionViewModel`, `CommandQueueSectionViewModel`, `TurnEventsSectionViewModel`): Encapsulate UI bindings per dashboard panel, subscribing to the message hub or owner view model for updates.
 
@@ -156,8 +156,8 @@ This document captures the current structure of the Chaos Overlords remaster so 
 ### Deterministic RNG Flow
 1. `ScenarioService` chooses or generates a seed (persisted in `ScenarioConfig`/`GameState`).
 2. `IRngService.Reset(seed)` primes the `DeterministicRngService`.
-3. Systems requiring randomness (future recruitment, combat) consume `IRngService` methods; replaying with the same seed reproduces outcomes.
+3. Systems requiring randomness (recruitment pool, future combat) consume `IRngService` methods; replaying with the same seed reproduces outcomes. The site allocator uses the same service to provide deterministic sector assignments.
 
 ---
 
-This overview will evolve as upcoming tasks (timeline polish, sector class metadata, Silver City cons) land. Please keep it in sync when introducing new services or modifying interaction patterns.
+This overview will evolve as upcoming tasks (chaos payout/crackdown hooks, timeline polish, Silver City cons) land. Please keep it in sync when introducing new services or modifying interaction patterns.

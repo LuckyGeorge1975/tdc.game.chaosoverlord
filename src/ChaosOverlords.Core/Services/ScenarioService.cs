@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
@@ -29,8 +33,18 @@ public sealed class ScenarioService : IScenarioService
 
         ValidateConfig(config);
 
+        var seed = config.Seed ?? RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+        if (seed == 0)
+        {
+            seed = 1;
+        }
+
+        _rngService.Reset(seed);
+
         var gangLookup = await BuildGangLookupAsync(cancellationToken).ConfigureAwait(false);
         var siteLookup = await BuildSiteLookupAsync(cancellationToken).ConfigureAwait(false);
+        var sectorMetadata = await BuildSectorMetadataAsync(cancellationToken).ConfigureAwait(false);
+        var siteAllocator = new SiteAllocator(siteLookup, _rngService);
 
         var players = new List<IPlayer>();
         var sectors = new Dictionary<string, Sector>(StringComparer.OrdinalIgnoreCase);
@@ -42,10 +56,16 @@ public sealed class ScenarioService : IScenarioService
             var playerId = player.Id;
             players.Add(player);
 
-            var site = ResolveOptional(siteLookup, slot.HeadquartersSiteName);
+            var configuredSiteName = GetConfiguredSiteName(sectorMetadata, slot.HeadquartersSectorId);
+            var desiredSiteName = string.IsNullOrWhiteSpace(slot.HeadquartersSiteName)
+                ? configuredSiteName
+                : slot.HeadquartersSiteName;
+
+            var site = siteAllocator.Allocate(desiredSiteName);
+
             if (!sectors.TryAdd(slot.HeadquartersSectorId, new Sector(slot.HeadquartersSectorId, site, playerId)))
             {
-                throw new InvalidOperationException($"Sector '{slot.HeadquartersSectorId}' is assigned to multiple players.");
+                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Sector '{0}' is assigned to multiple players.", slot.HeadquartersSectorId));
             }
 
             var gangData = ResolveRequired(gangLookup, slot.StartingGangName, "Starting gang");
@@ -55,12 +75,26 @@ public sealed class ScenarioService : IScenarioService
         // Include any additional neutral sectors defined on the scenario.
         foreach (var sectorId in config.MapSectorIds)
         {
-            if (string.IsNullOrWhiteSpace(sectorId))
+            if (string.IsNullOrWhiteSpace(sectorId) || sectors.ContainsKey(sectorId))
             {
                 continue;
             }
 
-            sectors.TryAdd(sectorId, new Sector(sectorId));
+            var configuredSiteName = GetConfiguredSiteName(sectorMetadata, sectorId);
+            var site = siteAllocator.Allocate(configuredSiteName);
+            sectors[sectorId] = new Sector(sectorId, site);
+        }
+
+        foreach (var entry in sectorMetadata)
+        {
+            var sectorId = entry.Key;
+            if (sectors.ContainsKey(sectorId))
+            {
+                continue;
+            }
+
+            var site = siteAllocator.Allocate(entry.Value);
+            sectors[sectorId] = new Sector(sectorId, site);
         }
 
         var game = new Game(players, sectors.Values, gangs);
@@ -69,14 +103,6 @@ public sealed class ScenarioService : IScenarioService
         {
             startingIndex = 0;
         }
-
-        var seed = config.Seed ?? RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
-        if (seed == 0)
-        {
-            seed = 1;
-        }
-
-        _rngService.Reset(seed);
 
         return new GameState(game, config, players, startingIndex, seed);
     }
@@ -108,7 +134,7 @@ public sealed class ScenarioService : IScenarioService
 
             if (!sectorIds.Add(player.HeadquartersSectorId))
             {
-                throw new ArgumentException($"Duplicate headquarters sector '{player.HeadquartersSectorId}' detected.", nameof(config));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Duplicate headquarters sector '{0}' detected.", player.HeadquartersSectorId), nameof(config));
             }
 
             if (string.IsNullOrWhiteSpace(player.StartingGangName))
@@ -149,6 +175,35 @@ public sealed class ScenarioService : IScenarioService
         return sites.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
     }
 
+    private async Task<IReadOnlyDictionary<string, string?>> BuildSectorMetadataAsync(CancellationToken cancellationToken)
+    {
+        var configuration = await _dataService.GetSectorConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (configuration is null)
+        {
+            throw new InvalidOperationException("Sector configuration data could not be loaded.");
+        }
+
+        if (configuration.Sectors is null || configuration.Sectors.Count == 0)
+        {
+            throw new InvalidOperationException("Sector configuration must define at least one sector entry.");
+        }
+
+        var sectors = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var sectorData in configuration.Sectors)
+        {
+            if (string.IsNullOrWhiteSpace(sectorData.Id))
+            {
+                continue;
+            }
+
+            sectors[sectorData.Id] = string.IsNullOrWhiteSpace(sectorData.SiteName)
+                ? null
+                : sectorData.SiteName;
+        }
+
+        return sectors;
+    }
+
     private static GangData ResolveRequired(
         IReadOnlyDictionary<string, GangData> lookup,
         string name,
@@ -156,26 +211,108 @@ public sealed class ScenarioService : IScenarioService
     {
         if (!lookup.TryGetValue(name, out var data))
         {
-            throw new InvalidOperationException($"{context} '{name}' was not found.");
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} '{1}' was not found.", context, name));
         }
 
         return data;
     }
 
-    private static SiteData? ResolveOptional(
-        IReadOnlyDictionary<string, SiteData> lookup,
-        string? name)
+    private static string? GetConfiguredSiteName(
+        IReadOnlyDictionary<string, string?> lookup,
+        string sectorId)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (!lookup.TryGetValue(sectorId, out var siteName))
         {
-            return null;
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Sector '{0}' is not defined in the sector configuration.", sectorId));
         }
 
-        if (!lookup.TryGetValue(name, out var data))
+        return siteName;
+    }
+
+    private sealed class SiteAllocator
+    {
+        private readonly IReadOnlyDictionary<string, SiteData> _lookup;
+        private readonly IRngService _rngService;
+        private readonly List<SiteData> _allSites;
+        private readonly List<SiteData> _available;
+
+        public SiteAllocator(IReadOnlyDictionary<string, SiteData> lookup, IRngService rngService)
         {
-            throw new InvalidOperationException($"Headquarters site '{name}' was not found.");
+            _lookup = lookup ?? throw new ArgumentNullException(nameof(lookup));
+            _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
+
+            _allSites = lookup.Values.ToList();
+            if (_allSites.Count == 0)
+            {
+                throw new InvalidOperationException("Site data is required to seed scenarios.");
+            }
+
+            _available = new List<SiteData>(_allSites);
+            Shuffle(_available);
         }
 
-        return data;
+        public SiteData Allocate(string? requestedName)
+        {
+            if (!string.IsNullOrWhiteSpace(requestedName))
+            {
+                return AllocateSpecific(requestedName);
+            }
+
+            return AllocateRandom();
+        }
+
+        private SiteData AllocateSpecific(string siteName)
+        {
+            if (!_lookup.TryGetValue(siteName, out var site))
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Configured site '{0}' was not found in the site data.", siteName));
+            }
+
+            RemoveFromAvailable(site.Name);
+            return site;
+        }
+
+        private SiteData AllocateRandom()
+        {
+            if (_available.Count == 0)
+            {
+                Refill();
+            }
+
+            var lastIndex = _available.Count - 1;
+            var site = _available[lastIndex];
+            _available.RemoveAt(lastIndex);
+            return site;
+        }
+
+        private void RemoveFromAvailable(string siteName)
+        {
+            var index = _available.FindIndex(site => string.Equals(site.Name, siteName, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0)
+            {
+                _available.RemoveAt(index);
+            }
+
+            if (_available.Count == 0)
+            {
+                Refill();
+            }
+        }
+
+        private void Refill()
+        {
+            _available.Clear();
+            _available.AddRange(_allSites);
+            Shuffle(_available);
+        }
+
+        private void Shuffle(List<SiteData> sites)
+        {
+            for (var i = sites.Count - 1; i > 0; i--)
+            {
+                var swapIndex = _rngService.NextInt(0, i + 1);
+                (sites[i], sites[swapIndex]) = (sites[swapIndex], sites[i]);
+            }
+        }
     }
 }

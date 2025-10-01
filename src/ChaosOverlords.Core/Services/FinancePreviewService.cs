@@ -41,7 +41,7 @@ public sealed class FinancePreviewService : IFinancePreviewService
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Player '{0}' was not found in the game state.", playerId));
         }
 
-        var cityCategories = BuildCityCategories(gameState, playerId);
+    var cityCategories = BuildCityCategories(gameState, playerId);
         var sectors = BuildSectorProjections(gameState, playerId);
 
         var cashAdjustment = cityCategories.Where(category => category.Type != FinanceCategoryType.CashAdjustment).Sum(category => category.Amount);
@@ -63,8 +63,8 @@ public sealed class FinancePreviewService : IFinancePreviewService
         var newRecruits = 0;
         var equipment = 0;
         var cityOfficials = 0;
-        var sectorTax = sectors.Count;
-        var siteProtection = sectors.Sum(s => s.Site?.Cash ?? 0);
+    var sectorTax = sectors.Sum(s => s.Site?.Cash ?? 0);
+    var siteProtection = 0;
         var chaosEstimate = sectors.Sum(s => s.ProjectedChaos);
 
         var categories = new Dictionary<FinanceCategoryType, FinanceCategory>
@@ -104,8 +104,8 @@ public sealed class FinancePreviewService : IFinancePreviewService
                 new(FinanceCategoryType.NewRecruits, "New Recruits", 0),
                 new(FinanceCategoryType.Equipment, "Equipment", 0),
                 new(FinanceCategoryType.CityOfficials, "City Officials", 0),
-                new(FinanceCategoryType.SectorTax, "Sector Tax", 1),
-                new(FinanceCategoryType.SiteProtection, "Site Protection", sector.Site?.Cash ?? 0),
+                new(FinanceCategoryType.SectorTax, "Sector Tax", sector.Site?.Cash ?? 0),
+                new(FinanceCategoryType.SiteProtection, "Site Protection", 0),
                 new(FinanceCategoryType.ChaosEstimate, "Chaos (Estimate)", sector.ProjectedChaos)
             };
 

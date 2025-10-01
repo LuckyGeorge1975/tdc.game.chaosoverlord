@@ -31,4 +31,9 @@ public interface IDataService
     /// Retrieves the mapping of item type ids to descriptive metadata.
     /// </summary>
     Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the configured sector definitions and optional site assignments.
+    /// </summary>
+    Task<SectorConfigurationData> GetSectorConfigurationAsync(CancellationToken cancellationToken = default);
 }

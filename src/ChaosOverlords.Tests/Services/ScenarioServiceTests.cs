@@ -158,6 +158,85 @@ public sealed class ScenarioServiceTests
         await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
         manager.AdvanceToNextPlayer();
         await manager.ExecuteCurrentPlayerAsync(CancellationToken.None);
+
+        Assert.Equal(64, state.Game.Sectors.Count);
+        Assert.All(state.Game.Sectors.Values, sector => Assert.False(string.IsNullOrWhiteSpace(sector.Site.Name)));
+    }
+
+    [Fact]
+    public async Task CreateNewGameAsync_AssignsConfiguredSitesFromSectorMetadata()
+    {
+        var config = new ScenarioConfig
+        {
+            Type = ScenarioType.KillEmAll,
+            Name = "Configured Sites",
+            Players = new List<ScenarioPlayerConfig>
+            {
+                new()
+                {
+                    Name = "Player One",
+                    Kind = PlayerKind.Human,
+                    StartingCash = 150,
+                    HeadquartersSectorId = "D4",
+                    StartingGangName = "Hackers"
+                }
+            },
+            MapSectorIds = new List<string> { "C3" }
+        };
+
+        var gangs = new List<GangData>
+        {
+            new()
+            {
+                Name = "Hackers",
+                HiringCost = 10,
+                UpkeepCost = 2,
+                Combat = 3,
+                Defense = 2,
+                TechLevel = 4,
+                Stealth = 5,
+                Detect = 3,
+                Chaos = 1,
+                Control = 2,
+                Heal = 0,
+                Influence = 1,
+                Research = 0,
+                Strength = 3,
+                BladeMelee = 1,
+                Ranged = 0,
+                Fighting = 0,
+                MartialArts = 0
+            }
+        };
+
+        var sites = new List<SiteData>
+        {
+            new() { Name = "Arena", Cash = 3 },
+            new() { Name = "Back Alley Network", Cash = 1 }
+        };
+
+        var sectorConfiguration = new SectorConfigurationData
+        {
+            Sectors = new[]
+            {
+                new SectorDefinitionData { Id = "D4", SiteName = "Arena" },
+                new SectorDefinitionData { Id = "C3", SiteName = "Back Alley Network" }
+            }
+        };
+
+        var dataService = new StubDataService(gangs, sites, sectorConfiguration: sectorConfiguration);
+        var scenarioService = new ScenarioService(dataService, new StubRngService());
+
+        var state = await scenarioService.CreateNewGameAsync(config, CancellationToken.None);
+
+        var headquarters = state.Game.GetSector("D4");
+        Assert.Equal("Arena", headquarters.Site?.Name);
+
+        var neutral = state.Game.GetSector("C3");
+        Assert.Equal("Back Alley Network", neutral.Site?.Name);
+        Assert.Null(neutral.ControllingPlayerId);
+
+        Assert.All(state.Game.Sectors.Values, sector => Assert.False(string.IsNullOrWhiteSpace(sector.Site.Name)));
     }
 
     [Fact]
@@ -245,17 +324,20 @@ public sealed class ScenarioServiceTests
         private readonly IReadOnlyList<ItemData> _items;
         private readonly IReadOnlyList<SiteData> _sites;
         private readonly IReadOnlyDictionary<int, ItemTypeData> _itemTypes;
+        private readonly SectorConfigurationData _sectorConfiguration;
 
         public StubDataService(
             IReadOnlyList<GangData> gangs,
             IReadOnlyList<SiteData> sites,
             IReadOnlyList<ItemData>? items = null,
-            IReadOnlyDictionary<int, ItemTypeData>? itemTypes = null)
+            IReadOnlyDictionary<int, ItemTypeData>? itemTypes = null,
+            SectorConfigurationData? sectorConfiguration = null)
         {
             _gangs = gangs;
             _sites = sites;
             _items = items ?? Array.Empty<ItemData>();
             _itemTypes = itemTypes ?? new Dictionary<int, ItemTypeData>();
+            _sectorConfiguration = sectorConfiguration?.Normalize() ?? CreateDefaultSectorConfiguration();
         }
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
@@ -271,6 +353,29 @@ public sealed class ScenarioServiceTests
 
         public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(_itemTypes);
+
+        public Task<SectorConfigurationData> GetSectorConfigurationAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(_sectorConfiguration);
+
+        private static SectorConfigurationData CreateDefaultSectorConfiguration()
+        {
+            var sectors = new List<SectorDefinitionData>();
+            for (var row = 'A'; row <= 'H'; row++)
+            {
+                for (var column = 1; column <= 8; column++)
+                {
+                    sectors.Add(new SectorDefinitionData
+                    {
+                        Id = string.Format("{0}{1}", row, column)
+                    });
+                }
+            }
+
+            return new SectorConfigurationData
+            {
+                Sectors = sectors
+            }.Normalize();
+        }
     }
 
     private sealed class StubRngService : IRngService

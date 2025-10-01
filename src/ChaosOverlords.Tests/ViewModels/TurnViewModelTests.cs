@@ -14,6 +14,7 @@ using ChaosOverlords.Core.Services.Messaging;
 using System.Linq;
 using Xunit;
 using ChaosOverlords.Core.Domain.Game.Commands;
+using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Tests.ViewModels;
 
@@ -166,7 +167,7 @@ public class TurnViewModelTests
         public StubGameSession()
         {
             var player = new Player(Guid.NewGuid(), "Player One", 100);
-            var sector = new Sector("A1", controllingPlayerId: player.Id);
+            var sector = new Sector("A1", CreateSite("A1 Hub"), controllingPlayerId: player.Id);
             var game = new Game(new IPlayer[] { player }, new[] { sector });
             var scenario = new ScenarioConfig
             {
@@ -204,6 +205,8 @@ public class TurnViewModelTests
             return Task.CompletedTask;
         }
     }
+
+    private static SiteData CreateSite(string name) => new() { Name = name, Cash = 2, Tolerance = 1 };
 
     private sealed class NoopRecruitmentService : IRecruitmentService
     {
