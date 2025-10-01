@@ -65,7 +65,7 @@ public sealed class ScenarioService : IScenarioService
 
             if (!sectors.TryAdd(slot.HeadquartersSectorId, new Sector(slot.HeadquartersSectorId, site, playerId)))
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Sector '{0}' is assigned to multiple players.", slot.HeadquartersSectorId));
+                throw new InvalidOperationException($"Sector '{slot.HeadquartersSectorId}' is assigned to multiple players.");
             }
 
             var gangData = ResolveRequired(gangLookup, slot.StartingGangName, "Starting gang");
