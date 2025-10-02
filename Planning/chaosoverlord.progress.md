@@ -16,8 +16,9 @@
 | Phase 2 | Task 12 – Finance Preview (City & Sector) | Done | FinancePreviewService projects city/sector deltas, TurnViewModel exposes shared collections, new section view model renders panel (2025-09-30) |
 | Phase 2 | Task 13 – Phasen-Timeline UI (Befehlsvisualisierung) | Done | MessageHub broadcasts timeline snapshots, CommandTimeline section updates reactively, panel styled for phase states (2025-09-30) |
 | Phase 2 | Task 14 – Map & Sector-Model: Klassen & Basistoleranz | Done | Sector state now site-driven; all sectors seeded with SiteData feeding map tooltips and economy/finance previews (2025-10-01) |
-| Phase 3 | Task 15 – Action Resolution Framework & Dice Utilities | In Progress | ActionContext/Result-Modelle + Dice-Rolls implementiert, Control-Command schreibt strukturierte Turn-Events; weitere Aktionen folgen (2025-10-01) |
+| Phase 3 | Task 15 – Action Resolution Framework & Dice Utilities | Done | ActionContext/Result-Modelle + Dice-Rolls implementiert; Edge-Case-Tests (Auto-Thresholds, Modifier-Aggregation) ergänzt; Control-Command schreibt strukturierte Turn-Events (2025-10-01) |
 | Phase 3 | Task 16 – Movement & Map Interaction Upgrade | Planned | Extend move command to multi-step paths, blocking rules, and enhanced map feedback leveraging the new action framework |
+| Phase 3 | Task 16 – Movement & Map Interaction Upgrade | In Progress | Bewegung ist kanonisch ein einzelner Schritt in einen angrenzenden Sektor (Manual). Multi-Step entfällt; Fokus auf Adjazenz/Blocking, gültige Ziele, deterministische Logs |
 | Phase 3 | Task 17 – Influence Actions (Control & Support Shifts) | Planned | Implement influence mechanics with deterministic checks affecting sector control/tolerance and finance projections |
 | Phase 3 | Task 18 – Research & Equipment Management | Planned | Add research progress, equipment inventory, and finance hooks including tests for edge cases |
 | Phase 3 | Task 19 – UI & Logging Integration für Kernaktionen | Planned | Surface new actions in UI panels, tooltips, and event logs; create smoke scenario covering a full core-action loop |
@@ -25,3 +26,4 @@
 | Phase 4 | Task 21 – Hide & Search Mechanics | Planned | Implement stealth checks and counteractions tied to the action framework |
 | Phase 4 | Task 22 – Combat & Stealth UI | Planned | Deliver accessible overlays/dialogs for combat/hide results with timeline/map indicators |
 | Phase 4 | Task 23 – Event Log & Economy Integration | Planned | Integrate combat/stealth outcomes with event log and economy preview, ensuring regression coverage |
+| Phase 3 | Sofortmaßnahme – Sector Influence Runtime | Done | Sector hat `InfluenceResistance`, `IsInfluenced`, `ReduceInfluenceResistance`, `ResetInfluence`; zugehörige Unit-Tests in `SectorTests` ergänzt (2025-10-01) |

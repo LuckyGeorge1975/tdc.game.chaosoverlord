@@ -109,6 +109,13 @@ public sealed class CommandResolutionService : ICommandResolutionService
             return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Skipped, "Gang already located in target sector.");
         }
 
+        // Capacity: max 6 of the player's gangs per sector
+    var ownerGangCountInTarget = gameState.Game.Gangs.Values.Count(g => g.OwnerId == gang.OwnerId && string.Equals(g.SectorId, sector.Id, StringComparison.OrdinalIgnoreCase));
+        if (ownerGangCountInTarget >= 6)
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, "Target sector is full (max 6 of your gangs).");
+        }
+
         game.MoveGang(command.GangId, sector.Id);
 
         var message = string.Format(CultureInfo.CurrentCulture, "{0} moved to {1}.", gang.Data.Name, sector.Id);

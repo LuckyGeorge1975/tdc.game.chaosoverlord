@@ -92,4 +92,69 @@ public sealed class ActionFrameworkTests
         Assert.Contains("automatic success", entry.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mods:", entry.Description, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void ActionDifficulty_AutomaticSuccessAndFailure_ThresholdsApply()
+    {
+        var difficulty = new ActionDifficulty(baseChance: 1, minimumChance: 1, maximumChance: 99, automaticSuccessThreshold: 3, automaticFailureThreshold: 98);
+
+        var context = new ActionContext(
+            turnNumber: 1,
+            actorId: Guid.NewGuid(),
+            actorName: "Testers",
+            actionName: "Check",
+            phase: TurnPhase.Execution,
+            commandPhase: CommandPhase.Instant,
+            difficulty: difficulty);
+
+        // Natural low roll is automatic success despite tiny effective chance
+        var autoSuccess = ActionResult.FromRoll(context, new PercentileRollResult(2));
+        Assert.Equal(ActionCheckOutcome.AutomaticSuccess, autoSuccess.Outcome);
+
+        // Natural high roll is automatic failure despite high effective chance
+        var contextHigh = new ActionContext(
+            turnNumber: 1,
+            actorId: Guid.NewGuid(),
+            actorName: "Testers",
+            actionName: "Check",
+            phase: TurnPhase.Execution,
+            commandPhase: CommandPhase.Instant,
+            difficulty: new ActionDifficulty(baseChance: 90, minimumChance: 1, maximumChance: 99, automaticSuccessThreshold: 3, automaticFailureThreshold: 98));
+
+        var autoFailure = ActionResult.FromRoll(contextHigh, new PercentileRollResult(99));
+        Assert.Equal(ActionCheckOutcome.AutomaticFailure, autoFailure.Outcome);
+    }
+
+    [Fact]
+    public void ActionDifficulty_EmptyModifiers_YieldsBaseChanceClamped()
+    {
+        var difficulty = new ActionDifficulty(baseChance: 120, minimumChance: 5, maximumChance: 95);
+        var effective = difficulty.ApplyModifiers(Array.Empty<ActionModifier>(), out var net);
+        Assert.Equal(95, effective);
+        Assert.Equal(0, net);
+    }
+
+    [Fact]
+    public void ActionResult_FromRoll_AppliesModifierAggregation()
+    {
+        var difficulty = new ActionDifficulty(baseChance: 50);
+        var context = new ActionContext(
+            turnNumber: 1,
+            actorId: Guid.NewGuid(),
+            actorName: "Synths",
+            actionName: "Influence",
+            phase: TurnPhase.Execution,
+            commandPhase: CommandPhase.Instant,
+            difficulty: difficulty,
+            modifiers: new[]
+            {
+                new ActionModifier("A", 5),
+                new ActionModifier("B", -3),
+                new ActionModifier("C", 2)
+            });
+
+        var result = ActionResult.FromRoll(context, new PercentileRollResult(55));
+        Assert.Equal(54, result.EffectiveChance); // 50 + (5 - 3 + 2)
+        Assert.Equal(4, result.NetModifier);
+    }
 }

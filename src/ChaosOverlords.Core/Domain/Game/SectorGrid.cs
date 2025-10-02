@@ -22,7 +22,9 @@ public static class SectorGrid
 
         var columnDelta = Math.Abs(sourceColumn - targetColumn);
         var rowDelta = Math.Abs(sourceRow - targetRow);
-        return columnDelta + rowDelta == 1;
+        // Adjacent if target is one step away in any direction (orthogonal or diagonal),
+        // but not the same cell.
+        return (columnDelta | rowDelta) != 0 && Math.Max(columnDelta, rowDelta) == 1;
     }
 
     public static bool TryParse(string sectorId, out int column, out int row)

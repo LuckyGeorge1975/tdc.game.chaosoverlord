@@ -11,6 +11,7 @@ namespace ChaosOverlords.Core.Domain.Game;
 public sealed class Sector
 {
     private readonly List<Guid> _gangIds = new();
+    private int _influenceResistance;
 
     public Sector(string id, SiteData site, Guid? controllingPlayerId = null)
     {
@@ -23,6 +24,7 @@ public sealed class Sector
 
         Id = id;
         ControllingPlayerId = controllingPlayerId;
+        _influenceResistance = Math.Max(0, Site.Resistance);
     }
 
     public string Id { get; }
@@ -50,6 +52,17 @@ public sealed class Sector
     /// Projected chaos revenue assigned during the chaos sub-phase.
     /// </summary>
     public int ProjectedChaos { get; private set; }
+
+    /// <summary>
+    /// Current remaining resistance to influence for the sector's site.
+    /// Starts at <see cref="SiteData.Resistance"/> and is reduced by successful Influence actions until it reaches 0.
+    /// </summary>
+    public int InfluenceResistance => _influenceResistance;
+
+    /// <summary>
+    /// Whether the site's influence has been fully achieved (resistance reduced to zero).
+    /// </summary>
+    public bool IsInfluenced => _influenceResistance <= 0;
 
     /// <summary>
     /// Updates the current controller (or clears it) based on campaign actions.
@@ -94,5 +107,33 @@ public sealed class Sector
     public void ClearChaosProjection()
     {
         ProjectedChaos = 0;
+    }
+
+    /// <summary>
+    /// Reduces the site's remaining influence resistance by the specified non-negative amount.
+    /// Returns the new remaining resistance.
+    /// </summary>
+    public int ReduceInfluenceResistance(int amount)
+    {
+        if (amount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be non-negative.");
+        }
+
+        if (_influenceResistance == 0 || amount == 0)
+        {
+            return _influenceResistance;
+        }
+
+        _influenceResistance = Math.Max(0, _influenceResistance - amount);
+        return _influenceResistance;
+    }
+
+    /// <summary>
+    /// Resets the site's influence progress back to its original resistance (e.g., on loss of control).
+    /// </summary>
+    public void ResetInfluence()
+    {
+        _influenceResistance = Math.Max(0, Site.Resistance);
     }
 }

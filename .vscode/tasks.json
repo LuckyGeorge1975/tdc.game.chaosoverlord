@@ -1,53 +1,147 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "restore",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "restore",
-        "${workspaceFolder}/src/ChaosOverlords.sln"
-      ],
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always"
-      }
-    },
-    {
-      "label": "build",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "build",
-        "${workspaceFolder}/src/ChaosOverlords.sln",
-        "--no-restore"
-      ],
-      "problemMatcher": "$msCompile",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "dependsOn": ["restore"],
-      "presentation": {
-        "reveal": "always"
-      }
-    },
-    {
-      "label": "test",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "test",
-        "${workspaceFolder}/src/ChaosOverlords.sln",
-        "--no-build"
-      ],
-      "problemMatcher": "$msCompile",
-      "group": "test",
-      "dependsOn": ["build"],
-      "presentation": {
-        "reveal": "always"
-      }
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "restore",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"restore",
+				"${workspaceFolder}/src/ChaosOverlords.sln"
+			],
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always"
+			}
+		},
+		{
+			"label": "build",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"${workspaceFolder}/src/ChaosOverlords.sln",
+				"--no-restore"
+			],
+			"problemMatcher": "$msCompile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"dependsOn": [
+				"restore"
+			],
+			"presentation": {
+				"reveal": "always"
+			}
+		},
+		{
+			"label": "test",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"${workspaceFolder}/src/ChaosOverlords.sln",
+				"--no-build"
+			],
+			"problemMatcher": "$msCompile",
+			"group": "test",
+			"dependsOn": [
+				"build"
+			],
+			"presentation": {
+				"reveal": "always"
+			}
+		},
+		{
+			"label": "dotnet-test-chaosoverlords",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"${workspaceFolder}/src/ChaosOverlords.sln",
+				"--no-build"
+			],
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "dotnet-test-chaosoverlords",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"${workspaceFolder}/src/ChaosOverlords.sln",
+				"--no-build"
+			],
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "dotnet-test-chaosoverlords-build",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"${workspaceFolder}/src/ChaosOverlords.sln"
+			],
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "dotnet test ChaosOverlords.sln",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-build"
+			],
+			"group": "test"
+		},
+		{
+			"label": "dotnet build ChaosOverlords.sln",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-restore"
+			],
+			"group": "build"
+		},
+		{
+			"label": "dotnet build ChaosOverlords.sln (verify)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-restore"
+			],
+			"group": "build"
+		},
+		{
+			"label": "dotnet test ChaosOverlords.sln (after tests added)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-build"
+			],
+			"group": "test"
+		},
+		{
+			"label": "dotnet test after diagonal adjacency",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-build"
+			],
+			"group": "test"
+		}
+	]
 }

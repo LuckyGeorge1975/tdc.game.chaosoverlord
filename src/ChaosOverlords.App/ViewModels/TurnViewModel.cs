@@ -763,8 +763,10 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
             return;
         }
 
+        var ownerId = gang.OwnerId;
         var targets = state.Game.Sectors.Values
             .Where(s => SectorGrid.AreAdjacent(gang.SectorId, s.Id))
+            .Where(s => state.Game.Gangs.Values.Count(g => g.OwnerId == ownerId && string.Equals(g.SectorId, s.Id, StringComparison.OrdinalIgnoreCase)) < 6)
             .OrderBy(s => s.Id, StringComparer.Ordinal)
             .Select(s => new SectorOptionViewModel(s.Id))
             .ToList();

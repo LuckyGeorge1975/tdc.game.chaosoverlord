@@ -28,6 +28,24 @@
 - Chaos-Payout bleibt ein Platzhalter; echte Auszahlung + Crackdown-Hooks werden in Phase 3 adressiert.
 - Prüfen, ob zusätzliche Integrationstests nach Umsetzung des ActionFrameworks benötigt werden (Phase 3 Task 19).
 
+## Würfel-Notation: Prozentwurf ↔ d6-Erfolge
+
+Ziel: Balancing konsistent halten, egal ob eine Aktion als Prozentwurf (1–100) oder als d6-Erfolgsprobe (x Würfel auf 5+/6+) gedacht ist.
+
+- Referenzmodell: d6-Erfolge mit Schwelle 5+ (≈ 33,33%/Würfel) oder 6+ (≈ 16,67%/Würfel).
+- Prozentile-Check im Code: `IRngService.RollPercent()` gegen effektive Erfolgswahrscheinlichkeit p.
+- Abbildung: Für n Würfel mit Erfolgschance q pro Würfel (z. B. q=1/3 bei 5+) ergibt sich Erfolgswahrscheinlichkeit p = 1 - (1 - q)^n.
+	- Beispiele:
+		- 1W6@5+: p ≈ 33%
+		- 2W6@5+: p ≈ 56%
+		- 3W6@5+: p ≈ 70%
+		- 1W6@6+: p ≈ 16,7%
+		- 2W6@6+: p ≈ 30,6%
+- Kalibrierung im ActionFramework: Modifikatoren verändern n (effektive Würfel) oder q (Schwelle) nicht direkt, sondern p. Wenn das Design in „Würfel + Zielzahl“ denkt, rechne n,q → p und setze die Prozentchance entsprechend.
+- Logging: ActionResult speichert sowohl p (in %) als auch den geworfenen Prozentwert; für Debugging kann optional n,q notiert werden, wenn die Aktion aus einer d6-Notation stammt.
+
+Hinweis: Für sehr kleine/hohe p greift die automatische Erfolg/Fehlschlag-Schwelle (z. B. p ≤ 1% ⇒ auto fail, p ≥ 99% ⇒ auto success), damit Edge-Cases deterministisch und testbar bleiben.
+
 ## Task 4 – Out-of-Scope Elemente
 - Silver City Cons (Priority 2): Umsetzung folgt nach Phase-2-Happy-Path; kein Major Rewrite erforderlich, Erweiterungen bleiben additiv.
 

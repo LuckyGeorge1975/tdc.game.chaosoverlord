@@ -41,15 +41,58 @@ public sealed class SectorTests
         Assert.Equal(playerId, sector.ControllingPlayerId);
     }
 
+    [Fact]
+    public void InfluenceResistance_InitializesFromSiteData()
+    {
+        var site = CreateSiteData(7);
+        var sector = new Sector("A1", site);
+
+        Assert.Equal(7, sector.InfluenceResistance);
+        Assert.False(sector.IsInfluenced);
+    }
+
+    [Fact]
+    public void ReduceInfluenceResistance_DecrementsAndClampsAtZero()
+    {
+        var site = CreateSiteData(3);
+        var sector = new Sector("A1", site);
+
+        var remaining = sector.ReduceInfluenceResistance(2);
+        Assert.Equal(1, remaining);
+        Assert.False(sector.IsInfluenced);
+
+        remaining = sector.ReduceInfluenceResistance(5);
+        Assert.Equal(0, remaining);
+        Assert.True(sector.IsInfluenced);
+
+        // Further reductions keep it at zero
+        remaining = sector.ReduceInfluenceResistance(1);
+        Assert.Equal(0, remaining);
+    }
+
+    [Fact]
+    public void ResetInfluence_RestoresOriginalResistance()
+    {
+        var site = CreateSiteData(4);
+        var sector = new Sector("A1", site);
+
+        sector.ReduceInfluenceResistance(4);
+        Assert.True(sector.IsInfluenced);
+
+        sector.ResetInfluence();
+        Assert.Equal(4, sector.InfluenceResistance);
+        Assert.False(sector.IsInfluenced);
+    }
+
     private static Gang CreateGang()
     {
         return new Gang(Guid.NewGuid(), CreateGangData(), Guid.NewGuid(), "A1");
     }
 
-    private static SiteData CreateSiteData() => new()
+    private static SiteData CreateSiteData(int? resistance = null) => new()
     {
         Name = "Downtown Plaza",
-        Resistance = 1,
+        Resistance = resistance ?? 1,
         Support = 1,
         Tolerance = 1,
         Cash = 2,

@@ -70,6 +70,34 @@ public sealed class CommandResolutionServiceTests
         Assert.Empty(writer.Events);
     }
 
+    [Fact]
+    public void ExecuteMove_Fails_WhenTargetSectorBecomesFull()
+    {
+        var writer = new RecordingEventWriter();
+        var rng = new DeterministicRngService();
+        rng.Reset(111);
+        var service = new CommandResolutionService(writer, rng);
+        var context = CreateContext();
+
+        // Fill A2 with 6 gangs from the same owner before execution
+        for (var i = 0; i < 6; i++)
+        {
+            var filler = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, context.PlayerId, sectorId: "A2");
+            context.State.Game.AddGang(filler);
+        }
+
+        var queue = context.State.Commands.GetOrCreate(context.PlayerId);
+        var moveCommand = new MoveCommand(Guid.NewGuid(), context.PlayerId, context.MoveGang.Id, TurnNumber: 1, SourceSectorId: "A1", TargetSectorId: "A2");
+        queue.SetCommand(moveCommand);
+
+        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+
+        var entry = Assert.Single(report.Entries);
+        Assert.Equal(CommandPhase.Movement, entry.Phase);
+        Assert.Equal(CommandExecutionStatus.Failed, entry.Status);
+        Assert.Equal("A1", context.MoveGang.SectorId);
+    }
+
     private static CommandContext CreateContext()
     {
         var playerId = Guid.NewGuid();

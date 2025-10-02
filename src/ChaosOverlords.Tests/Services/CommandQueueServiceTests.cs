@@ -53,9 +53,29 @@ public sealed class CommandQueueServiceTests
         var service = new CommandQueueService();
         var (state, playerId, gang) = CreateState();
 
-        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "B2", turnNumber: 1);
+        // From A1, A3 is not adjacent (two rows away)
+        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A3", turnNumber: 1);
 
         Assert.Equal(CommandQueueRequestStatus.NotAdjacent, result.Status);
+        Assert.Empty(result.Snapshot.Commands);
+    }
+
+    [Fact]
+    public void QueueMove_Fails_WhenTargetSectorIsFullForOwner()
+    {
+        var service = new CommandQueueService();
+        var (state, playerId, gang) = CreateState();
+
+        // Fill target sector A2 with 6 of the same owner's gangs
+        for (var i = 0; i < 6; i++)
+        {
+            var fillerGang = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, playerId, sectorId: "A2");
+            state.Game.AddGang(fillerGang);
+        }
+
+        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+
+        Assert.Equal(CommandQueueRequestStatus.InvalidAction, result.Status);
         Assert.Empty(result.Snapshot.Commands);
     }
 
@@ -81,7 +101,8 @@ public sealed class CommandQueueServiceTests
         {
             new Sector("A1", CreateSite("A1 Block"), playerId),
             new Sector("A2", CreateSite("A2 Block")),
-            new Sector("B2", CreateSite("B2 Block"))
+            new Sector("B2", CreateSite("B2 Block")),
+            new Sector("A3", CreateSite("A3 Block"))
         };
 
         var gangData = new GangData

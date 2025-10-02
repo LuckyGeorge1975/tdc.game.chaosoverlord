@@ -79,6 +79,13 @@ public sealed class CommandQueueService : ICommandQueueService
             return Failure(gameState, playerId, CommandQueueRequestStatus.NotAdjacent, "Target sector is not adjacent to the gang's current position.");
         }
 
+        // Capacity: max 6 of the player's gangs per sector
+        var ownerGangCountInTarget = game.Gangs.Values.Count(g => g.OwnerId == playerId && string.Equals(g.SectorId, targetSector.Id, StringComparison.OrdinalIgnoreCase));
+        if (ownerGangCountInTarget >= 6)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidAction, "Target sector is full (max 6 of your gangs).");
+        }
+
         var command = new MoveCommand(Guid.NewGuid(), playerId, gangId, turnNumber, gang.SectorId, targetSector.Id);
         return EnqueueCommand(gameState, command, string.Format(CultureInfo.CurrentCulture, "Move to {0} queued.", targetSector.Id));
     }

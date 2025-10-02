@@ -57,11 +57,7 @@ This document captures the current structure of the Chaos Overlords remaster so 
 - **`TurnController`** (`ITurnController` implementation): Holds the turn-phase state machine and command sub-phase timeline, raising events on state changes.
 
 ### Domain Entities
-- **Players**: `PlayerBase` (common bookkeeping), `Player` (human), `AiPlayer`, `NetworkPlayer` (stubs for future networking).
-- **`Gang`**: Runtime gang with stat aggregation and equipment management.
-- **`Item`**: Equipment with stat modifiers.
-- **`Sector`**: Map tile deterministically linked to immutable `SiteData`, tracks occupying gangs and controlling player while exposing derived income/tolerance values.
-- **`StatSheet` / `StatBreakdown`**: Value objects summarizing stats and their sources.
+**`Sector`**: Map tile deterministically linked to immutable `SiteData`, tracks occupying gangs and controlling player while exposing derived income/tolerance values. Additionally maintains runtime influence state: `InfluenceResistance` (initialized from `SiteData.Resistance`), `IsInfluenced` flag, and helpers `ReduceInfluenceResistance(int)` (floors at 0) and `ResetInfluence()`.
 
 ### Randomness
 - **`IRngService`**: Abstraction for deterministic random number generation.

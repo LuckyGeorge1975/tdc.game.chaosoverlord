@@ -170,7 +170,7 @@
 
 ## Task 15 – Action Resolution Framework & Dice Utilities
 
-**Status:** � In Progress – ActionContext/ActionResult-Modelle, Dice-Rolls im IRngService und Turn-Log-Ausgabe sind implementiert; weitere Aktionen bauen darauf auf.
+**Status:** ✅ Done – ActionContext/ActionResult-Modelle, Dice-Rolls im IRngService und Turn-Log-Ausgabe implementiert; Edge-Case-Tests (Auto-Thresholds, Mod-Aggregation) ergänzt; Control-Command schreibt strukturierte Action-Logs (2025-10-01).
 
 - Implementiere ein generisches `ActionContext`/`ActionResult`-Modell inklusive Erfolgs-/Fehlschlag-Enums.
 - Ergänze `IRngService` um Prüfmethoden (z. B. `RollPercent`, `RollDice`), die deterministisch logging-fähige Würfelwürfe liefern.
@@ -180,12 +180,19 @@
 
 ## Task 16 – Movement & Map Interaction Upgrade
 
-**Status:** 🟡 Planned – Bewegung erweitert über den Phase-2-Stub hinaus.
+**Status:** 🔄 In Progress – Bewegung verfeinern gemäß Original-Regeln.
 
-- Erweitere Move-Command um mehrschrittige Pfade, Blockaden (feindliche Kontrolle), und Kosten (z. B. Energie/Chaos-Projektion Reset).
+- Move-Command bleibt 1 Schritt in einen angrenzenden Sektor (Manual: “Move... Moves gang to an adjacent sector. Shortcut: drag in 9-sector display”).
+  Adjazenz umfasst orthogonal UND diagonal (8-neighborhood, konsistent mit 9-Sektor-Display).
+  Keine Multi-Step-Pfade in einer Ausführung.
+- Kapazität: Max. 6 eigene Gangs pro Sektor (Manual). Bewegung in volle Sektoren ist ungültig.
 - Füge Karteninteraktionen hinzu: Offenlegen von Sector-Details beim Betreten, Aktualisierung von Fog/Intel-Platzhaltern.
 - Aktualisiere CommandResolver + Tests für neue Pfadvalidierungen, inklusive RNG-gestützter Escape-Rolls (an Action-Framework angebunden).
 - UI: MapView markiert legale Ziele; Timeline/Event-Log spiegelt neue Bewegungsresultate.
+
+Hinweise:
+- Phase 3 Scope: kein Kampf/Stealth; nur Bewegung, Regeln für Zielgültigkeit und deterministische Logs.
+- Tests für: Adjazenz (8-neighborhood verankert), volle Sektoren, und illegale Ziele.
 
 ## Task 17 – Influence Actions (Control & Support Shifts)
 
