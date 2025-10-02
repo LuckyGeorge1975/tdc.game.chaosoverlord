@@ -98,6 +98,40 @@ public sealed class CommandResolutionServiceTests
         Assert.Equal("A1", context.MoveGang.SectorId);
     }
 
+    [Fact]
+    public void ExecuteInfluence_ReducesResistance_OnSuccess()
+    {
+        var writer = new RecordingEventWriter();
+        var rng = new DeterministicRngService();
+        rng.Reset(222);
+        var service = new CommandResolutionService(writer, rng);
+        var context = CreateContext();
+
+        // Prepare a sector with resistance and control
+        var sector = context.State.Game.GetSector("A1");
+        sector.SetController(context.PlayerId);
+        sector.ResetInfluence();
+        Assert.True(sector.InfluenceResistance >= 0);
+
+        // Ensure gang with some influence sits in A1
+        var influenceGangData = new GangData { Name = "Influencers", Influence = 2 };
+        var influenceGang = new Gang(Guid.NewGuid(), influenceGangData, context.PlayerId, sectorId: "A1");
+        context.State.Game.AddGang(influenceGang);
+
+        var queue = context.State.Commands.GetOrCreate(context.PlayerId);
+        var cmd = new InfluenceCommand(Guid.NewGuid(), context.PlayerId, influenceGang.Id, TurnNumber: 1, SectorId: "A1");
+        queue.SetCommand(cmd);
+
+        var before = sector.InfluenceResistance;
+        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+
+        var entry = Assert.Single(report.Entries);
+        Assert.Equal(CommandPhase.Instant, entry.Phase);
+        Assert.Equal(CommandExecutionStatus.Completed, entry.Status);
+        Assert.Equal(before - 1, sector.InfluenceResistance);
+        Assert.Contains(writer.Events, e => e.Type == TurnEventType.Action);
+    }
+
     private static CommandContext CreateContext()
     {
         var playerId = Guid.NewGuid();
@@ -113,7 +147,7 @@ public sealed class CommandResolutionServiceTests
 
         var sectors = new[]
         {
-            new Sector("A1", CreateSite("A1 Block"), playerId),
+            new Sector("A1", CreateSite("A1 Block", resistance: 2), playerId),
             new Sector("A2", CreateSite("A2 Block")),
             new Sector("B1", CreateSite("B1 Block")),
             new Sector("C1", new SiteData { Name = "Mall", Cash = 0, Support = 0, Tolerance = 0 })
@@ -145,12 +179,13 @@ public sealed class CommandResolutionServiceTests
 
     private sealed record CommandContext(GameState State, Guid PlayerId, Gang ChaosGang, Gang MoveGang, Gang ControlGang);
 
-    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0) => new()
+    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0, int resistance = 0) => new()
     {
         Name = name,
         Cash = cash,
         Tolerance = tolerance,
-        Support = support
+        Support = support,
+        Resistance = resistance
     };
 
     private sealed class RecordingEventWriter : ITurnEventWriter

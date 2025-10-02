@@ -128,6 +128,52 @@ public sealed class CommandQueueService : ICommandQueueService
         return EnqueueCommand(gameState, command, string.Format(CultureInfo.CurrentCulture, "Control attempt queued for {0}.", sector.Id));
     }
 
+    public CommandQueueResult QueueInfluence(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
+    {
+        ValidateArguments(gameState, playerId, gangId, turnNumber);
+        if (string.IsNullOrWhiteSpace(sectorId))
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidSector, "Sector id must be provided.");
+        }
+
+        var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
+        if (!game.TryGetPlayer(playerId, out var player) || player is null)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidPlayer, "Player not found.");
+        }
+
+        if (!game.TryGetGang(gangId, out var gang) || gang is null)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidGang, "Gang not found.");
+        }
+
+        if (gang.OwnerId != playerId)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.NotOwned, "Gang does not belong to the player.");
+        }
+
+        if (!game.TryGetSector(sectorId, out var sector) || sector is null)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidSector, "Sector does not exist.");
+        }
+
+        // Validate presence: accept either explicit occupancy or matching current sector id.
+        if (!sector.GangIds.Contains(gang.Id) && !string.Equals(gang.SectorId, sector.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidAction, "Gang must occupy the sector to influence the site.");
+        }
+
+        if (sector.ControllingPlayerId != playerId)
+        {
+            return Failure(gameState, playerId, CommandQueueRequestStatus.InvalidAction, "Sector must be under your control to influence the site.");
+        }
+
+        // Allow queuing even if already influenced; execution-time will skip if no resistance remains.
+
+        var command = new InfluenceCommand(Guid.NewGuid(), playerId, gangId, turnNumber, sector.Id);
+        return EnqueueCommand(gameState, command, string.Format(CultureInfo.CurrentCulture, "Influence queued for {0}.", sector.Id));
+    }
+
     public CommandQueueResult QueueChaos(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
     {
         ValidateArguments(gameState, playerId, gangId, turnNumber);
@@ -288,6 +334,17 @@ public sealed class CommandQueueService : ICommandQueueService
                 0,
                 move.TurnNumber,
                 string.Format(CultureInfo.CurrentCulture, "Move from {0} to {1}", move.SourceSectorId, move.TargetSectorId)),
+            InfluenceCommand influence => new PlayerCommandSnapshot(
+                influence.CommandId,
+                influence.GangId,
+                gangName,
+                influence.Kind,
+                influence.Phase,
+                influence.SectorId,
+                influence.SectorId,
+                0,
+                influence.TurnNumber,
+                string.Format(CultureInfo.CurrentCulture, "Influence {0}", influence.SectorId)),
             ControlCommand control => new PlayerCommandSnapshot(
                 control.CommandId,
                 control.GangId,

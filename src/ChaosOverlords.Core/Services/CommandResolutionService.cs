@@ -80,10 +80,96 @@ public sealed class CommandResolutionService : ICommandResolutionService
         return command switch
         {
             MoveCommand move => ExecuteMove(gameState, move, turnNumber),
+            InfluenceCommand influence => ExecuteInfluence(gameState, influence, turnNumber),
             ControlCommand control => ExecuteControl(gameState, control, turnNumber),
             ChaosCommand chaos => ExecuteChaos(gameState, chaos, turnNumber),
             _ => new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Skipped, "Unsupported command type.")
         };
+    }
+
+    private CommandExecutionEntry ExecuteInfluence(GameState gameState, InfluenceCommand command, int turnNumber)
+    {
+        var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
+        if (!game.TryGetGang(command.GangId, out var gang) || gang is null)
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, "Gang not found.");
+        }
+
+        if (!game.TryGetSector(command.SectorId, out var sector) || sector is null)
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, "Sector not found.");
+        }
+
+        // Validate presence using sector occupancy rather than relying on gang.SectorId equality.
+        if (!sector.GangIds.Contains(gang.Id))
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, "Gang is no longer stationed in the sector.");
+        }
+
+        if (sector.ControllingPlayerId != command.PlayerId)
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, "Sector not controlled by the player.");
+        }
+
+        if (sector.IsInfluenced)
+        {
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Skipped, "Site already fully influenced.");
+        }
+
+        var influencePower = gang.TotalStats.Influence;
+        var siteSupport = Math.Max(0, sector.Site?.Support ?? 0);
+        var siteSecurity = Math.Max(0, sector.Site?.Security ?? 0);
+        var penalty = siteSupport + siteSecurity;
+        var netScore = influencePower - penalty;
+        var success = netScore >= 1;
+
+        var modifiers = new List<ActionModifier>
+        {
+            new("Influence", influencePower)
+        };
+        if (siteSupport > 0)
+        {
+            modifiers.Add(new ActionModifier("Support Penalty", -siteSupport));
+        }
+        if (siteSecurity > 0)
+        {
+            modifiers.Add(new ActionModifier("Security Penalty", -siteSecurity));
+        }
+        modifiers.Add(new ActionModifier("Net Score", netScore));
+
+        var difficulty = new ActionDifficulty(50);
+        var targetLabel = sector.Site is null
+            ? sector.Id
+            : string.Format(CultureInfo.CurrentCulture, "{0} ({1})", sector.Id, sector.Site.Name);
+
+        var actionContext = new ActionContext(
+            turnNumber,
+            gang.Id,
+            gang.Data.Name,
+            "Influence Attempt",
+            TurnPhase.Execution,
+            CommandPhase.Instant,
+            difficulty,
+            modifiers,
+            targetId: sector.Id,
+            targetName: targetLabel);
+
+        var roll = _rng.RollPercent();
+        var forcedOutcome = success ? ActionCheckOutcome.AutomaticSuccess : ActionCheckOutcome.AutomaticFailure;
+        var actionResult = ActionResult.FromRoll(actionContext, roll, forcedOutcome);
+        _eventWriter.WriteAction(actionResult);
+
+        if (success)
+        {
+            // Each successful Influence reduces resistance by 1 (Phase 2 scope). Clamp at 0.
+            sector.ReduceInfluenceResistance(1);
+            var message = string.Format(CultureInfo.CurrentCulture, "{0} influenced {1}. Remaining resistance: {2}.", gang.Data.Name, sector.Id, sector.InfluenceResistance);
+            _eventWriter.Write(turnNumber, TurnPhase.Execution, TurnEventType.Information, message, CommandPhase.Instant);
+            return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Completed, message);
+        }
+
+        var failureMessage = string.Format(CultureInfo.CurrentCulture, "{0} failed to influence {1}.", gang.Data.Name, sector.Id);
+        return new CommandExecutionEntry(command.CommandId, command.GangId, command.Phase, command.Kind, CommandExecutionStatus.Failed, failureMessage);
     }
 
     private CommandExecutionEntry ExecuteMove(GameState gameState, MoveCommand command, int turnNumber)

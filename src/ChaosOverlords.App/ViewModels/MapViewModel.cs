@@ -58,7 +58,7 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
         _turnSubscription.Dispose();
     }
 
-    private void RefreshFromGameState()
+        private void RefreshFromGameState()
     {
         var state = _gameSession.GameState;
         var game = state?.Game;
@@ -72,13 +72,14 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var playerNames = game.Players.Values.ToDictionary(static p => p.Id, static p => p.Name);
+    var playerNames = game.Players.Values.ToDictionary(static p => p.Id, static p => p.Name);
+    var playerColors = game.Players.Values.ToDictionary(static p => p.Id, p => p.Color.ToString());
 
         foreach (var (sectorId, tile) in _tilesById)
         {
             if (game.Sectors.TryGetValue(sectorId, out var sector))
             {
-                tile.Apply(sector, playerNames);
+                tile.Apply(sector, playerNames, playerColors);
             }
             else
             {
@@ -158,13 +159,14 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
     private readonly int _defaultIncome;
     private readonly int _defaultTolerance;
 
-        private string? _controllerName;
+    private string? _controllerName;
         private int _gangCount;
         private int _chaosProjection;
     private SiteData? _currentSiteData;
         private string? _activeSiteName;
         private int? _currentIncome;
         private int? _currentTolerance;
+    private bool _isControlled;
 
         internal SectorTileViewModel(string sectorId, int row, int column, SiteData? defaultSite)
         {
@@ -193,6 +195,19 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
 
         public string OwnerDisplay => _controllerName ?? "Neutral";
 
+        private string? _ownerColor;
+        public string? OwnerColor
+        {
+            get => _ownerColor;
+            private set => SetProperty(ref _ownerColor, value);
+        }
+
+        public bool IsControlled
+        {
+            get => _isControlled;
+            private set => SetProperty(ref _isControlled, value);
+        }
+
         public string SiteDisplay => _activeSiteName is { Length: > 0 }
             ? string.Format(CultureInfo.CurrentCulture, "Site: {0}", _activeSiteName)
             : "Site: Unassigned";
@@ -211,7 +226,7 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
             ? "No Gangs"
             : string.Format(CultureInfo.CurrentCulture, _gangCount == 1 ? "{0} Gang" : "{0} Gangs", _gangCount);
 
-        internal void Apply(Sector sector, IReadOnlyDictionary<Guid, string> playerNames)
+        internal void Apply(Sector sector, IReadOnlyDictionary<Guid, string> playerNames, IReadOnlyDictionary<Guid, string> playerColors)
         {
             _controllerName = sector.ControllingPlayerId.HasValue && playerNames.TryGetValue(sector.ControllingPlayerId.Value, out var name)
                 ? name
@@ -222,14 +237,22 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
             _activeSiteName = sector.Site.Name;
             _currentIncome = sector.Site.Cash;
             _currentTolerance = sector.Site.Tolerance;
+            IsControlled = sector.ControllingPlayerId.HasValue;
+
+            // Owner color comes from player color enum name; UI can map it to a brush.
+            OwnerColor = sector.ControllingPlayerId.HasValue && playerColors.TryGetValue(sector.ControllingPlayerId.Value, out var color)
+                ? color
+                : null;
 
             OnPropertyChanged(nameof(OwnerDisplay));
+            OnPropertyChanged(nameof(IsControlled));
             OnPropertyChanged(nameof(GangDisplay));
             OnPropertyChanged(nameof(ChaosDisplay));
             OnPropertyChanged(nameof(SiteDisplay));
             OnPropertyChanged(nameof(IncomeDisplay));
             OnPropertyChanged(nameof(ToleranceDisplay));
             OnPropertyChanged(nameof(SiteTooltip));
+            OnPropertyChanged(nameof(OwnerColor));
         }
 
         internal void ClearDynamicState()
@@ -241,14 +264,18 @@ public sealed class MapViewModel : ViewModelBase, IDisposable
             _activeSiteName = _defaultSiteName;
             _currentIncome = _defaultIncome;
             _currentTolerance = _defaultTolerance;
+            IsControlled = false;
+            OwnerColor = null;
 
             OnPropertyChanged(nameof(OwnerDisplay));
+            OnPropertyChanged(nameof(IsControlled));
             OnPropertyChanged(nameof(GangDisplay));
             OnPropertyChanged(nameof(ChaosDisplay));
             OnPropertyChanged(nameof(SiteDisplay));
             OnPropertyChanged(nameof(IncomeDisplay));
             OnPropertyChanged(nameof(ToleranceDisplay));
             OnPropertyChanged(nameof(SiteTooltip));
+            OnPropertyChanged(nameof(OwnerColor));
         }
 
         private static string FormatAmount(int amount)

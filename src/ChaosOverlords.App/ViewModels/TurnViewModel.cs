@@ -30,6 +30,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private readonly ICommandQueueService _commandQueueService;
     private readonly IFinancePreviewService _financePreviewService;
     private readonly IMessageHub _messageHub;
+    private readonly ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider _logPathProvider;
     private bool _isDisposed;
     private bool _recruitmentInitialised;
 
@@ -41,7 +42,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         ITurnEventWriter eventWriter,
         ICommandQueueService commandQueueService,
         IFinancePreviewService financePreviewService,
-        IMessageHub messageHub)
+        IMessageHub messageHub,
+        ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider logPathProvider)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
@@ -51,6 +53,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         _commandQueueService = commandQueueService ?? throw new ArgumentNullException(nameof(commandQueueService));
         _financePreviewService = financePreviewService ?? throw new ArgumentNullException(nameof(financePreviewService));
         _messageHub = messageHub ?? throw new ArgumentNullException(nameof(messageHub));
+    _logPathProvider = logPathProvider ?? throw new ArgumentNullException(nameof(logPathProvider));
 
         TurnEvents = new ObservableCollection<TurnEventViewModel>();
         RecruitmentOptions = new ObservableCollection<RecruitmentOptionViewModel>();
@@ -72,7 +75,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         FinancePreview = new FinancePreviewSectionViewModel(this);
         CommandQueue = new CommandQueueSectionViewModel(this);
         Recruitment = new RecruitmentSectionViewModel(this);
-    TurnEventsPanel = new TurnEventsSectionViewModel(TurnEvents);
+        TurnEventsPanel = new TurnEventsSectionViewModel(TurnEvents, OpenLogsFolder);
 
         SyncFromController();
         UpdateRecruitmentPanelState();
@@ -175,6 +178,17 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     [NotifyPropertyChangedFor(nameof(CityNetChangeDisplay))]
     private int _cityNetChange;
 
+    // Preview strings for Control and Influence outcomes.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasControlPreview))]
+    private string? _controlPreview;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInfluencePreview))]
+    private string? _influencePreview;
+
+    public bool HasControlPreview => !string.IsNullOrWhiteSpace(ControlPreview);
+    public bool HasInfluencePreview => !string.IsNullOrWhiteSpace(InfluencePreview);
     /// <summary>
     /// Heading describing which player's finances are shown.
     /// </summary>
@@ -235,6 +249,35 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
 
     [RelayCommand(CanExecute = nameof(CanEndTurn))]
     private void EndTurn() => _turnController.EndTurn();
+
+    private void OpenLogsFolder()
+    {
+        try
+        {
+            var dir = _logPathProvider.GetLogDirectory();
+            if (OperatingSystem.IsWindows())
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = dir,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                System.Diagnostics.Process.Start("open", dir);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                System.Diagnostics.Process.Start("xdg-open", dir);
+            }
+        }
+        catch
+        {
+            // Swallow any failures to avoid crashing the UI; the button is a convenience.
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanHire))]
     private void Hire(RecruitmentOptionViewModel option)
@@ -418,6 +461,23 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         ApplyCommandQueueResult(result);
     }
 
+    [RelayCommand(CanExecute = nameof(CanQueueSimpleCommand))]
+    private void QueueInfluence()
+    {
+        EnsureSessionInitialised();
+
+        if (SelectedGang is null)
+        {
+            return;
+        }
+
+        var state = _gameSession.GameState;
+        var playerId = state.CurrentPlayer.Id;
+        var targetSectorId = SelectedSector?.SectorId ?? SelectedGang.SectorId;
+        var result = _commandQueueService.QueueInfluence(state, playerId, SelectedGang.GangId, targetSectorId, _turnController.TurnNumber);
+        ApplyCommandQueueResult(result);
+    }
+
     [RelayCommand(CanExecute = nameof(CanRemoveQueuedCommand))]
     private void RemoveQueuedCommand(QueuedCommandViewModel command)
     {
@@ -461,6 +521,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         SyncFromController();
         UpdateRecruitmentPanelState();
         UpdateCommandPanelState();
+    UpdatePreviews();
     }
 
     private void OnEventLogChanged(object? sender, EventArgs e) => UpdateTurnEvents();
@@ -553,6 +614,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
             return;
         }
 
+        // Keep controlled sectors in sync for selecting Influence targets.
+        LoadControlledSectors(state.CurrentPlayer.Id);
         LoadAvailableGangs(state);
         var snapshot = _commandQueueService.GetQueue(state, state.CurrentPlayer.Id);
         ApplyQueueSnapshot(snapshot);
@@ -836,6 +899,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     {
         QueueMoveCommand.NotifyCanExecuteChanged();
         QueueControlCommand.NotifyCanExecuteChanged();
+        QueueInfluenceCommand.NotifyCanExecuteChanged();
         QueueChaosCommand.NotifyCanExecuteChanged();
         RemoveQueuedCommandCommand.NotifyCanExecuteChanged();
     }
@@ -907,6 +971,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
 
         UpdateMovementTargets(_gameSession.GameState);
         RefreshCommandCommands();
+        UpdatePreviews();
     }
 
     partial void OnSelectedMovementTargetChanged(SectorOptionViewModel? oldValue, SectorOptionViewModel? newValue)
@@ -940,6 +1005,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         if (oldValue != newValue)
         {
             RefreshRecruitmentCommands();
+            UpdatePreviews();
         }
     }
 
@@ -971,6 +1037,58 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         public bool IsExpense { get; }
 
         public bool IsIncome { get; }
+    }
+
+    private void UpdatePreviews()
+    {
+        if (!_gameSession.IsInitialized || SelectedGang is null)
+        {
+            ControlPreview = null;
+            InfluencePreview = null;
+            return;
+        }
+
+        var state = _gameSession.GameState;
+        if (!state.Game.TryGetGang(SelectedGang.GangId, out var gang) || gang is null)
+        {
+            ControlPreview = null;
+            InfluencePreview = null;
+            return;
+        }
+
+        // Control preview uses the gang's current sector
+        if (state.Game.TryGetSector(SelectedGang.SectorId, out var controlSector) && controlSector is not null)
+        {
+            var controlPower = gang.TotalStats.Control + gang.TotalStats.Strength;
+            var incomePenalty = Math.Max(0, controlSector.Site?.Cash ?? 0);
+            var supportPenalty = Math.Max(0, controlSector.Site?.Support ?? 0);
+            var net = controlPower - incomePenalty - supportPenalty;
+            ControlPreview = string.Format(CultureInfo.CurrentCulture,
+                "Control Preview: Control {0} + Strength {1} - Cash {2} - Support {3} = Net {4} → {5}",
+                gang.TotalStats.Control, gang.TotalStats.Strength, incomePenalty, supportPenalty, net,
+                net >= 1 ? "Automatic Success" : "Automatic Failure");
+        }
+        else
+        {
+            ControlPreview = null;
+        }
+
+        // Influence preview uses SelectedSector if set, otherwise the gang's current sector
+        var influenceSectorId = SelectedSector?.SectorId ?? SelectedGang.SectorId;
+        if (state.Game.TryGetSector(influenceSectorId, out var influenceSector) && influenceSector is not null)
+        {
+            var influencePower = gang.TotalStats.Influence;
+            var support = Math.Max(0, influenceSector.Site?.Support ?? 0);
+            var security = Math.Max(0, influenceSector.Site?.Security ?? 0);
+            var net = influencePower - (support + security);
+            InfluencePreview = string.Format(CultureInfo.CurrentCulture,
+                "Influence Preview: Influence {0} - (Support {1} + Security {2}) = Net {3} → {4}",
+                influencePower, support, security, net, net >= 1 ? "Automatic Success" : "Automatic Failure");
+        }
+        else
+        {
+            InfluencePreview = null;
+        }
     }
 
     public sealed class FinanceSectorViewModel
@@ -1161,6 +1279,10 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
                     CultureInfo.CurrentCulture,
                     "Move from {0} to {1}",
                     snapshot.SourceSectorId,
+                    snapshot.TargetSectorId),
+                PlayerCommandKind.Influence => string.Format(
+                    CultureInfo.CurrentCulture,
+                    "Influence {0}",
                     snapshot.TargetSectorId),
                 PlayerCommandKind.Control => string.Format(
                     CultureInfo.CurrentCulture,

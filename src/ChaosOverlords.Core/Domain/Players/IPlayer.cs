@@ -13,6 +13,11 @@ public interface IPlayer
 
     int Cash { get; }
 
+    /// <summary>
+    /// Assigned player color from a small distinct palette.
+    /// </summary>
+    PlayerColor Color { get; }
+
     IReadOnlyCollection<Guid> GangIds { get; }
 
     void Credit(int amount);

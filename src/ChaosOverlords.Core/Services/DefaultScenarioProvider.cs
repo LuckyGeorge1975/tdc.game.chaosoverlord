@@ -22,7 +22,8 @@ public sealed class DefaultScenarioProvider : IDefaultScenarioProvider
                 StartingCash = 250,
                 HeadquartersSectorId = "D4",
                 HeadquartersSiteName = "Arena",
-                StartingGangName = "Abominators"
+                // Use a stronger starter so Control at HQ isn't auto-fail in the demo
+                StartingGangName = "Angels Of Arcadia"
             },
             new()
             {
@@ -31,7 +32,7 @@ public sealed class DefaultScenarioProvider : IDefaultScenarioProvider
                 StartingCash = 150,
                 HeadquartersSectorId = "E5",
                 HeadquartersSiteName = "Arboretum",
-                StartingGangName = "Angels Of Arcadia"
+                StartingGangName = "Abominators"
             }
         },
         MapSectorIds = new List<string>

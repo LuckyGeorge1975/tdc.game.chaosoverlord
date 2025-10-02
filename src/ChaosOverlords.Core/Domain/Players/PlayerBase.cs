@@ -38,6 +38,8 @@ public abstract class PlayerBase : IPlayer
 
     public int Cash { get; private set; }
 
+    public PlayerColor Color { get; internal set; } = PlayerColor.None;
+
     public IReadOnlyCollection<Guid> GangIds => new ReadOnlyCollection<Guid>(_gangIds);
 
     public void Credit(int amount)

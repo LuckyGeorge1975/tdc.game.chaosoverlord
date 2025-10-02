@@ -10,6 +10,8 @@ using ChaosOverlords.Core.Services;
 using ChaosOverlords.Core.Services.Messaging;
 using ChaosOverlords.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace ChaosOverlords.App;
 
@@ -90,6 +92,15 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
+        // Build configuration: appsettings.json + environment variables (keep it simple for now)
+        var configBuilder = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables();
+
+        var configuration = configBuilder.Build();
+        services.AddSingleton<IConfiguration>(configuration);
+
         services.AddSingleton<IDataService, EmbeddedJsonDataService>();
         services.AddSingleton<IRngService, DeterministicRngService>();
         services.AddSingleton<IScenarioService, ScenarioService>();
@@ -102,8 +113,12 @@ public partial class App : Application
     services.AddSingleton<IFinancePreviewService, FinancePreviewService>();
     services.AddSingleton<IMessageHub, MessageHub>();
 
+    // Bind domain logging options and expose the bound POCO for constructor injection (keeps Core free of Options deps)
+    services.Configure<ChaosOverlords.Core.Configuration.LoggingOptions>(configuration.GetSection("Logging:TurnEvents"));
+    services.AddSingleton(sp => sp.GetRequiredService<IOptions<ChaosOverlords.Core.Configuration.LoggingOptions>>().Value);
         services.AddSingleton<ITurnEventLog, TurnEventLog>();
-        services.AddSingleton<ITurnEventWriter, TurnEventWriter>();
+        services.AddSingleton<ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider, ChaosOverlords.Core.Domain.Game.Events.LogPathProvider>();
+        services.AddSingleton<ITurnEventWriter, ChaosOverlords.Core.Domain.Game.Events.FileTurnEventWriter>();
         services.AddSingleton<TurnEventRecorder>();
         services.AddSingleton<TurnPhaseProcessor>();
         services.AddSingleton<ITurnController, TurnController>();

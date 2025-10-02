@@ -157,7 +157,13 @@ public class TurnViewModelTests
         IFinancePreviewService financePreviewService)
     {
         var messageHub = new MessageHub();
-        return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService, messageHub);
+        var logPathProvider = new TestLogPathProvider();
+        return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService, messageHub, logPathProvider);
+    }
+
+    private sealed class TestLogPathProvider : ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider
+    {
+        public string GetLogDirectory() => System.IO.Path.Combine(System.IO.Path.GetTempPath(), "co_test_logs");
     }
 
     private sealed class StubGameSession : IGameSession
@@ -260,6 +266,11 @@ public class TurnViewModelTests
         public CommandQueueResult QueueControl(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
         {
             return new CommandQueueResult(CommandQueueRequestStatus.Success, "Control", GetQueue(gameState, playerId));
+        }
+
+        public CommandQueueResult QueueInfluence(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
+        {
+            return new CommandQueueResult(CommandQueueRequestStatus.Success, "Influence", GetQueue(gameState, playerId));
         }
 
         public CommandQueueResult QueueMove(GameState gameState, Guid playerId, Guid gangId, string targetSectorId, int turnNumber)

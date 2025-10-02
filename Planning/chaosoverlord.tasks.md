@@ -180,7 +180,7 @@
 
 ## Task 16 – Movement & Map Interaction Upgrade
 
-**Status:** 🔄 In Progress – Bewegung verfeinern gemäß Original-Regeln.
+**Status:** ✅ Done – Bewegung gemäß Manual umgesetzt (8‑Nachbarschaft, Kapazitätsgrenze), UI‑Highlighting und deterministische Logs vorhanden (2025-10-02).
 
 - Move-Command bleibt 1 Schritt in einen angrenzenden Sektor (Manual: “Move... Moves gang to an adjacent sector. Shortcut: drag in 9-sector display”).
   Adjazenz umfasst orthogonal UND diagonal (8-neighborhood, konsistent mit 9-Sektor-Display).
@@ -196,7 +196,7 @@ Hinweise:
 
 ## Task 17 – Influence Actions (Control & Support Shifts)
 
-**Status:** 🟡 Planned – Einflussaktionen als deterministische Checks.
+**Status:** ✅ Done – Influence end‑to‑end inkl. Queue/Resolver, RNG‑Integration, UI‑Wiring, Previews und Tests (2025-10-02).
 
 - Implementiere Influence-Command (z. B. Propaganda/Bribe) basierend auf Gang-Werten, Sector-Tolerance und Site-Support.
 - Verwende ActionFramework/Dice Utilities; Erfolg modifiziert Sector-Kontrolle oder Support besser/weniger tolerant.
@@ -218,8 +218,14 @@ Hinweise:
 
 - CommandTimeline und TurnManagement-Panel erhalten neue Slots/Badges für Influence/Research/Equip-Aktionen.
 - Map/Recruitment/Finance-Views zeigen Ergebnisse (z. B. neue Boni, laufende Projekte) mit Tooltips.
-- TurnEventLog fasst Kernaktionen pro Phase zusammen; Export/Replay bleibt deterministisch.
+- TurnEventLog fasst Kernaktionen pro Phase zusammen; Export/Replay bleibt deterministisch. Datei‑Logging mit Retention ist aktiv; optional: Rotation nach Größe/Zeit.
 - Smoke-Test-Szenario, das einen kompletten Kernaktions-Zyklus durchläuft.
+
+### Nächste Schritte (Backlog)
+- `appsettings.{Environment}.json`‑Overlays und README‑Dokumentation ergänzen.
+- Auto‑Scroll pausieren, wenn der Nutzer nach oben scrollt; Wiederaufnahme, wenn an das Ende gesprungen wird.
+- Optional: Log‑Rotation nach Größe/Zeit; robustere IO‑Fehlerbehandlung beim Trimmen.
+- Previews weiter formatieren (Icons/Farben), Odds‑Tooltips vorbereiten.
 
 ---
 

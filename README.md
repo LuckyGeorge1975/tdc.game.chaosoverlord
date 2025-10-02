@@ -3,11 +3,14 @@
 ## Überblick
 Remake des 1996 erschienenen Strategiespiels *Chaos Overlords* auf Basis von **.NET 9** und **Avalonia**. Ziel ist eine moderne, testbare Reimplementation mit klarer Trennung von Spiel-Logik (`ChaosOverlords.Core`), UI (`ChaosOverlords.App`) und Datenhaltung (`ChaosOverlords.Data`). Die Rundenlogik folgt einem deterministischen Happy Path, orchestriert über klar abgegrenzte Services (RNG, Economy, Turn Processing) und ein MVVM-getriebenes UI.
 
-## Aktueller Funktionsumfang (Phase 2 abgeschlossen, Phase 3 – Task 15 im Gange)
-- Phase 1 & 2 vollständig abgeschlossen: Daten-Layer, Domain-Modelle, Szenario-Bootstrap, modulare Turn-Dashboard-Abschnitte inkl. Finance Preview & Timeline.
-- Seeded `IRngService` mit Turn-Event-Log (Task 8) sowie Action/Dice-Utilities (Task 15) für deterministische Checks und nachvollziehbare Würfelausgaben.
-- `CommandResolutionService` nutzt das neue ActionFramework für Control-Versuche und schreibt strukturierte Action-Events ins Turn-Log.
-- `EconomyService` & `FinancePreviewService` liefern deterministische Upkeep-/Preview-Daten; Recruitment-Service verwaltet den Hire-Pool inkl. Tests.
+## Aktueller Funktionsumfang (Phase 2 abgeschlossen, Phase 3 in Arbeit)
+- Phase 1 & 2: vollständig abgeschlossen (Daten-Layer, Domain-Modelle, Szenario-Bootstrap, modulare Turn-Dashboard-Abschnitte inkl. Finance Preview & Timeline).
+- Phase 3: Action/Dice-Utilities (Task 15) sowie Kernaktionen Movement (Task 16) und Influence (Task 17) sind umgesetzt und getestet.
+	- Movement: 8‑Nachbarschaft (orthogonal+diagonal), Kapazitätsgrenze 6 eigene Gangs pro Sektor, Ausführung in Execution‑Phase, deterministische Logs.
+	- Influence: End‑to‑End inkl. Queue/Resolver, deterministische Checks via `IRngService`, ausführliche Action‑Events; permissive Queue‑Validierung, autoritative Ausführung.
+- Logging & UI‑Polish: Datei‑basiertes Turn‑Event‑Logging mit `IOptions`‑Konfiguration, Log‑Retention, „Open Logs Folder“‑Button, Auto‑Scroll‑Toggle im Events‑Panel.
+- Preview & Map: Control/Influence‑Preview im UI; kontrollierte Sektoren werden auf der Karte farblich markiert.
+- `EconomyService` & `FinancePreviewService`: deterministische Upkeep-/Preview‑Daten; Recruitment‑Service verwaltet den Hire‑Pool inkl. Tests.
 
 ## Technologie-Stack
 - .NET 9 (C#)
@@ -50,6 +53,20 @@ Für den UI-Start (Placeholder-Avalonia-Anwendung):
 dotnet run --project src/ChaosOverlords.App/ChaosOverlords.App.csproj
 ```
 
+## Konfiguration & Logging
+
+- App‑Konfiguration: `appsettings.json` wird beim App‑Start geladen; `LoggingOptions` wird via `IOptions` gebunden (mit optionalen Umgebungsüberlagerungen).
+- Turn‑Event‑Logging (Datei + In‑Memory):
+	- Properties: `Enabled` (bool), `LogDirectory` (string, absolut oder relativ), `FileNamePrefix` (string, Default `turn`), `MaxRetainedFiles` (int ≥ 0).
+	- Pfadauflösung: Leerer/relativer Pfad wird über einen `ILogPathProvider` in einen absoluten Pfad aufgelöst; existiert der Ordner nicht, wird er erstellt.
+	- Retention: Es werden nur die jüngsten `MaxRetainedFiles` Dateien mit passendem Prefix behalten (ältere werden beim Start bestmöglich entfernt).
+	- Sharing: Logdateien werden so geöffnet, dass paralleles Lesen möglich ist (Read/Write‑Sharing); das Events‑Panel spiegelt Einträge in Echtzeit.
+- UI‑Komfort:
+	- „Open Logs Folder“‑Button im Turn‑Events‑Panel öffnet den Log‑Ordner plattformgerecht.
+	- Auto‑Scroll‑Toggle hält die Liste bei neuen Einträgen am Ende; bei Bedarf kann Auto‑Scroll deaktiviert werden.
+
+Tests: Es existiert ein file‑backed Logging‑Test, der Header‑Zeile und Event‑Append verifiziert (`FileTurnEventWriterTests`).
+
 ## Branch- & Workflow-Strategie
 - `main`: Release-Branch, erhält Merges nach Abschluss einer Phase (Definition of Done in `Planning/chaosoverlord.phases.dod.md`).
 - Phasen-Branches: `P<phase>_<beschreibung>` (z. B. `P3_CoreActions`) dienen als Integrationsbasis für alle Tasks einer Phase.
@@ -61,6 +78,7 @@ dotnet run --project src/ChaosOverlords.App/ChaosOverlords.App.csproj
 - Aufgaben & Phasen: `Planning/chaosoverlord.tasks.md`, `Planning/chaosoverlord.phases.md`
 - Definition of Done: `Planning/chaosoverlord.task.dod.md`, `Planning/chaosoverlord.phases.dod.md`
 - Fortschrittstracking: `Planning/chaosoverlord.progress.md`
+- Phase‑Status & DoD: `Planning/chaosoverlord.phases.md`, `Planning/chaosoverlord.phases.dod.md`
 - Entwicklungsentscheidungen & Annahmen: `Planning/chaosoverlord.notes.md`
 - Lore & Referenzen: `Story/`
 

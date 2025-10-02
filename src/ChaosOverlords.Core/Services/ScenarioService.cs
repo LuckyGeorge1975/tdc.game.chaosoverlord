@@ -51,9 +51,17 @@ public sealed class ScenarioService : IScenarioService
         var sectors = new Dictionary<string, Sector>(StringComparer.OrdinalIgnoreCase);
         var gangs = new List<Gang>();
 
+        var palette = new[] { PlayerColor.Red, PlayerColor.Blue, PlayerColor.Green, PlayerColor.Yellow, PlayerColor.Purple, PlayerColor.Orange, PlayerColor.Cyan, PlayerColor.Magenta };
+        var colorIndex = 0;
+
         foreach (var slot in config.Players)
         {
             var player = CreatePlayer(slot);
+            if (player is PlayerBase basePlayer)
+            {
+                basePlayer.Color = palette[colorIndex % palette.Length];
+            }
+            colorIndex++;
             var playerId = player.Id;
             players.Add(player);
 

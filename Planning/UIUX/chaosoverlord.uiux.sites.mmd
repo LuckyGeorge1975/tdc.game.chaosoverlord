@@ -1,0 +1,14 @@
+flowchart TD
+    CityView[City View – Map mit Site Icons]
+    SectorView[Sector View – Sites unten links]
+    Search[Search Sites Popup]
+    Influence[Site to Influence Popup]
+    SiteInfo[Site Info Fenster – Resistance, Bonus]
+    Event[Last Turn Event: Site Cooperation]
+
+    CityView --> |Klick auf Sektor| SectorView
+    SectorView --> |Rechtsklick Influence| Influence
+    SectorView --> |Search Command| Search
+    Influence --> SiteInfo
+    Search --> SiteInfo
+    SiteInfo --> Event

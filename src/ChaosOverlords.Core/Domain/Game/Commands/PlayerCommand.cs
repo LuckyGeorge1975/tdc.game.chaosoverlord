@@ -9,6 +9,7 @@ namespace ChaosOverlords.Core.Domain.Game.Commands;
 public enum PlayerCommandKind
 {
     Move,
+    Influence,
     Control,
     Chaos
 }
@@ -48,6 +49,21 @@ public sealed record MoveCommand(
     public override PlayerCommandKind Kind => PlayerCommandKind.Move;
 
     public override CommandPhase Phase => CommandPhase.Movement;
+}
+
+/// <summary>
+/// Command attempting to influence a site within a controlled sector during the instant sub-phase.
+/// </summary>
+public sealed record InfluenceCommand(
+    Guid CommandId,
+    Guid PlayerId,
+    Guid GangId,
+    int TurnNumber,
+    string SectorId) : PlayerCommand(CommandId, PlayerId, GangId, TurnNumber)
+{
+    public override PlayerCommandKind Kind => PlayerCommandKind.Influence;
+
+    public override CommandPhase Phase => CommandPhase.Instant;
 }
 
 /// <summary>

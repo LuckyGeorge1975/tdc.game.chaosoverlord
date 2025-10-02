@@ -1,0 +1,13 @@
+flowchart TD
+    Shop[Item Purchase Overlay]
+    Info[Item Info Panel]
+    Give[Give Item Overlay]
+    Research[Research Panel]
+    Sell[Sell Item Overlay]
+    Gang[Gang Information Stats]
+
+    Shop --> |Double-Click Item| Info
+    Shop --> |Buy| Gang
+    Give --> |Transfer| Gang
+    Research --> |Progress 0| Shop
+    Sell --> |50% Cash| Gang

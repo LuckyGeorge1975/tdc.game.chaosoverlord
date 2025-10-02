@@ -15,6 +15,8 @@ public interface ICommandQueueService
 
     CommandQueueResult QueueControl(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber);
 
+    CommandQueueResult QueueInfluence(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber);
+
     CommandQueueResult QueueChaos(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber);
 
     CommandQueueResult Remove(GameState gameState, Guid playerId, Guid gangId, int turnNumber);

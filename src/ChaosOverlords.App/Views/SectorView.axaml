@@ -3,13 +3,28 @@
              xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
              x:Class="ChaosOverlords.App.Views.SectorView"
              x:DataType="vm:MapViewModel+SectorTileViewModel">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SectorDefaultBackground" Color="{DynamicResource ThemeBackgroundColor}"/>
+        <vm:BoolToBrushConverter x:Key="ControlledToBrush"
+                                  TrueBrush="#2039a94c"
+                                  FalseBrush="{StaticResource SectorDefaultBackground}"/>
+        <vm:PlayerColorToBrushConverter x:Key="PlayerColorToBrush" />
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="Border.root">
             <Setter Property="Padding" Value="8" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
-            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource PlayerColorToBrush}">
+                        <Binding Path="IsControlled"/>
+                        <Binding Path="OwnerColor"/>
+                        <Binding Source="{StaticResource SectorDefaultBackground}"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style Selector="TextBlock.sector-id">

@@ -1,6 +1,10 @@
 # Manual
 Manual/
 
+#Logs
+log/
+logs/
+
 # Build artifacts
 bin/
 obj/
