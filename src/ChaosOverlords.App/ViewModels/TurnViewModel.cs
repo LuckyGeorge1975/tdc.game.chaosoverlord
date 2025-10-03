@@ -857,10 +857,32 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         }
 
         var ownerId = gang.OwnerId;
+        // Build a lookup dictionary for gang counts per sector/owner
+        var sectorOwnerGangCounts = new Dictionary<string, Dictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var g in state.Game.Gangs.Values)
+        {
+            if (!sectorOwnerGangCounts.TryGetValue(g.SectorId, out var ownerDict))
+            {
+                ownerDict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                sectorOwnerGangCounts[g.SectorId] = ownerDict;
+            }
+            if (!ownerDict.ContainsKey(g.OwnerId))
+            {
+                ownerDict[g.OwnerId] = 0;
+            }
+            ownerDict[g.OwnerId]++;
+        }
         var targets = state.Game.Sectors.Values
             .Where(s => SectorGrid.AreAdjacent(gang.SectorId, s.Id))
-            .Where(s => state.Game.Gangs.Values.Count(g =>
-                g.OwnerId == ownerId && string.Equals(g.SectorId, s.Id, StringComparison.OrdinalIgnoreCase)) < 6)
+            .Where(s =>
+            {
+                if (sectorOwnerGangCounts.TryGetValue(s.Id, out var ownerDict) &&
+                    ownerDict.TryGetValue(ownerId, out var count))
+                {
+                    return count < 6;
+                }
+                return true; // No gangs of this owner in this sector
+            })
             .OrderBy(s => s.Id, StringComparer.Ordinal)
             .Select(s => new SectorOptionViewModel(s.Id))
             .ToList();
