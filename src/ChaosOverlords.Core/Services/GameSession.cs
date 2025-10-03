@@ -6,21 +6,16 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 ///     Tracks the lifetime of the currently active campaign session.
 /// </summary>
-public sealed class GameSession : IGameSession
+public sealed class GameSession(
+    IScenarioService scenarioService,
+    IDefaultScenarioProvider scenarioProvider)
+    : IGameSession
 {
-    private readonly IDefaultScenarioProvider _scenarioProvider;
-    private readonly IScenarioService _scenarioService;
+    private readonly IDefaultScenarioProvider _scenarioProvider = scenarioProvider ?? throw new ArgumentNullException(nameof(scenarioProvider));
+    private readonly IScenarioService _scenarioService = scenarioService ?? throw new ArgumentNullException(nameof(scenarioService));
     private GameState? _gameState;
     private GameStateManager? _manager;
     private ScenarioConfig? _scenario;
-
-    public GameSession(
-        IScenarioService scenarioService,
-        IDefaultScenarioProvider scenarioProvider)
-    {
-        _scenarioService = scenarioService ?? throw new ArgumentNullException(nameof(scenarioService));
-        _scenarioProvider = scenarioProvider ?? throw new ArgumentNullException(nameof(scenarioProvider));
-    }
 
     public bool IsInitialized { get; private set; }
 

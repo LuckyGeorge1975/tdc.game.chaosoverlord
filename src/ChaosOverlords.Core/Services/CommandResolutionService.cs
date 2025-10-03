@@ -9,7 +9,13 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 ///     Executes queued player commands in deterministic phase order.
 /// </summary>
-public sealed class CommandResolutionService : ICommandResolutionService
+public sealed class CommandResolutionService(
+    ITurnEventWriter eventWriter,
+    IRngService rng,
+    IResearchService researchService,
+    IDataService dataService,
+    IEquipmentService equipmentService)
+    : ICommandResolutionService
 {
     private static readonly CommandPhase[] PhaseOrder =
     {
@@ -21,26 +27,16 @@ public sealed class CommandResolutionService : ICommandResolutionService
         CommandPhase.Control
     };
 
-    private readonly IDataService _dataService;
-    private readonly IEquipmentService _equipmentService;
+    private readonly IDataService _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+    private readonly IEquipmentService _equipmentService = equipmentService ?? throw new ArgumentNullException(nameof(equipmentService));
 
-    private readonly ITurnEventWriter _eventWriter;
-    private readonly IResearchService _researchService;
-    private readonly IRngService _rng;
+    private readonly ITurnEventWriter _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
+    private readonly IResearchService _researchService = researchService ?? throw new ArgumentNullException(nameof(researchService));
+    private readonly IRngService _rng = rng ?? throw new ArgumentNullException(nameof(rng));
 
     public CommandResolutionService(ITurnEventWriter eventWriter, IRngService rng, IResearchService researchService)
         : this(eventWriter, rng, researchService, new EmptyDataService(), new EquipmentService())
     {
-    }
-
-    public CommandResolutionService(ITurnEventWriter eventWriter, IRngService rng, IResearchService researchService,
-        IDataService dataService, IEquipmentService equipmentService)
-    {
-        _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
-        _rng = rng ?? throw new ArgumentNullException(nameof(rng));
-        _researchService = researchService ?? throw new ArgumentNullException(nameof(researchService));
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
-        _equipmentService = equipmentService ?? throw new ArgumentNullException(nameof(equipmentService));
     }
 
     public CommandExecutionReport Execute(GameState gameState, Guid playerId, int turnNumber)

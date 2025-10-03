@@ -58,13 +58,9 @@ public class DiceRollResult
 /// <summary>
 ///     Represents a percentile (1d100) roll.
 /// </summary>
-public sealed class PercentileRollResult : DiceRollResult
+public sealed class PercentileRollResult(int roll)
+    : DiceRollResult(new ReadOnlyCollection<int>(new[] { ValidateRoll(roll) }), 0, "1d100")
 {
-    public PercentileRollResult(int roll)
-        : base(new ReadOnlyCollection<int>(new[] { ValidateRoll(roll) }), 0, "1d100")
-    {
-    }
-
     /// <summary>
     ///     Value rolled on the percentile die (1-100 inclusive).
     /// </summary>

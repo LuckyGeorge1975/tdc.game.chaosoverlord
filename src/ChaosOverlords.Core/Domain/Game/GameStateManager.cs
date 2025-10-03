@@ -5,14 +5,9 @@ namespace ChaosOverlords.Core.Domain.Game;
 /// <summary>
 ///     Coordinates turn execution across the players registered in a <see cref="GameState" />.
 /// </summary>
-public sealed class GameStateManager
+public sealed class GameStateManager(GameState gameState)
 {
-    public GameStateManager(GameState gameState)
-    {
-        GameState = gameState ?? throw new ArgumentNullException(nameof(gameState));
-    }
-
-    public GameState GameState { get; }
+    public GameState GameState { get; } = gameState ?? throw new ArgumentNullException(nameof(gameState));
 
     public IPlayer CurrentPlayer => GameState.CurrentPlayer;
 

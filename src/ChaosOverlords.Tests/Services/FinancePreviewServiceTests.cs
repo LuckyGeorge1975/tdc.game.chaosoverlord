@@ -20,16 +20,16 @@ public sealed class FinancePreviewServiceTests
         Assert.Equal(primaryPlayer.Id, projection.PlayerId);
         Assert.Equal(primaryPlayer.Name, projection.PlayerName);
 
-        Assert.Equal(8, projection.CityCategories.Count);
+        Assert.Equal(9, projection.CityCategories.Count);
 
         Assert.Contains(projection.CityCategories,
-            category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -5);
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -5 });
         Assert.Contains(projection.CityCategories,
-            category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 3);
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: 3 });
         Assert.Contains(projection.CityCategories,
-            category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
         Assert.Contains(projection.CityCategories,
-            category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 3);
+            category => category is { Type: FinanceCategoryType.ChaosEstimate, Amount: 3 });
 
         var netCategory = Assert.Single(projection.CityCategories,
             category => category.Type == FinanceCategoryType.CashAdjustment);
@@ -42,22 +42,22 @@ public sealed class FinancePreviewServiceTests
         Assert.Equal("A1 – Neon Hub", sectorA1.DisplayName);
         Assert.Equal(3, sectorA1.NetChange);
         Assert.Contains(sectorA1.Categories,
-            category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -3);
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -3 });
         Assert.Contains(sectorA1.Categories,
-            category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 4);
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: 4 });
         Assert.Contains(sectorA1.Categories,
-            category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
         Assert.Contains(sectorA1.Categories,
-            category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 2);
+            category => category is { Type: FinanceCategoryType.ChaosEstimate, Amount: 2 });
 
         var sectorB2 = projection.Sectors.Single(sector => sector.SectorId == "B2");
         Assert.Equal(-2, sectorB2.NetChange);
         Assert.Contains(sectorB2.Categories,
-            category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -2);
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -2 });
         Assert.Contains(sectorB2.Categories,
-            category => category.Type == FinanceCategoryType.SectorTax && category.Amount == -1);
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: -1 });
         Assert.Contains(sectorB2.Categories,
-            category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
     }
 
     [Fact]

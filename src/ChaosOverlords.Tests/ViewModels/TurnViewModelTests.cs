@@ -434,15 +434,8 @@ public class TurnViewModelTests
         }
     }
 
-    private sealed class RecordingEventWriter : ITurnEventWriter
+    private sealed class RecordingEventWriter(ITurnEventLog log) : ITurnEventWriter
     {
-        private readonly ITurnEventLog _log;
-
-        public RecordingEventWriter(ITurnEventLog log)
-        {
-            _log = log;
-        }
-
         public List<TurnEvent> Events { get; } = new();
 
         public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
@@ -450,7 +443,7 @@ public class TurnViewModelTests
         {
             var entry = new TurnEvent(turnNumber, phase, commandPhase, type, description, DateTimeOffset.UtcNow);
             Events.Add(entry);
-            _log.Append(entry);
+            log.Append(entry);
         }
 
         public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
@@ -462,7 +455,7 @@ public class TurnViewModelTests
             var entry = new TurnEvent(result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase,
                 TurnEventType.Action, result.ToString(), DateTimeOffset.UtcNow);
             Events.Add(entry);
-            _log.Append(entry);
+            log.Append(entry);
         }
     }
 }

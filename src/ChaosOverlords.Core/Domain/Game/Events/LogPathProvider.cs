@@ -2,14 +2,9 @@ using ChaosOverlords.Core.Configuration;
 
 namespace ChaosOverlords.Core.Domain.Game.Events;
 
-public sealed class LogPathProvider : ILogPathProvider
+public sealed class LogPathProvider(LoggingOptions options) : ILogPathProvider
 {
-    private readonly LoggingOptions _options;
-
-    public LogPathProvider(LoggingOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly LoggingOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
     public string GetLogDirectory()
     {

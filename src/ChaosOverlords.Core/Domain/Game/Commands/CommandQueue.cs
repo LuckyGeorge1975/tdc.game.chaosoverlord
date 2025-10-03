@@ -22,17 +22,12 @@ public sealed record CommandQueueMutationResult(
 /// <summary>
 ///     Maintains the set of commands queued by a single player for the current turn.
 /// </summary>
-public sealed class CommandQueue
+public sealed class CommandQueue(Guid playerId)
 {
     private readonly Dictionary<Guid, PlayerCommand> _commandsByGang = new();
     private readonly List<PlayerCommand> _orderedCommands = new();
 
-    public CommandQueue(Guid playerId)
-    {
-        PlayerId = playerId;
-    }
-
-    public Guid PlayerId { get; }
+    public Guid PlayerId { get; } = playerId;
 
     public IReadOnlyList<PlayerCommand> Commands => _orderedCommands.AsReadOnly();
 

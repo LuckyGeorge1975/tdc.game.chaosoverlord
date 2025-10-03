@@ -5,23 +5,16 @@ namespace ChaosOverlords.Core.Domain.Game;
 /// <summary>
 ///     Runtime representation of an item that is created from immutable reference data and can be equipped by a gang.
 /// </summary>
-public sealed class Item
+public sealed class Item(Guid id, ItemData data, bool isEquipped = false)
 {
-    public Item(Guid id, ItemData data, bool isEquipped = false)
-    {
-        Id = id;
-        Data = data ?? throw new ArgumentNullException(nameof(data));
-        IsEquipped = isEquipped;
-    }
-
-    public Guid Id { get; }
+    public Guid Id { get; } = id;
 
     /// <summary>
     ///     Immutable stats and metadata describing the item blueprint.
     /// </summary>
-    public ItemData Data { get; }
+    public ItemData Data { get; } = data ?? throw new ArgumentNullException(nameof(data));
 
-    public bool IsEquipped { get; private set; }
+    public bool IsEquipped { get; private set; } = isEquipped;
 
     public DateTimeOffset AcquiredAt { get; init; } = DateTimeOffset.UtcNow;
 

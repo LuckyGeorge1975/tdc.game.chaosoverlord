@@ -102,15 +102,8 @@ public sealed class ResearchServiceTests
         return (state, playerId);
     }
 
-    private sealed class StubDataService : IDataService
+    private sealed class StubDataService(IReadOnlyList<ItemData> items) : IDataService
     {
-        private readonly IReadOnlyList<ItemData> _items;
-
-        public StubDataService(IReadOnlyList<ItemData> items)
-        {
-            _items = items;
-        }
-
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<GangData>>(Array.Empty<GangData>());
@@ -123,7 +116,7 @@ public sealed class ResearchServiceTests
 
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_items);
+            return Task.FromResult(items);
         }
 
         public Task<IReadOnlyList<SiteData>> GetSitesAsync(CancellationToken cancellationToken = default)

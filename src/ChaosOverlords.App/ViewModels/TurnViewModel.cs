@@ -357,7 +357,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         ApplyRecruitmentSnapshot(result.Pool);
         LoadControlledSectors(playerId);
 
-        if (result.Status == RecruitmentActionStatus.Success && result.Option is not null)
+        if (result is { Status: RecruitmentActionStatus.Success, Option: not null })
         {
             RecruitmentStatusMessage = string.Format(
                 CultureInfo.CurrentCulture,
@@ -413,7 +413,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         ApplyRecruitmentSnapshot(result.Pool);
         LoadControlledSectors(playerId);
 
-        if (result.Status == RecruitmentActionStatus.Success && result.Option is not null)
+        if (result is { Status: RecruitmentActionStatus.Success, Option: not null })
         {
             RecruitmentStatusMessage = string.Format(
                 CultureInfo.CurrentCulture,
@@ -858,19 +858,20 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
 
         var ownerId = gang.OwnerId;
         // Build a lookup dictionary for gang counts per sector/owner
-        var sectorOwnerGangCounts = new Dictionary<string, Dictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
+        var sectorOwnerGangCounts = new Dictionary<string, Dictionary<Guid, int>>(StringComparer.OrdinalIgnoreCase);
         foreach (var g in state.Game.Gangs.Values)
         {
             if (!sectorOwnerGangCounts.TryGetValue(g.SectorId, out var ownerDict))
             {
-                ownerDict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                ownerDict = new Dictionary<Guid, int>();
                 sectorOwnerGangCounts[g.SectorId] = ownerDict;
             }
-            if (!ownerDict.ContainsKey(g.OwnerId))
+            if (!ownerDict.TryGetValue(g.OwnerId, out int value))
             {
-                ownerDict[g.OwnerId] = 0;
+                value = 0;
+                ownerDict[g.OwnerId] = value;
             }
-            ownerDict[g.OwnerId]++;
+            ownerDict[g.OwnerId] = ++value;
         }
         var targets = state.Game.Sectors.Values
             .Where(s => SectorGrid.AreAdjacent(gang.SectorId, s.Id))
@@ -1076,18 +1077,11 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public sealed class ResearchSuggestionViewModel
+    public sealed class ResearchSuggestionViewModel(string name, int cost)
     {
-        public ResearchSuggestionViewModel(string name, int cost)
-        {
-            Name = name;
-            Cost = cost;
-            Display = string.Format(CultureInfo.CurrentCulture, "{0} ({1})", name, cost);
-        }
-
-        public string Name { get; }
-        public int Cost { get; }
-        public string Display { get; }
+        public string Name { get; } = name;
+        public int Cost { get; } = cost;
+        public string Display { get; } = string.Format(CultureInfo.CurrentCulture, "{0} ({1})", name, cost);
     }
 
     public sealed class FinanceCategoryViewModel
@@ -1141,17 +1135,11 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         public IReadOnlyList<FinanceCategoryViewModel> Categories { get; }
     }
 
-    public sealed class TurnEventViewModel
+    public sealed class TurnEventViewModel(TurnEvent entry)
     {
-        public TurnEventViewModel(TurnEvent entry)
-        {
-            Entry = entry;
-            Description = CreateDescription(entry);
-        }
+        public TurnEvent Entry { get; } = entry;
 
-        public TurnEvent Entry { get; }
-
-        public string Description { get; }
+        public string Description { get; } = CreateDescription(entry);
 
         private static string CreateDescription(TurnEvent entry)
         {
@@ -1216,32 +1204,20 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public sealed class SectorOptionViewModel
+    public sealed class SectorOptionViewModel(string sectorId)
     {
-        public SectorOptionViewModel(string sectorId)
-        {
-            SectorId = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
-        }
-
-        public string SectorId { get; }
+        public string SectorId { get; } = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
 
         public string DisplayName => SectorId;
     }
 
-    public sealed class GangOptionViewModel
+    public sealed class GangOptionViewModel(Guid gangId, string name, string sectorId)
     {
-        public GangOptionViewModel(Guid gangId, string name, string sectorId)
-        {
-            GangId = gangId;
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            SectorId = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
-        }
+        public Guid GangId { get; } = gangId;
 
-        public Guid GangId { get; }
+        public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
-        public string Name { get; }
-
-        public string SectorId { get; }
+        public string SectorId { get; } = sectorId ?? throw new ArgumentNullException(nameof(sectorId));
 
         public string DisplayName => string.Format(CultureInfo.CurrentCulture, "{0} ({1})", Name, SectorId);
     }

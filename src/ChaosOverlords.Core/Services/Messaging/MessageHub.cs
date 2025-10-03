@@ -57,23 +57,14 @@ public sealed class MessageHub : IMessageHub
         bool IsDisposed { get; }
     }
 
-    private sealed class Subscription<TMessage> : ISubscription, IDisposable
+    private sealed class Subscription<TMessage>(MessageHub owner, Action<TMessage> handler) : ISubscription, IDisposable
     {
-        private readonly Action<TMessage> _handler;
-        private readonly MessageHub _owner;
-
-        public Subscription(MessageHub owner, Action<TMessage> handler)
-        {
-            _owner = owner;
-            _handler = handler;
-        }
-
         public void Dispose()
         {
             if (IsDisposed) return;
 
             IsDisposed = true;
-            _owner.Unsubscribe(this);
+            owner.Unsubscribe(this);
         }
 
         public Type MessageType => typeof(TMessage);
@@ -84,7 +75,7 @@ public sealed class MessageHub : IMessageHub
         {
             if (IsDisposed) return;
 
-            _handler(message);
+            handler(message);
         }
     }
 }

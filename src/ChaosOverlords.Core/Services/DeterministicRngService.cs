@@ -116,14 +116,9 @@ public sealed class DeterministicRngService : IRngService
         return builder.ToString();
     }
 
-    private struct SplitMix64
+    private struct SplitMix64(ulong seed)
     {
-        private ulong _state;
-
-        public SplitMix64(ulong seed)
-        {
-            _state = seed;
-        }
+        private ulong _state = seed;
 
         public ulong Next()
         {

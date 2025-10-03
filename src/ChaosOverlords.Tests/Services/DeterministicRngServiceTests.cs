@@ -62,7 +62,7 @@ public sealed class DeterministicRngServiceTests
 
         var value = rng.NextDouble();
 
-        Assert.True(value >= 0.0 && value < 1.0);
+        Assert.True(value is >= 0.0 and < 1.0);
     }
 
     [Fact]

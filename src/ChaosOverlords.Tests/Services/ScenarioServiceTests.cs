@@ -330,36 +330,26 @@ public sealed class ScenarioServiceTests
         Assert.Equal(1, playerTwo.ExecutionCount);
     }
 
-    private sealed class StubDataService : IDataService
+    private sealed class StubDataService(
+        IReadOnlyList<GangData> gangs,
+        IReadOnlyList<SiteData> sites,
+        IReadOnlyList<ItemData>? items = null,
+        IReadOnlyDictionary<int, ItemTypeData>? itemTypes = null,
+        SectorConfigurationData? sectorConfiguration = null)
+        : IDataService
     {
-        private readonly IReadOnlyList<GangData> _gangs;
-        private readonly IReadOnlyList<ItemData> _items;
-        private readonly IReadOnlyDictionary<int, ItemTypeData> _itemTypes;
-        private readonly SectorConfigurationData _sectorConfiguration;
-        private readonly IReadOnlyList<SiteData> _sites;
-
-        public StubDataService(
-            IReadOnlyList<GangData> gangs,
-            IReadOnlyList<SiteData> sites,
-            IReadOnlyList<ItemData>? items = null,
-            IReadOnlyDictionary<int, ItemTypeData>? itemTypes = null,
-            SectorConfigurationData? sectorConfiguration = null)
-        {
-            _gangs = gangs;
-            _sites = sites;
-            _items = items ?? Array.Empty<ItemData>();
-            _itemTypes = itemTypes ?? new Dictionary<int, ItemTypeData>();
-            _sectorConfiguration = sectorConfiguration?.Normalize() ?? CreateDefaultSectorConfiguration();
-        }
+        private readonly IReadOnlyList<ItemData> _items = items ?? Array.Empty<ItemData>();
+        private readonly IReadOnlyDictionary<int, ItemTypeData> _itemTypes = itemTypes ?? new Dictionary<int, ItemTypeData>();
+        private readonly SectorConfigurationData _sectorConfiguration = sectorConfiguration?.Normalize() ?? CreateDefaultSectorConfiguration();
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_gangs);
+            return Task.FromResult(gangs);
         }
 
         public IReadOnlyList<GangData> GetGangs()
         {
-            return _gangs;
+            return gangs;
         }
 
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
@@ -369,7 +359,7 @@ public sealed class ScenarioServiceTests
 
         public Task<IReadOnlyList<SiteData>> GetSitesAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_sites);
+            return Task.FromResult(sites);
         }
 
         public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(
@@ -443,13 +433,8 @@ public sealed class ScenarioServiceTests
         }
     }
 
-    private sealed class TrackingPlayer : PlayerBase
+    private sealed class TrackingPlayer(Guid id, string name) : PlayerBase(id, name)
     {
-        public TrackingPlayer(Guid id, string name)
-            : base(id, name)
-        {
-        }
-
         public int ExecutionCount { get; private set; }
 
         public override Task ExecuteTurnAsync(GameStateManager manager, CancellationToken cancellationToken)

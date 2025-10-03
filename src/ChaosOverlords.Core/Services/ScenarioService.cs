@@ -10,16 +10,10 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 ///     Default implementation that wires reference data into runtime game state for freshly created campaigns.
 /// </summary>
-public sealed class ScenarioService : IScenarioService
+public sealed class ScenarioService(IDataService dataService, IRngService rngService) : IScenarioService
 {
-    private readonly IDataService _dataService;
-    private readonly IRngService _rngService;
-
-    public ScenarioService(IDataService dataService, IRngService rngService)
-    {
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
-        _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
-    }
+    private readonly IDataService _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+    private readonly IRngService _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
 
     public async Task<GameState> CreateNewGameAsync(ScenarioConfig config,
         CancellationToken cancellationToken = default)

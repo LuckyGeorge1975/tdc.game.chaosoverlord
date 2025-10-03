@@ -88,14 +88,9 @@ public sealed class FabricationTests
         return (state, player, gang);
     }
 
-    private sealed class FakeDataService : IDataService
+    private sealed class FakeDataService(IEnumerable<ItemData> items) : IDataService
     {
-        private readonly IReadOnlyList<ItemData> _items;
-
-        public FakeDataService(IEnumerable<ItemData> items)
-        {
-            _items = items.ToList();
-        }
+        private readonly IReadOnlyList<ItemData> _items = items.ToList();
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
         {

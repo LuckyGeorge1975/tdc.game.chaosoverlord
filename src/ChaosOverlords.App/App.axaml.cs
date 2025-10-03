@@ -42,7 +42,7 @@ public class App : Application
 
             switch (member)
             {
-                case PropertyInfo property when property.CanWrite:
+                case PropertyInfo { CanWrite: true } property:
                     property.SetValue(null, false);
                     break;
                 case FieldInfo field:

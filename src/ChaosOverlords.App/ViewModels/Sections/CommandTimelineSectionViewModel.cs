@@ -42,18 +42,12 @@ public sealed class CommandTimelineSectionViewModel : IDisposable
     }
 }
 
-public sealed partial class CommandPhaseEntryViewModel : ObservableObject
+public sealed partial class CommandPhaseEntryViewModel(CommandPhase phase, CommandPhaseState state) : ObservableObject
 {
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsActive))] [NotifyPropertyChangedFor(nameof(IsCompleted))]
-    private CommandPhaseState _state;
+    private CommandPhaseState _state = state;
 
-    public CommandPhaseEntryViewModel(CommandPhase phase, CommandPhaseState state)
-    {
-        Phase = phase;
-        _state = state;
-    }
-
-    public CommandPhase Phase { get; }
+    public CommandPhase Phase { get; } = phase;
 
     public string DisplayName => Phase.ToString();
 

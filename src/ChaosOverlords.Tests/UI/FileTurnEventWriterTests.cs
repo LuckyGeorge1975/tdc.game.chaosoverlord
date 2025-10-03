@@ -60,18 +60,11 @@ public class FileTurnEventWriterTests
         }
     }
 
-    private sealed class TestPathProvider : ILogPathProvider
+    private sealed class TestPathProvider(LoggingOptions options) : ILogPathProvider
     {
-        private readonly LoggingOptions _options;
-
-        public TestPathProvider(LoggingOptions options)
-        {
-            _options = options;
-        }
-
         public string GetLogDirectory()
         {
-            return _options.LogDirectory;
+            return options.LogDirectory;
         }
     }
 }

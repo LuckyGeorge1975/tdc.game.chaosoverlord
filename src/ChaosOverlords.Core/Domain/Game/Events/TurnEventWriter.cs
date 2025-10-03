@@ -7,14 +7,9 @@ namespace ChaosOverlords.Core.Domain.Game.Events;
 /// <summary>
 ///     Default implementation that materialises <see cref="TurnEvent" /> instances and appends them to the log.
 /// </summary>
-public sealed class TurnEventWriter : ITurnEventWriter
+public sealed class TurnEventWriter(ITurnEventLog eventLog) : ITurnEventWriter
 {
-    private readonly ITurnEventLog _eventLog;
-
-    public TurnEventWriter(ITurnEventLog eventLog)
-    {
-        _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
-    }
+    private readonly ITurnEventLog _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
 
     public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
         CommandPhase? commandPhase = null)

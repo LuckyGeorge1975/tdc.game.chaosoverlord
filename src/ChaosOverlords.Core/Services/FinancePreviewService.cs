@@ -9,7 +9,8 @@ namespace ChaosOverlords.Core.Services;
 /// <summary>
 ///     Default implementation that builds finance preview data using the current game state.
 /// </summary>
-public sealed class FinancePreviewService : IFinancePreviewService
+public sealed class FinancePreviewService(IDataService dataService, IResearchService researchService)
+    : IFinancePreviewService
 {
     private static readonly IReadOnlyList<FinanceCategoryType> CategoryOrder = new[]
     {
@@ -23,17 +24,11 @@ public sealed class FinancePreviewService : IFinancePreviewService
         FinanceCategoryType.ChaosEstimate
     };
 
-    private readonly IDataService _dataService;
-    private readonly IResearchService _researchService;
+    private readonly IDataService _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+    private readonly IResearchService _researchService = researchService ?? throw new ArgumentNullException(nameof(researchService));
 
     public FinancePreviewService() : this(new EmptyDataService(), new ResearchService())
     {
-    }
-
-    public FinancePreviewService(IDataService dataService, IResearchService researchService)
-    {
-        _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
-        _researchService = researchService ?? throw new ArgumentNullException(nameof(researchService));
     }
 
     // Backward-compatible overload used in existing tests and app wiring

@@ -3,21 +3,15 @@ namespace ChaosOverlords.Core.Domain.Game;
 /// <summary>
 ///     Tracks the current state of a command sub-phase within a turn.
 /// </summary>
-public sealed class CommandPhaseProgress
+public sealed class CommandPhaseProgress(CommandPhase phase, CommandPhaseState state)
 {
-    public CommandPhaseProgress(CommandPhase phase, CommandPhaseState state)
-    {
-        Phase = phase;
-        State = state;
-    }
-
     /// <summary>
     ///     The command phase represented by this entry.
     /// </summary>
-    public CommandPhase Phase { get; }
+    public CommandPhase Phase { get; } = phase;
 
     /// <summary>
     ///     The current lifecycle state of the command phase.
     /// </summary>
-    public CommandPhaseState State { get; internal set; }
+    public CommandPhaseState State { get; internal set; } = state;
 }

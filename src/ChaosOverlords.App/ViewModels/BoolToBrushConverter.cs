@@ -11,7 +11,7 @@ public sealed class BoolToBrushConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var isTrue = value is bool b && b;
+        var isTrue = value is bool and true;
         return isTrue ? TrueBrush : FalseBrush;
     }
 

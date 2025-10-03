@@ -128,29 +128,22 @@ public sealed class RecruitmentServiceTests
         };
     }
 
-    private sealed class TestDataService : IDataService
+    private sealed class TestDataService(IReadOnlyList<GangData> gangs) : IDataService
     {
-        private readonly IReadOnlyList<GangData> _gangs;
-        private readonly IReadOnlyList<SiteData> _sites;
-
-        public TestDataService(IReadOnlyList<GangData> gangs)
+        private readonly IReadOnlyList<SiteData> _sites = new List<SiteData>
         {
-            _gangs = gangs;
-            _sites = new List<SiteData>
-            {
-                CreateSiteData("A1 HQ"),
-                CreateSiteData("Neutral")
-            };
-        }
+            CreateSiteData("A1 HQ"),
+            CreateSiteData("Neutral")
+        };
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_gangs);
+            return Task.FromResult(gangs);
         }
 
         public IReadOnlyList<GangData> GetGangs()
         {
-            return _gangs;
+            return gangs;
         }
 
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
@@ -183,14 +176,9 @@ public sealed class RecruitmentServiceTests
         }
     }
 
-    private sealed class SequenceRngService : IRngService
+    private sealed class SequenceRngService(IEnumerable<int> sequence) : IRngService
     {
-        private readonly Queue<int> _sequence;
-
-        public SequenceRngService(IEnumerable<int> sequence)
-        {
-            _sequence = new Queue<int>(sequence);
-        }
+        private readonly Queue<int> _sequence = new(sequence);
 
         public int Seed { get; private set; }
 
