@@ -62,7 +62,42 @@ public sealed class DeterministicRngServiceTests
 
         var value = rng.NextDouble();
 
-        Assert.True(value >= 0.0 && value < 1.0);
+        Assert.True(value is >= 0.0 and < 1.0);
+    }
+
+    [Fact]
+    public void RollPercent_ReturnsValueBetweenOneAndHundred()
+    {
+        var rng = new DeterministicRngService();
+        rng.Reset(12345);
+
+        var roll = rng.RollPercent();
+
+        Assert.InRange(roll.Roll, 1, 100);
+        Assert.Equal("1d100", roll.Expression);
+    }
+
+    [Fact]
+    public void RollDice_ReturnsExpressionAndDice()
+    {
+        var rng = new DeterministicRngService();
+        rng.Reset(99);
+
+        var result = rng.RollDice(2, 6, 1);
+
+        Assert.Equal(2, result.Dice.Count);
+        Assert.Equal("2d6+1", result.Expression);
+        Assert.InRange(result.Total, 3, 13);
+    }
+
+    [Fact]
+    public void RollDice_InvalidArguments_Throws()
+    {
+        var rng = new DeterministicRngService();
+        rng.Reset(7);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => rng.RollDice(0, 6));
+        Assert.Throws<ArgumentOutOfRangeException>(() => rng.RollDice(1, 1));
     }
 
     [Fact]

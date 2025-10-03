@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ChaosOverlords.Core.Services.Messaging;
 
 /// <summary>
-/// Default in-memory implementation of <see cref="IMessageHub"/> backed by thread-safe subscriber lists.
+///     Default in-memory implementation of <see cref="IMessageHub" /> backed by thread-safe subscriber lists.
 /// </summary>
 public sealed class MessageHub : IMessageHub
 {
@@ -14,10 +11,7 @@ public sealed class MessageHub : IMessageHub
 
     public IDisposable Subscribe<TMessage>(Action<TMessage> handler)
     {
-        if (handler is null)
-        {
-            throw new ArgumentNullException(nameof(handler));
-        }
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
 
         var subscription = new Subscription<TMessage>(this, handler);
         var subscribers = _subscriptions.GetOrAdd(typeof(TMessage), _ => new List<ISubscription>());
@@ -32,15 +26,9 @@ public sealed class MessageHub : IMessageHub
 
     public void Publish<TMessage>(TMessage message)
     {
-        if (message is null)
-        {
-            throw new ArgumentNullException(nameof(message));
-        }
+        if (message is null) throw new ArgumentNullException(nameof(message));
 
-        if (!_subscriptions.TryGetValue(typeof(TMessage), out var subscribers))
-        {
-            return;
-        }
+        if (!_subscriptions.TryGetValue(typeof(TMessage), out var subscribers)) return;
 
         ISubscription[] snapshot;
         lock (subscribers)
@@ -49,20 +37,13 @@ public sealed class MessageHub : IMessageHub
         }
 
         foreach (var subscription in snapshot)
-        {
             if (subscription is Subscription<TMessage> typed)
-            {
                 typed.Invoke(message);
-            }
-        }
     }
 
     private void Unsubscribe(ISubscription subscription)
     {
-        if (!_subscriptions.TryGetValue(subscription.MessageType, out var subscribers))
-        {
-            return;
-        }
+        if (!_subscriptions.TryGetValue(subscription.MessageType, out var subscribers)) return;
 
         lock (subscribers)
         {
@@ -76,41 +57,25 @@ public sealed class MessageHub : IMessageHub
         bool IsDisposed { get; }
     }
 
-    private sealed class Subscription<TMessage> : ISubscription, IDisposable
+    private sealed class Subscription<TMessage>(MessageHub owner, Action<TMessage> handler) : ISubscription, IDisposable
     {
-        private readonly MessageHub _owner;
-        private readonly Action<TMessage> _handler;
-        private bool _isDisposed;
-
-        public Subscription(MessageHub owner, Action<TMessage> handler)
+        public void Dispose()
         {
-            _owner = owner;
-            _handler = handler;
+            if (IsDisposed) return;
+
+            IsDisposed = true;
+            owner.Unsubscribe(this);
         }
 
         public Type MessageType => typeof(TMessage);
 
-        public bool IsDisposed => _isDisposed;
+        public bool IsDisposed { get; private set; }
 
         public void Invoke(TMessage message)
         {
-            if (_isDisposed)
-            {
-                return;
-            }
+            if (IsDisposed) return;
 
-            _handler(message);
-        }
-
-        public void Dispose()
-        {
-            if (_isDisposed)
-            {
-                return;
-            }
-
-            _isDisposed = true;
-            _owner.Unsubscribe(this);
+            handler(message);
         }
     }
 }

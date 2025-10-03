@@ -1,0 +1,17 @@
+flowchart TD
+    Start[Gang sichtbar in Sector View]
+    Info[Gang Information Overlay]
+    Ctx[Kontextmenü Rechtsklick]
+    Bar[Command Bar oben am Gang]
+    Exec[Execution Phase]
+    Result[Events Combat Financial]
+
+    Start --> |Klick auf Portrait| Info
+    Start --> |Rechtsklick| Ctx
+    Start --> |Sector View geöffnet| Bar
+
+    Ctx --> |Command wählen| Exec
+    Bar --> |Command wählen| Exec
+
+    Exec --> |Turn Ende| Result
+    Result --> |Nächster Turn| Start

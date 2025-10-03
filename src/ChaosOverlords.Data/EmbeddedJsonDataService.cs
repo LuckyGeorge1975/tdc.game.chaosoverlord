@@ -8,7 +8,7 @@ using ChaosOverlords.Core.Services;
 namespace ChaosOverlords.Data;
 
 /// <summary>
-/// Loads static game data from JSON files embedded within the data assembly.
+///     Loads static game data from JSON files embedded within the data assembly.
 /// </summary>
 public sealed class EmbeddedJsonDataService : IDataService
 {
@@ -27,12 +27,12 @@ public sealed class EmbeddedJsonDataService : IDataService
 
     private readonly IReadOnlyList<GangData> _gangs;
     private readonly IReadOnlyList<ItemData> _items;
-    private readonly IReadOnlyList<SiteData> _sites;
     private readonly IReadOnlyDictionary<int, ItemTypeData> _itemTypes;
     private readonly SectorConfigurationData _sectorConfiguration;
+    private readonly IReadOnlyList<SiteData> _sites;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EmbeddedJsonDataService"/> class.
+    ///     Initializes a new instance of the <see cref="EmbeddedJsonDataService" /> class.
     /// </summary>
     public EmbeddedJsonDataService()
     {
@@ -40,7 +40,7 @@ public sealed class EmbeddedJsonDataService : IDataService
         _gangs = LoadList<GangData>(assembly, GangsResource);
         _items = LoadList<ItemData>(assembly, ItemsResource);
         _sites = LoadList<SiteData>(assembly, SitesResource);
-    _sectorConfiguration = Load<SectorConfigurationData>(assembly, SectorsResource).Normalize();
+        _sectorConfiguration = Load<SectorConfigurationData>(assembly, SectorsResource).Normalize();
 
         var itemTypeList = LoadList<ItemTypeData>(assembly, ItemTypesResource);
         var itemTypeDictionary = itemTypeList.ToDictionary(static t => t.Id);
@@ -55,7 +55,10 @@ public sealed class EmbeddedJsonDataService : IDataService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<GangData> GetGangs() => _gangs;
+    public IReadOnlyList<GangData> GetGangs()
+    {
+        return _gangs;
+    }
 
     /// <inheritdoc />
     public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
@@ -87,40 +90,32 @@ public sealed class EmbeddedJsonDataService : IDataService
 
     private static IReadOnlyList<T> LoadList<T>(Assembly assembly, string resourceName)
     {
-        using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+        using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream is null)
-        {
             throw new InvalidOperationException($"Embedded resource '{resourceName}' could not be found.");
-        }
 
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
 
         var data = JsonSerializer.Deserialize<List<T>>(json, SerializerOptions);
         if (data is null)
-        {
             throw new InvalidOperationException($"Embedded resource '{resourceName}' did not contain valid JSON.");
-        }
 
         return new ReadOnlyCollection<T>(data);
     }
 
     private static T Load<T>(Assembly assembly, string resourceName)
     {
-        using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+        using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream is null)
-        {
             throw new InvalidOperationException($"Embedded resource '{resourceName}' could not be found.");
-        }
 
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
 
         var data = JsonSerializer.Deserialize<T>(json, SerializerOptions);
         if (data is null)
-        {
             throw new InvalidOperationException($"Embedded resource '{resourceName}' did not contain valid JSON.");
-        }
 
         return data;
     }

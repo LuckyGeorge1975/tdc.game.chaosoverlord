@@ -8,7 +8,7 @@ public sealed class ItemTests
     [Fact]
     public void Equip_SetsFlag()
     {
-    var item = CreateItem();
+        var item = CreateItem();
 
         item.Equip();
 
@@ -18,7 +18,7 @@ public sealed class ItemTests
     [Fact]
     public void UnEquip_ClearsFlag()
     {
-        var item = CreateItem(isEquipped: true);
+        var item = CreateItem(true);
 
         item.UnEquip();
 

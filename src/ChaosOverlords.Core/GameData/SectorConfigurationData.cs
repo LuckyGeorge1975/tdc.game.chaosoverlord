@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace ChaosOverlords.Core.GameData;
 
 /// <summary>
-/// Container describing the static sector metadata used to seed campaigns.
+///     Container describing the static sector metadata used to seed campaigns.
 /// </summary>
 public sealed class SectorConfigurationData
 {
@@ -16,13 +13,14 @@ public sealed class SectorConfigurationData
     {
         return new SectorConfigurationData
         {
-            Sectors = new ReadOnlyCollection<SectorDefinitionData>((Sectors ?? Array.Empty<SectorDefinitionData>()).ToList())
+            Sectors = new ReadOnlyCollection<SectorDefinitionData>((Sectors ?? Array.Empty<SectorDefinitionData>())
+                .ToList())
         };
     }
 }
 
 /// <summary>
-/// Associates a sector id with an optional preconfigured site assignment.
+///     Associates a sector id with an optional preconfigured site assignment.
 /// </summary>
 public sealed class SectorDefinitionData
 {

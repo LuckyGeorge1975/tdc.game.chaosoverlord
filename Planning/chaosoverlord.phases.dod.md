@@ -28,10 +28,10 @@
 - Automatisierte Tests prüfen mindestens einen vollständigen Happy-Path-Turn.
 
 ### Phase 3 – Kernaktionen
-- Aktionen Einfluss, Forschung, Ausrüsten, Bewegen funktionieren inklusive Würfel-/Check-Utilities.
-- Map-Interaktionen decken alle im Manual beschriebenen Pfade ab.
+- Movement & Influence sind implementiert und testabgedeckt (inkl. deterministischer Würfel-/Check‑Utilities).
+- Research & Equip folgen innerhalb der Phase; Map‑Interaktionen und UI werden entsprechend erweitert.
 - Fehlerhafte Eingaben werden abgefangen und getestet.
-- UI aktualisiert States unmittelbar nach jeder Aktion.
+- UI aktualisiert States unmittelbar nach jeder Aktion; Turn‑Event‑Logging ist deterministisch und file‑basiert konfigurierbar.
 
 ### Phase 4 – Kampf & Verstecken/Aufspüren
 - Kampf- und Terminate-Logik mit vollständigen Ausgangsfällen implementiert und getestet.

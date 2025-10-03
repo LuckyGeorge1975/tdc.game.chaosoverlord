@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
@@ -11,7 +8,6 @@ namespace ChaosOverlords.Tests.Services;
 
 public sealed class EconomyServiceTests
 {
-
     [Fact]
     public void ApplyUpkeep_AdjustsPlayerCashAndProducesSnapshot()
     {
@@ -28,38 +24,35 @@ public sealed class EconomyServiceTests
 
         Assert.Equal(1, report.TurnNumber);
 
-    // Player one: upkeep 5, sector income 5 => net 0 (200 -> 200)
+        // Player one: upkeep 5, sector income 5 => net 0 (200 -> 200)
         Assert.Equal(5, playerOneSnapshot.Upkeep);
-    Assert.Equal(5, playerOneSnapshot.SectorIncome);
-    Assert.Equal(0, playerOneSnapshot.SiteIncome);
+        Assert.Equal(5, playerOneSnapshot.SectorIncome);
+        Assert.Equal(0, playerOneSnapshot.SiteIncome);
         Assert.Equal(0, playerOneSnapshot.NetChange);
         Assert.Equal(200, playerOneSnapshot.EndingCash);
 
-    // Player two: upkeep 3, sector income -1 => net -4 (150 -> 146)
+        // Player two: upkeep 3, sector income -1 => net -4 (150 -> 146)
         Assert.Equal(3, playerTwoSnapshot.Upkeep);
-    Assert.Equal(-1, playerTwoSnapshot.SectorIncome);
-    Assert.Equal(0, playerTwoSnapshot.SiteIncome);
+        Assert.Equal(-1, playerTwoSnapshot.SectorIncome);
+        Assert.Equal(0, playerTwoSnapshot.SiteIncome);
         Assert.Equal(-4, playerTwoSnapshot.NetChange);
         Assert.Equal(146, playerTwoSnapshot.EndingCash);
 
         Assert.Equal(200, playerOne.Cash);
         Assert.Equal(146, playerTwo.Cash);
         Assert.Equal(8, report.TotalUpkeep);
-    Assert.Equal(4, report.TotalSectorIncome);
-    Assert.Equal(0, report.TotalSiteIncome);
+        Assert.Equal(4, report.TotalSectorIncome);
+        Assert.Equal(0, report.TotalSiteIncome);
         Assert.Equal(-4, report.TotalNetChange); // matches sum of nets
     }
 
     [Fact]
     public void ApplyUpkeep_WithNoControlledSectors_HandlesZeroIncome()
     {
-        var (state, turnNumber) = CreateState(includeNeutralSectors: false);
+        var (state, turnNumber) = CreateState(false);
         var player = (Player)state.Game.GetPlayer(state.PrimaryPlayerId);
 
-        foreach (var sector in state.Game.Sectors.Values)
-        {
-            sector.SetController(null);
-        }
+        foreach (var sector in state.Game.Sectors.Values) sector.SetController(null);
 
         var service = new EconomyService();
         var report = service.ApplyUpkeep(state, turnNumber);
@@ -78,15 +71,12 @@ public sealed class EconomyServiceTests
 
         var sectors = new List<Sector>
         {
-            new("A1", CreateSite("Arena", cash: 3, tolerance: 1, support: 1), playerOne.Id),
-            new("B2", CreateSite("Warehouse", cash: 2), playerOne.Id),
-            new("C3", CreateSite("Night Market", cash: -1, tolerance: 1, support: 1), playerTwo.Id)
+            new("A1", CreateSite("Arena", 3, 1, 1), playerOne.Id),
+            new("B2", CreateSite("Warehouse", 2), playerOne.Id),
+            new("C3", CreateSite("Night Market", -1, 1, 1), playerTwo.Id)
         };
 
-        if (includeNeutralSectors)
-        {
-            sectors.Add(new Sector("D4", CreateSite("Old Docks")));
-        }
+        if (includeNeutralSectors) sectors.Add(new Sector("D4", CreateSite("Old Docks")));
 
         var gangs = new List<Gang>
         {
@@ -182,15 +172,18 @@ public sealed class EconomyServiceTests
             }
         };
 
-        var state = new GameState(game, scenario, new List<IPlayer> { playerOne, playerTwo }, 0, randomSeed: 1);
+        var state = new GameState(game, scenario, new List<IPlayer> { playerOne, playerTwo }, 0, 1);
         return (state, 1);
     }
 
-    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0) => new()
+    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0)
     {
-        Name = name,
-        Cash = cash,
-        Tolerance = tolerance,
-        Support = support
-    };
+        return new SiteData
+        {
+            Name = name,
+            Cash = cash,
+            Tolerance = tolerance,
+            Support = support
+        };
+    }
 }

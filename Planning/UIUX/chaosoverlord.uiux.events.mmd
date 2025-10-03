@@ -1,0 +1,5 @@
+flowchart TD
+    Commands[Command Execution] --> EventPhase[Last Turn Events]
+    EventPhase --> PosEvents[Positive: Sector Control, Research, Elimination]
+    EventPhase --> NegEvents[Negative: Police Crackdown, Sector Lost]
+    EventPhase --> MapUpdate[Map/Stats Updates]

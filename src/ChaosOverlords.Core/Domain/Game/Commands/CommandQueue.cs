@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using ChaosOverlords.Core.Domain.Game;
-
 namespace ChaosOverlords.Core.Domain.Game.Commands;
 
 /// <summary>
-/// Describes the outcome of mutating a command queue.
+///     Describes the outcome of mutating a command queue.
 /// </summary>
 public enum CommandQueueMutationStatus
 {
@@ -17,7 +12,7 @@ public enum CommandQueueMutationStatus
 }
 
 /// <summary>
-/// Result metadata produced when a queue mutation occurs.
+///     Result metadata produced when a queue mutation occurs.
 /// </summary>
 public sealed record CommandQueueMutationResult(
     CommandQueueMutationStatus Status,
@@ -25,35 +20,28 @@ public sealed record CommandQueueMutationResult(
     PlayerCommand? ReplacedCommand);
 
 /// <summary>
-/// Maintains the set of commands queued by a single player for the current turn.
+///     Maintains the set of commands queued by a single player for the current turn.
 /// </summary>
-public sealed class CommandQueue
+public sealed class CommandQueue(Guid playerId)
 {
     private readonly Dictionary<Guid, PlayerCommand> _commandsByGang = new();
     private readonly List<PlayerCommand> _orderedCommands = new();
 
-    public CommandQueue(Guid playerId)
-    {
-        PlayerId = playerId;
-    }
-
-    public Guid PlayerId { get; }
+    public Guid PlayerId { get; } = playerId;
 
     public IReadOnlyList<PlayerCommand> Commands => _orderedCommands.AsReadOnly();
 
-    public bool HasCommand(Guid gangId) => _commandsByGang.ContainsKey(gangId);
+    public bool HasCommand(Guid gangId)
+    {
+        return _commandsByGang.ContainsKey(gangId);
+    }
 
     public CommandQueueMutationResult SetCommand(PlayerCommand command)
     {
-        if (command is null)
-        {
-            throw new ArgumentNullException(nameof(command));
-        }
+        if (command is null) throw new ArgumentNullException(nameof(command));
 
         if (command.PlayerId != PlayerId)
-        {
             throw new InvalidOperationException("Command player id does not match queue owner.");
-        }
 
         if (_commandsByGang.TryGetValue(command.GangId, out var existing))
         {
@@ -68,9 +56,7 @@ public sealed class CommandQueue
     public CommandQueueMutationResult Remove(Guid gangId)
     {
         if (!_commandsByGang.TryGetValue(gangId, out var existing))
-        {
             return new CommandQueueMutationResult(CommandQueueMutationStatus.NotFound, null, null);
-        }
 
         _commandsByGang.Remove(gangId);
         _orderedCommands.Remove(existing);
@@ -85,10 +71,7 @@ public sealed class CommandQueue
 
     public IReadOnlyList<PlayerCommand> GetCommandsForPhase(CommandPhase phase)
     {
-        if (_orderedCommands.Count == 0)
-        {
-            return Array.Empty<PlayerCommand>();
-        }
+        if (_orderedCommands.Count == 0) return Array.Empty<PlayerCommand>();
 
         return _orderedCommands.Where(command => command.Phase == phase).ToList();
     }
@@ -104,12 +87,8 @@ public sealed class CommandQueue
         _commandsByGang[replacement.GangId] = replacement;
         var index = _orderedCommands.IndexOf(existing);
         if (index >= 0)
-        {
             _orderedCommands[index] = replacement;
-        }
         else
-        {
             _orderedCommands.Add(replacement);
-        }
     }
 }

@@ -1,5 +1,4 @@
 using ChaosOverlords.Core.Domain.Game;
-using Xunit;
 
 namespace ChaosOverlords.Tests.Domain;
 

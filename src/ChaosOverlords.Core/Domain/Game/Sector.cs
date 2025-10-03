@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Represents a single tile on the city map tied to immutable <see cref="SiteData"/> for bonuses.
+///     Represents a single tile on the city map tied to immutable <see cref="SiteData" /> for bonuses.
 /// </summary>
 public sealed class Sector
 {
@@ -15,30 +13,29 @@ public sealed class Sector
     public Sector(string id, SiteData site, Guid? controllingPlayerId = null)
     {
         if (string.IsNullOrWhiteSpace(id))
-        {
             throw new ArgumentException("Sector id cannot be null or whitespace.", nameof(id));
-        }
 
         Site = site ?? throw new ArgumentNullException(nameof(site));
 
         Id = id;
         ControllingPlayerId = controllingPlayerId;
+        InfluenceResistance = Math.Max(0, Site.Resistance);
     }
 
     public string Id { get; }
 
     /// <summary>
-    /// Immutable site data that defines passive bonuses when the sector is controlled.
+    ///     Immutable site data that defines passive bonuses when the sector is controlled.
     /// </summary>
     public SiteData Site { get; }
 
     /// <summary>
-    /// Passive income provided by the sector's site each upkeep.
+    ///     Passive income provided by the sector's site each upkeep.
     /// </summary>
     public int Income => Site.Cash;
 
     /// <summary>
-    /// Baseline tolerance contributed by the sector's site.
+    ///     Baseline tolerance contributed by the sector's site.
     /// </summary>
     public int Tolerance => Site.Tolerance;
 
@@ -47,12 +44,23 @@ public sealed class Sector
     public IReadOnlyCollection<Guid> GangIds => new ReadOnlyCollection<Guid>(_gangIds);
 
     /// <summary>
-    /// Projected chaos revenue assigned during the chaos sub-phase.
+    ///     Projected chaos revenue assigned during the chaos sub-phase.
     /// </summary>
     public int ProjectedChaos { get; private set; }
 
     /// <summary>
-    /// Updates the current controller (or clears it) based on campaign actions.
+    ///     Current remaining resistance to influence for the sector's site.
+    ///     Starts at <see cref="SiteData.Resistance" /> and is reduced by successful Influence actions until it reaches 0.
+    /// </summary>
+    public int InfluenceResistance { get; private set; }
+
+    /// <summary>
+    ///     Whether the site's influence has been fully achieved (resistance reduced to zero).
+    /// </summary>
+    public bool IsInfluenced => InfluenceResistance <= 0;
+
+    /// <summary>
+    ///     Updates the current controller (or clears it) based on campaign actions.
     /// </summary>
     public void SetController(Guid? playerId)
     {
@@ -60,28 +68,25 @@ public sealed class Sector
     }
 
     /// <summary>
-    /// Marks a gang as occupying the sector.
+    ///     Marks a gang as occupying the sector.
     /// </summary>
     public void PlaceGang(Gang gang)
     {
-        if (gang is null)
-        {
-            throw new ArgumentNullException(nameof(gang));
-        }
+        if (gang is null) throw new ArgumentNullException(nameof(gang));
 
-        if (!_gangIds.Contains(gang.Id))
-        {
-            _gangIds.Add(gang.Id);
-        }
+        if (!_gangIds.Contains(gang.Id)) _gangIds.Add(gang.Id);
     }
 
     /// <summary>
-    /// Removes a gang from the sector, returning whether it was present.
+    ///     Removes a gang from the sector, returning whether it was present.
     /// </summary>
-    public bool RemoveGang(Guid gangId) => _gangIds.Remove(gangId);
+    public bool RemoveGang(Guid gangId)
+    {
+        return _gangIds.Remove(gangId);
+    }
 
     /// <summary>
-    /// Assigns a projected chaos value to the sector.
+    ///     Assigns a projected chaos value to the sector.
     /// </summary>
     public void SetChaosProjection(int value)
     {
@@ -89,10 +94,32 @@ public sealed class Sector
     }
 
     /// <summary>
-    /// Clears any existing chaos projection.
+    ///     Clears any existing chaos projection.
     /// </summary>
     public void ClearChaosProjection()
     {
         ProjectedChaos = 0;
+    }
+
+    /// <summary>
+    ///     Reduces the site's remaining influence resistance by the specified non-negative amount.
+    ///     Returns the new remaining resistance.
+    /// </summary>
+    public int ReduceInfluenceResistance(int amount)
+    {
+        if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be non-negative.");
+
+        if (InfluenceResistance == 0 || amount == 0) return InfluenceResistance;
+
+        InfluenceResistance = Math.Max(0, InfluenceResistance - amount);
+        return InfluenceResistance;
+    }
+
+    /// <summary>
+    ///     Resets the site's influence progress back to its original resistance (e.g., on loss of control).
+    /// </summary>
+    public void ResetInfluence()
+    {
+        InfluenceResistance = Math.Max(0, Site.Resistance);
     }
 }

@@ -1,18 +1,14 @@
-using System;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
-using Xunit;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class FinancePreviewServiceTests
 {
-
     [Fact]
     public void BuildProjection_ComputesCityAndSectorBreakdown()
     {
@@ -24,14 +20,19 @@ public sealed class FinancePreviewServiceTests
         Assert.Equal(primaryPlayer.Id, projection.PlayerId);
         Assert.Equal(primaryPlayer.Name, projection.PlayerName);
 
-        Assert.Equal(8, projection.CityCategories.Count);
+        Assert.Equal(9, projection.CityCategories.Count);
 
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -5);
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 3);
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
-        Assert.Contains(projection.CityCategories, category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 3);
+        Assert.Contains(projection.CityCategories,
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -5 });
+        Assert.Contains(projection.CityCategories,
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: 3 });
+        Assert.Contains(projection.CityCategories,
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
+        Assert.Contains(projection.CityCategories,
+            category => category is { Type: FinanceCategoryType.ChaosEstimate, Amount: 3 });
 
-        var netCategory = Assert.Single(projection.CityCategories, category => category.Type == FinanceCategoryType.CashAdjustment);
+        var netCategory = Assert.Single(projection.CityCategories,
+            category => category.Type == FinanceCategoryType.CashAdjustment);
         Assert.Equal(1, netCategory.Amount);
         Assert.Equal(1, projection.NetCashAdjustment);
 
@@ -40,16 +41,23 @@ public sealed class FinancePreviewServiceTests
         var sectorA1 = projection.Sectors.Single(sector => sector.SectorId == "A1");
         Assert.Equal("A1 – Neon Hub", sectorA1.DisplayName);
         Assert.Equal(3, sectorA1.NetChange);
-        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -3);
-        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == 4);
-        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
-        Assert.Contains(sectorA1.Categories, category => category.Type == FinanceCategoryType.ChaosEstimate && category.Amount == 2);
+        Assert.Contains(sectorA1.Categories,
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -3 });
+        Assert.Contains(sectorA1.Categories,
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: 4 });
+        Assert.Contains(sectorA1.Categories,
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
+        Assert.Contains(sectorA1.Categories,
+            category => category is { Type: FinanceCategoryType.ChaosEstimate, Amount: 2 });
 
         var sectorB2 = projection.Sectors.Single(sector => sector.SectorId == "B2");
         Assert.Equal(-2, sectorB2.NetChange);
-        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.Upkeep && category.Amount == -2);
-        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.SectorTax && category.Amount == -1);
-        Assert.Contains(sectorB2.Categories, category => category.Type == FinanceCategoryType.SiteProtection && category.Amount == 0);
+        Assert.Contains(sectorB2.Categories,
+            category => category is { Type: FinanceCategoryType.Upkeep, Amount: -2 });
+        Assert.Contains(sectorB2.Categories,
+            category => category is { Type: FinanceCategoryType.SectorTax, Amount: -1 });
+        Assert.Contains(sectorB2.Categories,
+            category => category is { Type: FinanceCategoryType.SiteProtection, Amount: 0 });
     }
 
     [Fact]
@@ -64,17 +72,14 @@ public sealed class FinancePreviewServiceTests
         }
 
         foreach (var gang in state.Game.Gangs.Values.ToList())
-        {
             if (gang.OwnerId == primaryPlayer.Id)
-            {
                 state.Game.RemoveGang(gang.Id);
-            }
-        }
 
         var service = new FinancePreviewService();
         var projection = service.BuildProjection(state, primaryPlayer.Id);
 
-        Assert.All(projection.CityCategories.Where(category => category.Type != FinanceCategoryType.CashAdjustment), category => Assert.Equal(0, category.Amount));
+        Assert.All(projection.CityCategories.Where(category => category.Type != FinanceCategoryType.CashAdjustment),
+            category => Assert.Equal(0, category.Amount));
         Assert.Equal(0, projection.NetCashAdjustment);
         Assert.Empty(projection.Sectors);
     }
@@ -85,14 +90,20 @@ public sealed class FinancePreviewServiceTests
         var enemyPlayer = new Player(Guid.NewGuid(), "Player Two", 90);
 
         var sectorA1 = new Sector("A1", new SiteData { Name = "Neon Hub", Cash = 4, Tolerance = 2 }, primaryPlayer.Id);
-        var sectorB2 = new Sector("B2", new SiteData { Name = "Midnight Exchange", Cash = -1, Tolerance = 1 }, primaryPlayer.Id);
-        var sectorC3 = new Sector("C3", new SiteData { Name = "Shadow Market", Cash = 0, Tolerance = 1 }, enemyPlayer.Id);
+        var sectorB2 = new Sector("B2", new SiteData { Name = "Midnight Exchange", Cash = -1, Tolerance = 1 },
+            primaryPlayer.Id);
+        var sectorC3 = new Sector("C3", new SiteData { Name = "Shadow Market", Cash = 0, Tolerance = 1 },
+            enemyPlayer.Id);
 
-        var gangOne = new Gang(Guid.NewGuid(), new GangData { Name = "Ghosts", HiringCost = 10, UpkeepCost = 3 }, primaryPlayer.Id, sectorA1.Id);
-        var gangTwo = new Gang(Guid.NewGuid(), new GangData { Name = "Rogues", HiringCost = 8, UpkeepCost = 2 }, primaryPlayer.Id, sectorB2.Id);
-        var enemyGang = new Gang(Guid.NewGuid(), new GangData { Name = "Enforcers", HiringCost = 7, UpkeepCost = 4 }, enemyPlayer.Id, sectorC3.Id);
+        var gangOne = new Gang(Guid.NewGuid(), new GangData { Name = "Ghosts", HiringCost = 10, UpkeepCost = 3 },
+            primaryPlayer.Id, sectorA1.Id);
+        var gangTwo = new Gang(Guid.NewGuid(), new GangData { Name = "Rogues", HiringCost = 8, UpkeepCost = 2 },
+            primaryPlayer.Id, sectorB2.Id);
+        var enemyGang = new Gang(Guid.NewGuid(), new GangData { Name = "Enforcers", HiringCost = 7, UpkeepCost = 4 },
+            enemyPlayer.Id, sectorC3.Id);
 
-        var game = new Game(new[] { primaryPlayer, enemyPlayer }, new[] { sectorA1, sectorB2, sectorC3 }, new[] { gangOne, gangTwo, enemyGang });
+        var game = new Game(new[] { primaryPlayer, enemyPlayer }, new[] { sectorA1, sectorB2, sectorC3 },
+            new[] { gangOne, gangTwo, enemyGang });
 
         game.GetSector("A1").SetChaosProjection(2);
         game.GetSector("B2").SetChaosProjection(1);

@@ -1,0 +1,18 @@
+flowchart TD
+    subgraph CityView["City View – 64 Sektoren"]
+        Map[Stadtkarte 8x8]
+        OverlordBar[Overlord Bar – Portraits]
+        ControlPanel[Main Control Panel – rechts]
+    end
+
+    subgraph SectorView["Sector View – Detail eines Sektors"]
+        MiniMap[Mini-Map – 3x3 Sektoren]
+        Sites[Sites – unten links]
+        Gangs[Gangs mit Force-Bar]
+        Commands[Command-Bar über Gang]
+    end
+
+    Map --> |Doppelklick| SectorView
+    SectorView --> |Zurück| CityView
+    ControlPanel --> |Infos| Sites
+    Map --> |Rechtsklick| Commands

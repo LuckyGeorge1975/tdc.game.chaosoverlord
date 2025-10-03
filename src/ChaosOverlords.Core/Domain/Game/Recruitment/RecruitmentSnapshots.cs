@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-
 namespace ChaosOverlords.Core.Domain.Game.Recruitment;
 
 /// <summary>
-/// Immutable projection of a recruitment option used by the UI and logging components.
+///     Immutable projection of a recruitment option used by the UI and logging components.
 /// </summary>
 public sealed record RecruitmentOptionSnapshot(
     Guid OptionId,
@@ -20,17 +17,20 @@ public sealed record RecruitmentOptionSnapshot(
 }
 
 /// <summary>
-/// Represents the recruitment options exposed to a single player.
+///     Represents the recruitment options exposed to a single player.
 /// </summary>
-public sealed record RecruitmentPoolSnapshot(Guid PlayerId, string PlayerName, IReadOnlyList<RecruitmentOptionSnapshot> Options);
+public sealed record RecruitmentPoolSnapshot(
+    Guid PlayerId,
+    string PlayerName,
+    IReadOnlyList<RecruitmentOptionSnapshot> Options);
 
 /// <summary>
-/// Captures the outcome of refreshing recruitment pools at the start of a turn.
+///     Captures the outcome of refreshing recruitment pools at the start of a turn.
 /// </summary>
 public sealed record RecruitmentRefreshResult(RecruitmentPoolSnapshot Pool, bool HasChanges);
 
 /// <summary>
-/// Indicates whether a recruitment action succeeded or why it failed.
+///     Indicates whether a recruitment action succeeded or why it failed.
 /// </summary>
 public enum RecruitmentActionStatus
 {
@@ -42,7 +42,7 @@ public enum RecruitmentActionStatus
 }
 
 /// <summary>
-/// Result payload returned after attempting to hire a gang.
+///     Result payload returned after attempting to hire a gang.
 /// </summary>
 public sealed record RecruitmentHireResult(
     RecruitmentActionStatus Status,
@@ -53,7 +53,7 @@ public sealed record RecruitmentHireResult(
     string? FailureReason);
 
 /// <summary>
-/// Result payload returned after declining a candidate.
+///     Result payload returned after declining a candidate.
 /// </summary>
 public sealed record RecruitmentDeclineResult(
     RecruitmentActionStatus Status,

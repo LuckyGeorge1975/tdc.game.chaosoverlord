@@ -1,20 +1,17 @@
-using System;
-using ChaosOverlords.Core.Domain.Game;
-
 namespace ChaosOverlords.Core.Domain.Game.Events;
 
 /// <summary>
-/// Observes the turn controller and records high-level lifecycle events in the log.
+///     Observes the turn controller and records high-level lifecycle events in the log.
 /// </summary>
 public sealed class TurnEventRecorder : IDisposable
 {
     private readonly ITurnController _controller;
     private readonly ITurnEventWriter _eventWriter;
-    private bool _wasActive;
-    private TurnPhase _lastPhase;
+    private bool _isDisposed;
     private CommandPhase? _lastCommandPhase;
     private int _lastCompletedTurn;
-    private bool _isDisposed;
+    private TurnPhase _lastPhase;
+    private bool _wasActive;
 
     public TurnEventRecorder(ITurnController controller, ITurnEventWriter eventWriter)
     {
@@ -32,10 +29,7 @@ public sealed class TurnEventRecorder : IDisposable
 
     public void Dispose()
     {
-        if (_isDisposed)
-        {
-            return;
-        }
+        if (_isDisposed) return;
 
         _controller.StateChanged -= OnStateChanged;
         _controller.TurnCompleted -= OnTurnCompleted;
@@ -47,21 +41,17 @@ public sealed class TurnEventRecorder : IDisposable
         var turnNumber = _controller.TurnNumber;
 
         if (_controller.IsTurnActive && !_wasActive)
-        {
             _eventWriter.Write(turnNumber, _controller.CurrentPhase, TurnEventType.TurnStarted, "Turn started.");
-        }
 
         if (_controller.IsTurnActive)
         {
             if (_controller.CurrentPhase != _lastPhase)
-            {
-                _eventWriter.Write(turnNumber, _controller.CurrentPhase, TurnEventType.PhaseAdvanced, $"Advanced to {_controller.CurrentPhase} phase.");
-            }
+                _eventWriter.Write(turnNumber, _controller.CurrentPhase, TurnEventType.PhaseAdvanced,
+                    $"Advanced to {_controller.CurrentPhase} phase.");
 
             if (_controller.ActiveCommandPhase != _lastCommandPhase && _controller.ActiveCommandPhase.HasValue)
-            {
-                _eventWriter.Write(turnNumber, _controller.CurrentPhase, TurnEventType.CommandPhaseAdvanced, $"Command phase {_controller.ActiveCommandPhase} activated.", _controller.ActiveCommandPhase);
-            }
+                _eventWriter.Write(turnNumber, _controller.CurrentPhase, TurnEventType.CommandPhaseAdvanced,
+                    $"Command phase {_controller.ActiveCommandPhase} activated.", _controller.ActiveCommandPhase);
         }
 
         _wasActive = _controller.IsTurnActive;
@@ -72,10 +62,7 @@ public sealed class TurnEventRecorder : IDisposable
     private void OnTurnCompleted(object? sender, EventArgs e)
     {
         var completedTurn = _controller.TurnNumber - 1;
-        if (completedTurn <= _lastCompletedTurn)
-        {
-            completedTurn = _controller.TurnNumber;
-        }
+        if (completedTurn <= _lastCompletedTurn) completedTurn = _controller.TurnNumber;
 
         _lastCompletedTurn = completedTurn;
 

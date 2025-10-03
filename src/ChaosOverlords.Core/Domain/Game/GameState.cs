@@ -1,19 +1,20 @@
 using System.Collections.ObjectModel;
 using ChaosOverlords.Core.Domain.Game.Commands;
+using ChaosOverlords.Core.Domain.Game.Equipment;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
+using ChaosOverlords.Core.Domain.Game.Research;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Encapsulates the full runtime snapshot for an active campaign.
+///     Encapsulates the full runtime snapshot for an active campaign.
 /// </summary>
 public sealed class GameState
 {
     private readonly List<IPlayer> _playerOrder;
     private readonly int _startingPlayerIndex;
-    private int _currentPlayerIndex;
 
     public GameState(
         Game game,
@@ -24,24 +25,18 @@ public sealed class GameState
     {
         Game = game ?? throw new ArgumentNullException(nameof(game));
         Scenario = scenario ?? throw new ArgumentNullException(nameof(scenario));
-        if (playerOrder is null)
-        {
-            throw new ArgumentNullException(nameof(playerOrder));
-        }
+        if (playerOrder is null) throw new ArgumentNullException(nameof(playerOrder));
 
         if (playerOrder.Count == 0)
-        {
             throw new ArgumentException("At least one player must be registered.", nameof(playerOrder));
-        }
 
         if (startingPlayerIndex < 0 || startingPlayerIndex >= playerOrder.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(startingPlayerIndex), startingPlayerIndex, "Starting player index is out of bounds.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(startingPlayerIndex), startingPlayerIndex,
+                "Starting player index is out of bounds.");
 
         _playerOrder = new List<IPlayer>(playerOrder);
         _startingPlayerIndex = startingPlayerIndex;
-        _currentPlayerIndex = startingPlayerIndex;
+        CurrentPlayerIndex = startingPlayerIndex;
 
         RandomSeed = randomSeed;
 
@@ -49,93 +44,97 @@ public sealed class GameState
     }
 
     /// <summary>
-    /// Aggregated runtime entities (players, gangs, items, sectors).
+    ///     Aggregated runtime entities (players, gangs, items, sectors).
     /// </summary>
     public Game Game { get; }
 
     /// <summary>
-    /// Scenario metadata that produced this campaign.
+    ///     Scenario metadata that produced this campaign.
     /// </summary>
     public ScenarioConfig Scenario { get; }
 
     /// <summary>
-    /// Primary (human-controlled) player.
+    ///     Primary (human-controlled) player.
     /// </summary>
     public IPlayer PrimaryPlayer { get; }
 
     /// <summary>
-    /// Seed that initialises the deterministic RNG for this game instance.
+    ///     Seed that initialises the deterministic RNG for this game instance.
     /// </summary>
     public int RandomSeed { get; }
 
     /// <summary>
-    /// Recruitment pools tracking available candidates for each player.
+    ///     Recruitment pools tracking available candidates for each player.
     /// </summary>
     public RecruitmentState Recruitment { get; } = new();
 
     /// <summary>
-    /// Command queues prepared by players for the current turn.
+    ///     Command queues prepared by players for the current turn.
     /// </summary>
     public CommandQueueState Commands { get; } = new();
 
     /// <summary>
-    /// Identifier of the primary player.
+    ///     Player research tracking (active project and progress).
+    /// </summary>
+    public ResearchState Research { get; } = new();
+
+    /// <summary>
+    ///     Centralized warehouse tracking per player's item inventory.
+    /// </summary>
+    public WarehouseState Warehouse { get; } = new();
+
+    /// <summary>
+    ///     Identifier of the primary player.
     /// </summary>
     public Guid PrimaryPlayerId => PrimaryPlayer.Id;
 
     /// <summary>
-    /// Currently active player in the rotation.
+    ///     Currently active player in the rotation.
     /// </summary>
-    public IPlayer CurrentPlayer => _playerOrder[_currentPlayerIndex];
+    public IPlayer CurrentPlayer => _playerOrder[CurrentPlayerIndex];
 
     /// <summary>
-    /// Turn order for the campaign.
+    ///     Turn order for the campaign.
     /// </summary>
     public IReadOnlyList<IPlayer> PlayerOrder => new ReadOnlyCollection<IPlayer>(_playerOrder);
 
     /// <summary>
-    /// Zero-based index of the active player within <see cref="PlayerOrder"/>.
+    ///     Zero-based index of the active player within <see cref="PlayerOrder" />.
     /// </summary>
-    public int CurrentPlayerIndex => _currentPlayerIndex;
+    public int CurrentPlayerIndex { get; private set; }
 
     /// <summary>
-    /// Current turn number, starting at 1.
+    ///     Current turn number, starting at 1.
     /// </summary>
     public int TurnNumber { get; private set; } = 1;
 
     /// <summary>
-    /// Advances the global turn counter.
+    ///     Advances the global turn counter.
     /// </summary>
     public void AdvanceTurn()
     {
-        if (TurnNumber == int.MaxValue)
-        {
-            throw new InvalidOperationException("Turn counter overflow.");
-        }
+        if (TurnNumber == int.MaxValue) throw new InvalidOperationException("Turn counter overflow.");
 
         TurnNumber++;
-        _currentPlayerIndex = _startingPlayerIndex;
+        CurrentPlayerIndex = _startingPlayerIndex;
     }
 
     /// <summary>
-    /// Advances to the next player in the rotation.
+    ///     Advances to the next player in the rotation.
     /// </summary>
     public void AdvanceToNextPlayer()
     {
-        _currentPlayerIndex = (_currentPlayerIndex + 1) % _playerOrder.Count;
+        CurrentPlayerIndex = (CurrentPlayerIndex + 1) % _playerOrder.Count;
     }
 
     /// <summary>
-    /// Forces the active player to a specific slot (used by the game manager when resuming saves or applying skips).
+    ///     Forces the active player to a specific slot (used by the game manager when resuming saves or applying skips).
     /// </summary>
     public void SetCurrentPlayer(Guid playerId)
     {
         var index = _playerOrder.FindIndex(p => p.Id == playerId);
-        if (index < 0)
-        {
-            throw new InvalidOperationException($"Player '{playerId}' is not registered in the turn order.");
-        }
+        if (index < 0) throw new InvalidOperationException($"Player '{playerId}' is not registered in the turn order.");
 
-        _currentPlayerIndex = index;
+        CurrentPlayerIndex = index;
     }
 }

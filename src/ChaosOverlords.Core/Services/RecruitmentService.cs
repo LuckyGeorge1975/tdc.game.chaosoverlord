@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.GameData;
@@ -8,7 +5,7 @@ using ChaosOverlords.Core.GameData;
 namespace ChaosOverlords.Core.Services;
 
 /// <summary>
-/// Default implementation of <see cref="IRecruitmentService"/> responsible for managing hire pools per player.
+///     Default implementation of <see cref="IRecruitmentService" /> responsible for managing hire pools per player.
 /// </summary>
 public sealed class RecruitmentService : IRecruitmentService
 {
@@ -19,17 +16,12 @@ public sealed class RecruitmentService : IRecruitmentService
 
     public RecruitmentService(IDataService dataService, IRngService rngService)
     {
-        if (dataService is null)
-        {
-            throw new ArgumentNullException(nameof(dataService));
-        }
+        if (dataService is null) throw new ArgumentNullException(nameof(dataService));
 
         _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
         _gangData = dataService.GetGangs();
         if (_gangData is null || _gangData.Count == 0)
-        {
             throw new InvalidOperationException("Gang data must be available to initialise recruitment service.");
-        }
     }
 
     public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
@@ -40,15 +32,10 @@ public sealed class RecruitmentService : IRecruitmentService
 
     public IReadOnlyList<RecruitmentRefreshResult> RefreshPools(GameState gameState, int turnNumber)
     {
-        if (gameState is null)
-        {
-            throw new ArgumentNullException(nameof(gameState));
-        }
+        if (gameState is null) throw new ArgumentNullException(nameof(gameState));
 
         if (turnNumber <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be positive.");
-        }
 
         var reservedNames = CollectReservedNames(gameState);
         var results = new List<RecruitmentRefreshResult>();
@@ -61,59 +48,47 @@ public sealed class RecruitmentService : IRecruitmentService
         return results;
     }
 
-    public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
+    public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId,
+        int turnNumber)
     {
-        if (gameState is null)
-        {
-            throw new ArgumentNullException(nameof(gameState));
-        }
+        if (gameState is null) throw new ArgumentNullException(nameof(gameState));
 
         if (string.IsNullOrWhiteSpace(sectorId))
-        {
             throw new ArgumentException("Sector id must be provided.", nameof(sectorId));
-        }
 
         if (turnNumber <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be positive.");
-        }
 
         var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
         if (!game.TryGetPlayer(playerId, out var player) || player is null)
-        {
             throw new InvalidOperationException($"Player '{playerId}' was not found in the game state.");
-        }
 
         var resolvedPlayer = player;
 
         if (!game.TryGetSector(sectorId, out var targetSector) || targetSector is null)
-        {
-            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId, sectorId, "Target sector not found.");
-        }
+            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId,
+                sectorId, "Target sector not found.");
 
         var sector = targetSector;
 
         if (sector.ControllingPlayerId != playerId)
-        {
-            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId, sectorId, "Sector is not controlled by the player.");
-        }
+            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidSector, optionId,
+                sectorId, "Sector is not controlled by the player.");
 
-        var pool = gameState.Recruitment.GetOrCreatePool(playerId, () => CreatePool(gameState, turnNumber, CollectReservedNames(gameState)));
+        var pool = gameState.Recruitment.GetOrCreatePool(playerId,
+            () => CreatePool(gameState, turnNumber, CollectReservedNames(gameState)));
         if (!pool.TryGetOption(optionId, out var option) || option is not { } selectedOption)
-        {
-            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidOption, optionId, sectorId, "Recruitment option not found.");
-        }
+            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidOption, optionId,
+                sectorId, "Recruitment option not found.");
 
         if (!selectedOption.CanHire)
-        {
-            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.AlreadyResolved, optionId, sectorId, "Recruitment option is no longer available.");
-        }
+            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.AlreadyResolved, optionId,
+                sectorId, "Recruitment option is no longer available.");
 
         var hiringCost = selectedOption.GangData.HiringCost;
         if (resolvedPlayer.Cash < hiringCost)
-        {
-            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InsufficientFunds, optionId, sectorId, "Insufficient funds to hire this gang.");
-        }
+            return FailureHire(gameState, playerId, turnNumber, RecruitmentActionStatus.InsufficientFunds, optionId,
+                sectorId, "Insufficient funds to hire this gang.");
 
         resolvedPlayer.Debit(hiringCost);
         var gangId = Guid.NewGuid();
@@ -124,31 +99,26 @@ public sealed class RecruitmentService : IRecruitmentService
 
         var snapshot = CreatePoolSnapshot(gameState, playerId, pool);
         var optionSnapshot = snapshot.Options.First(o => o.OptionId == selectedOption.Id);
-        return new RecruitmentHireResult(RecruitmentActionStatus.Success, snapshot, optionSnapshot, gangId, sectorId, null);
+        return new RecruitmentHireResult(RecruitmentActionStatus.Success, snapshot, optionSnapshot, gangId, sectorId,
+            null);
     }
 
     public RecruitmentDeclineResult Decline(GameState gameState, Guid playerId, Guid optionId, int turnNumber)
     {
-        if (gameState is null)
-        {
-            throw new ArgumentNullException(nameof(gameState));
-        }
+        if (gameState is null) throw new ArgumentNullException(nameof(gameState));
 
         if (turnNumber <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be positive.");
-        }
 
-        var pool = gameState.Recruitment.GetOrCreatePool(playerId, () => CreatePool(gameState, turnNumber, CollectReservedNames(gameState)));
+        var pool = gameState.Recruitment.GetOrCreatePool(playerId,
+            () => CreatePool(gameState, turnNumber, CollectReservedNames(gameState)));
         if (!pool.TryGetOption(optionId, out var option) || option is not { } selectedOption)
-        {
-            return FailureDecline(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidOption, optionId, "Recruitment option not found.");
-        }
+            return FailureDecline(gameState, playerId, turnNumber, RecruitmentActionStatus.InvalidOption, optionId,
+                "Recruitment option not found.");
 
         if (!selectedOption.CanHire)
-        {
-            return FailureDecline(gameState, playerId, turnNumber, RecruitmentActionStatus.AlreadyResolved, optionId, "Recruitment option is no longer available.");
-        }
+            return FailureDecline(gameState, playerId, turnNumber, RecruitmentActionStatus.AlreadyResolved, optionId,
+                "Recruitment option is no longer available.");
 
         selectedOption.MarkDeclined(turnNumber);
         var snapshot = CreatePoolSnapshot(gameState, playerId, pool);
@@ -156,17 +126,13 @@ public sealed class RecruitmentService : IRecruitmentService
         return new RecruitmentDeclineResult(RecruitmentActionStatus.Success, snapshot, optionSnapshot, null);
     }
 
-    private RecruitmentRefreshResult EnsurePoolInternal(GameState gameState, Guid playerId, int turnNumber, HashSet<string> reservedNames)
+    private RecruitmentRefreshResult EnsurePoolInternal(GameState gameState, Guid playerId, int turnNumber,
+        HashSet<string> reservedNames)
     {
-        if (gameState is null)
-        {
-            throw new ArgumentNullException(nameof(gameState));
-        }
+        if (gameState is null) throw new ArgumentNullException(nameof(gameState));
 
         if (turnNumber <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be positive.");
-        }
 
         var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
         var player = game.GetPlayer(playerId);
@@ -246,20 +212,15 @@ public sealed class RecruitmentService : IRecruitmentService
         var comparer = StringComparer.OrdinalIgnoreCase;
         var reserved = new HashSet<string>(comparer);
 
-        foreach (var gang in gameState.Game?.Gangs.Values ?? Enumerable.Empty<Gang>())
-        {
-            reserved.Add(gang.Data.Name);
-        }
+        foreach (var gang in gameState.Game?.Gangs.Values ?? Enumerable.Empty<Gang>()) reserved.Add(gang.Data.Name);
 
-        foreach (var option in gameState.Recruitment.GetAllOptions())
-        {
-            reserved.Add(option.GangData.Name);
-        }
+        foreach (var option in gameState.Recruitment.GetAllOptions()) reserved.Add(option.GangData.Name);
 
         return reserved;
     }
 
-    private RecruitmentPoolSnapshot CreatePoolSnapshot(GameState gameState, Guid playerId, RecruitmentPool pool, string? playerName = null)
+    private RecruitmentPoolSnapshot CreatePoolSnapshot(GameState gameState, Guid playerId, RecruitmentPool pool,
+        string? playerName = null)
     {
         var name = playerName ?? gameState.Game?.GetPlayer(playerId).Name ?? string.Empty;
         var options = pool.Options
@@ -276,14 +237,16 @@ public sealed class RecruitmentService : IRecruitmentService
         return new RecruitmentPoolSnapshot(playerId, name, options);
     }
 
-    private RecruitmentHireResult FailureHire(GameState gameState, Guid playerId, int turnNumber, RecruitmentActionStatus status, Guid optionId, string sectorId, string message)
+    private RecruitmentHireResult FailureHire(GameState gameState, Guid playerId, int turnNumber,
+        RecruitmentActionStatus status, Guid optionId, string sectorId, string message)
     {
         var snapshot = EnsurePoolInternal(gameState, playerId, turnNumber, CollectReservedNames(gameState)).Pool;
         var optionSnapshot = snapshot.Options.FirstOrDefault(o => o.OptionId == optionId);
         return new RecruitmentHireResult(status, snapshot, optionSnapshot, null, sectorId, message);
     }
 
-    private RecruitmentDeclineResult FailureDecline(GameState gameState, Guid playerId, int turnNumber, RecruitmentActionStatus status, Guid optionId, string message)
+    private RecruitmentDeclineResult FailureDecline(GameState gameState, Guid playerId, int turnNumber,
+        RecruitmentActionStatus status, Guid optionId, string message)
     {
         var snapshot = EnsurePoolInternal(gameState, playerId, turnNumber, CollectReservedNames(gameState)).Pool;
         var optionSnapshot = snapshot.Options.FirstOrDefault(o => o.OptionId == optionId);

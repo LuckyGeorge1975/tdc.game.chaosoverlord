@@ -88,26 +88,29 @@ public sealed class GangTests
         };
     }
 
-    private static ItemData CreateItemData() => new()
+    private static ItemData CreateItemData()
     {
-        Name = "Laser",
-        Type = 2,
-        ResearchCost = 2,
-        FabricationCost = 4,
-        TechLevel = 3,
-        Combat = 1,
-        Defense = 0,
-        Stealth = 0,
-        Detect = 0,
-        Chaos = 0,
-        Control = 0,
-        Heal = 0,
-        Influence = 0,
-        Research = 0,
-        Strength = 1,
-        BladeMelee = 0,
-        Ranged = 0,
-        Fighting = 0,
-        MartialArts = 0
-    };
+        return new ItemData
+        {
+            Name = "Laser",
+            Type = 2,
+            ResearchCost = 2,
+            FabricationCost = 4,
+            TechLevel = 3,
+            Combat = 1,
+            Defense = 0,
+            Stealth = 0,
+            Detect = 0,
+            Chaos = 0,
+            Control = 0,
+            Heal = 0,
+            Influence = 0,
+            Research = 0,
+            Strength = 1,
+            BladeMelee = 0,
+            Ranged = 0,
+            Fighting = 0,
+            MartialArts = 0
+        };
+    }
 }

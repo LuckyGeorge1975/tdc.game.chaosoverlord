@@ -3,8 +3,8 @@
              xmlns:sections="clr-namespace:ChaosOverlords.App.ViewModels.Sections"
              x:Class="ChaosOverlords.App.Views.TurnManagementView"
              x:DataType="sections:TurnManagementSectionViewModel">
-    <StackPanel Spacing="16">
-        <StackPanel Spacing="4">
+    <StackPanel Spacing="4">
+        <StackPanel Spacing="2">
             <TextBlock Text="Turn Management" FontSize="20" FontWeight="Bold" />
             <TextBlock Text="Control the turn phases and keep track of the command flow." FontSize="14" />
         </StackPanel>

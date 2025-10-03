@@ -4,28 +4,19 @@ using Avalonia.Controls.Templates;
 namespace ChaosOverlords.App;
 
 /// <summary>
-/// Resolves views for view models based on naming convention (FooViewModel → FooView).
+///     Resolves views for view models based on naming convention (FooViewModel → FooView).
 /// </summary>
 public sealed class ViewLocator : IDataTemplate
 {
     public Control Build(object? data)
     {
-        if (data is null)
-        {
-            return new TextBlock { Text = "No view available" };
-        }
+        if (data is null) return new TextBlock { Text = "No view available" };
 
         var name = data.GetType().FullName?.Replace("ViewModel", "View");
-        if (name is null)
-        {
-            return new TextBlock { Text = "View lookup failed" };
-        }
+        if (name is null) return new TextBlock { Text = "View lookup failed" };
 
         var type = Type.GetType(name);
-        if (type is null)
-        {
-            return new TextBlock { Text = name };
-        }
+        if (type is null) return new TextBlock { Text = name };
 
         try
         {
@@ -38,5 +29,7 @@ public sealed class ViewLocator : IDataTemplate
     }
 
     public bool Match(object? data)
-        => data is not null && data.GetType().Name.EndsWith("ViewModel", StringComparison.Ordinal);
+    {
+        return data is not null && data.GetType().Name.EndsWith("ViewModel", StringComparison.Ordinal);
+    }
 }

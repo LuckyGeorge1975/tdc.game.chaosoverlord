@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-
 namespace ChaosOverlords.Core.Domain.Game.Commands;
 
 /// <summary>
-/// Aggregates per-player command queues for the active game state.
+///     Aggregates per-player command queues for the active game state.
 /// </summary>
 public sealed class CommandQueueState
 {
@@ -23,9 +20,15 @@ public sealed class CommandQueueState
         return queue;
     }
 
-    public bool TryGet(Guid playerId, out CommandQueue? queue) => _queues.TryGetValue(playerId, out queue);
+    public bool TryGet(Guid playerId, out CommandQueue? queue)
+    {
+        return _queues.TryGetValue(playerId, out queue);
+    }
 
-    public void Clear() => _queues.Clear();
+    public void Clear()
+    {
+        _queues.Clear();
+    }
 
     public void Clear(Guid playerId)
     {

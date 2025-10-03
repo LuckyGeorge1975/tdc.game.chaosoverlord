@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,7 +14,8 @@ public sealed class FinancePreviewSectionViewModel : ObservableObject, IDisposab
         _owner.PropertyChanged += OnOwnerPropertyChanged;
     }
 
-    public ObservableCollection<TurnViewModel.FinanceCategoryViewModel> CityFinanceCategories => _owner.CityFinanceCategories;
+    public ObservableCollection<TurnViewModel.FinanceCategoryViewModel> CityFinanceCategories =>
+        _owner.CityFinanceCategories;
 
     public ObservableCollection<TurnViewModel.FinanceSectorViewModel> SectorFinance => _owner.SectorFinance;
 
@@ -25,7 +25,10 @@ public sealed class FinancePreviewSectionViewModel : ObservableObject, IDisposab
 
     public bool IsVisible => _owner.IsFinancePreviewVisible;
 
-    public void Dispose() => _owner.PropertyChanged -= OnOwnerPropertyChanged;
+    public void Dispose()
+    {
+        _owner.PropertyChanged -= OnOwnerPropertyChanged;
+    }
 
     private void OnOwnerPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

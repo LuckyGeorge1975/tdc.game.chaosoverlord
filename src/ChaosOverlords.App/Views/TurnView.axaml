@@ -1,43 +1,46 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
-			 xmlns:views="clr-namespace:ChaosOverlords.App.Views"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+             xmlns:views="clr-namespace:ChaosOverlords.App.Views"
              mc:Ignorable="d"
              x:Class="ChaosOverlords.App.Views.TurnView"
              x:DataType="vm:TurnViewModel">
-	<UserControl.Styles>
-		<Style Selector="Border.command-phase">
-			<Setter Property="Padding" Value="8" />
-			<Setter Property="CornerRadius" Value="4" />
-			<Setter Property="Margin" Value="0" />
-			<Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
-			<Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
-			<Setter Property="BorderThickness" Value="1" />
-		</Style>
-		<Style Selector="Border.command-phase TextBlock.phase-name">
-			<Setter Property="FontWeight" Value="Bold" />
-		</Style>
-		<Style Selector="Border.command-phase TextBlock.phase-state">
-			<Setter Property="FontStyle" Value="Italic" />
-			<Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
-		</Style>
-	</UserControl.Styles>
+    <UserControl.Styles>
+        <Style Selector="Border.command-phase">
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.command-phase TextBlock.phase-name">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.command-phase TextBlock.phase-state">
+            <Setter Property="FontStyle" Value="Italic" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+    </UserControl.Styles>
 
-	<Border Padding="16">
-		<StackPanel Spacing="16">
-			<views:TurnManagementView DataContext="{Binding TurnManagement}" />
+    <Border Padding="4">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="4">
+                <views:TurnManagementView DataContext="{Binding TurnManagement}" />
 
-			<views:CommandTimelineView DataContext="{Binding CommandTimeline}" />
+                <views:CommandTimelineView DataContext="{Binding CommandTimeline}" />
 
-			<views:FinancePreviewView DataContext="{Binding FinancePreview}" />
+                <views:FinancePreviewView DataContext="{Binding FinancePreview}" />
 
-			<views:CommandQueueView DataContext="{Binding CommandQueue}" />
+                <views:CommandQueueView DataContext="{Binding CommandQueue}" />
 
-			<views:RecruitmentView DataContext="{Binding Recruitment}" />
+                <views:RecruitmentView DataContext="{Binding Recruitment}" />
 
-			<views:TurnEventsView DataContext="{Binding TurnEventsPanel}" />
-		</StackPanel>
-	</Border>
+                <views:TurnEventsView DataContext="{Binding TurnEventsPanel}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
 </UserControl>

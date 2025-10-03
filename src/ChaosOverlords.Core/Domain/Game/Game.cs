@@ -3,14 +3,14 @@ using ChaosOverlords.Core.Domain.Players;
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Aggregates the runtime entities that describe a single campaign instance, keeping them in sync with their
-/// immutable data counterparts.
+///     Aggregates the runtime entities that describe a single campaign instance, keeping them in sync with their
+///     immutable data counterparts.
 /// </summary>
 public sealed class Game
 {
-    private readonly Dictionary<Guid, IPlayer> _players;
     private readonly Dictionary<Guid, Gang> _gangs;
     private readonly Dictionary<Guid, Item> _items;
+    private readonly Dictionary<Guid, IPlayer> _players;
     private readonly Dictionary<string, Sector> _sectors;
 
     public Game(
@@ -19,15 +19,9 @@ public sealed class Game
         IEnumerable<Gang>? gangs = null,
         IEnumerable<Item>? items = null)
     {
-        if (players is null)
-        {
-            throw new ArgumentNullException(nameof(players));
-        }
+        if (players is null) throw new ArgumentNullException(nameof(players));
 
-        if (sectors is null)
-        {
-            throw new ArgumentNullException(nameof(sectors));
-        }
+        if (sectors is null) throw new ArgumentNullException(nameof(sectors));
 
         _players = players.ToDictionary(p => p.Id);
         _sectors = sectors.ToDictionary(s => s.Id);
@@ -35,84 +29,100 @@ public sealed class Game
         _items = new Dictionary<Guid, Item>();
 
         if (items is not null)
-        {
             foreach (var item in items)
-            {
                 _items[item.Id] = item;
-            }
-        }
 
         if (gangs is not null)
-        {
             foreach (var gang in gangs)
-            {
                 AddGang(gang);
-            }
-        }
     }
 
     /// <summary>
-    /// All players participating in the current campaign, keyed by runtime id.
+    ///     All players participating in the current campaign, keyed by runtime id.
     /// </summary>
     public IReadOnlyDictionary<Guid, IPlayer> Players => _players;
 
     /// <summary>
-    /// Known city sectors forming the map for the campaign.
+    ///     Known city sectors forming the map for the campaign.
     /// </summary>
     public IReadOnlyDictionary<string, Sector> Sectors => _sectors;
 
     /// <summary>
-    /// Active gangs currently deployed on the board.
+    ///     Active gangs currently deployed on the board.
     /// </summary>
     public IReadOnlyDictionary<Guid, Gang> Gangs => _gangs;
 
     /// <summary>
-    /// Items that exist in the campaign world, including unequipped armory stock.
+    ///     Items that exist in the campaign world, including unequipped armory stock.
     /// </summary>
     public IReadOnlyDictionary<Guid, Item> Items => _items;
 
     /// <summary>
-    /// Retrieves the player runtime state for a known id.
+    ///     Retrieves the player runtime state for a known id.
     /// </summary>
-    public IPlayer GetPlayer(Guid playerId) => _players[playerId];
+    public IPlayer GetPlayer(Guid playerId)
+    {
+        return _players[playerId];
+    }
 
     /// <summary>
-    /// Attempts to resolve the player runtime state for optional lookups.
+    ///     Attempts to resolve the player runtime state for optional lookups.
     /// </summary>
-    public bool TryGetPlayer(Guid playerId, out IPlayer? player) => _players.TryGetValue(playerId, out player);
+    public bool TryGetPlayer(Guid playerId, out IPlayer? player)
+    {
+        return _players.TryGetValue(playerId, out player);
+    }
 
     /// <summary>
-    /// Retrieves the gang runtime state for a known id.
+    ///     Retrieves the gang runtime state for a known id.
     /// </summary>
-    public Gang GetGang(Guid gangId) => _gangs[gangId];
+    public Gang GetGang(Guid gangId)
+    {
+        return _gangs[gangId];
+    }
 
     /// <summary>
-    /// Attempts to resolve a gang; used by systems that operate conditionally.
+    ///     Attempts to resolve a gang; used by systems that operate conditionally.
     /// </summary>
-    public bool TryGetGang(Guid gangId, out Gang? gang) => _gangs.TryGetValue(gangId, out gang);
+    public bool TryGetGang(Guid gangId, out Gang? gang)
+    {
+        return _gangs.TryGetValue(gangId, out gang);
+    }
 
     /// <summary>
-    /// Retrieves an item instance by id.
+    ///     Retrieves an item instance by id.
     /// </summary>
-    public Item GetItem(Guid itemId) => _items[itemId];
+    public Item GetItem(Guid itemId)
+    {
+        return _items[itemId];
+    }
 
     /// <summary>
-    /// Attempts to resolve an item instance by id.
+    ///     Attempts to resolve an item instance by id.
     /// </summary>
-    public bool TryGetItem(Guid itemId, out Item? item) => _items.TryGetValue(itemId, out item);
+    public bool TryGetItem(Guid itemId, out Item? item)
+    {
+        return _items.TryGetValue(itemId, out item);
+    }
 
     /// <summary>
-    /// Resolves the requested sector.
+    ///     Resolves the requested sector.
     /// </summary>
-    public Sector GetSector(string sectorId) => _sectors[sectorId];
+    public Sector GetSector(string sectorId)
+    {
+        return _sectors[sectorId];
+    }
 
     /// <summary>
-    /// Attempts to resolve a sector without throwing.
+    ///     Attempts to resolve a sector without throwing.
     /// </summary>
-    public bool TryGetSector(string sectorId, out Sector? sector) => _sectors.TryGetValue(sectorId, out sector);
+    public bool TryGetSector(string sectorId, out Sector? sector)
+    {
+        return _sectors.TryGetValue(sectorId, out sector);
+    }
 
     /// <summary>
-    /// Registers a new player, usually during scenario setup.
+    ///     Registers a new player, usually during scenario setup.
     /// </summary>
     public void AddPlayer(IPlayer player)
     {
@@ -121,7 +131,7 @@ public sealed class Game
     }
 
     /// <summary>
-    /// Registers a gang into the campaign, wiring up ownership, sector presence, and equipment.
+    ///     Registers a gang into the campaign, wiring up ownership, sector presence, and equipment.
     /// </summary>
     public void AddGang(Gang gang)
     {
@@ -133,28 +143,21 @@ public sealed class Game
         owner.AssignGang(gang.Id);
 
         if (!_sectors.TryGetValue(gang.SectorId, out var sector))
-        {
             throw new InvalidOperationException($"Sector '{gang.SectorId}' is not registered in the game state.");
-        }
 
         sector.PlaceGang(gang);
 
-        foreach (var item in gang.Items)
-        {
-            _items[item.Id] = item;
-        }
+        foreach (var item in gang.Items) _items[item.Id] = item;
     }
 
     /// <summary>
-    /// Executes a move command, relocating a gang between sectors and updating all cross references.
+    ///     Executes a move command, relocating a gang between sectors and updating all cross references.
     /// </summary>
     public void MoveGang(Guid gangId, string targetSectorId)
     {
         if (!_sectors.ContainsKey(targetSectorId))
-        {
             throw new InvalidOperationException(
                 $"Target sector '{targetSectorId}' is not registered in the game state.");
-        }
 
         var gang = GetGang(gangId);
         var currentSector = GetSector(gang.SectorId);
@@ -166,33 +169,21 @@ public sealed class Game
     }
 
     /// <summary>
-    /// Removes a gang from the board, unwinding sector occupancy, ownership, and equipment references.
+    ///     Removes a gang from the board, unwinding sector occupancy, ownership, and equipment references.
     /// </summary>
     public void RemoveGang(Guid gangId)
     {
-        if (!_gangs.Remove(gangId, out var gang))
-        {
-            return;
-        }
+        if (!_gangs.Remove(gangId, out var gang)) return;
 
-        if (_players.TryGetValue(gang.OwnerId, out var owner))
-        {
-            owner.RemoveGang(gangId);
-        }
+        if (_players.TryGetValue(gang.OwnerId, out var owner)) owner.RemoveGang(gangId);
 
-        if (_sectors.TryGetValue(gang.SectorId, out var sector))
-        {
-            sector.RemoveGang(gangId);
-        }
+        if (_sectors.TryGetValue(gang.SectorId, out var sector)) sector.RemoveGang(gangId);
 
-        foreach (var item in gang.Items)
-        {
-            _items.Remove(item.Id);
-        }
+        foreach (var item in gang.Items) _items.Remove(item.Id);
     }
 
     /// <summary>
-    /// Associates an item with a gang so that its bonuses are counted going forward.
+    ///     Associates an item with a gang so that its bonuses are counted going forward.
     /// </summary>
     public void RegisterItem(Item item, Guid owningGangId)
     {
@@ -204,22 +195,15 @@ public sealed class Game
     }
 
     /// <summary>
-    /// Removes an item from play. If the item is attached to a gang it will also be unequipped.
+    ///     Removes an item from play. If the item is attached to a gang it will also be unequipped.
     /// </summary>
     public bool RemoveItem(Guid itemId)
     {
-        if (!_items.Remove(itemId))
-        {
-            return false;
-        }
+        if (!_items.Remove(itemId)) return false;
 
         foreach (var gang in _gangs.Values)
-        {
             if (gang.DetachItem(itemId))
-            {
                 break;
-            }
-        }
 
         return true;
     }

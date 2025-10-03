@@ -1,7 +1,7 @@
 namespace ChaosOverlords.Core.GameData;
 
 /// <summary>
-/// Immutable representation of an item entry sourced from the embedded game data.
+///     Immutable representation of an item entry sourced from the embedded game data.
 /// </summary>
 public sealed record ItemData
 {
