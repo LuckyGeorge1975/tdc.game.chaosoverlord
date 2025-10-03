@@ -3,7 +3,7 @@ using ChaosOverlords.Core.Domain.Game;
 namespace ChaosOverlords.App.Messaging;
 
 /// <summary>
-/// Broadcast whenever the turn lifecycle state changes.
+///     Broadcast whenever the turn lifecycle state changes.
 /// </summary>
 /// <param name="TurnNumber">The current turn index starting at 1.</param>
 /// <param name="CurrentPhase">The active turn phase.</param>

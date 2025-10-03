@@ -83,7 +83,7 @@ public sealed class DeterministicRngServiceTests
         var rng = new DeterministicRngService();
         rng.Reset(99);
 
-        var result = rng.RollDice(2, 6, modifier: 1);
+        var result = rng.RollDice(2, 6, 1);
 
         Assert.Equal(2, result.Dice.Count);
         Assert.Equal("2d6+1", result.Expression);

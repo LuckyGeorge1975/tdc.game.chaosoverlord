@@ -3,7 +3,7 @@ using ChaosOverlords.Core.Domain.Game;
 namespace ChaosOverlords.Core.Domain.Players;
 
 /// <summary>
-/// Placeholder for remote/network-controlled player integration.
+///     Placeholder for remote/network-controlled player integration.
 /// </summary>
 public sealed class NetworkPlayer : PlayerBase
 {

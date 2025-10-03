@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-
 namespace ChaosOverlords.Core.Domain.Game.Recruitment;
 
 /// <summary>
-/// Maintains the recruitment options for a single player.
+///     Maintains the recruitment options for a single player.
 /// </summary>
 internal sealed class RecruitmentPool
 {
@@ -13,20 +10,12 @@ internal sealed class RecruitmentPool
     public RecruitmentPool(int slotCount, Func<int, RecruitmentOption> optionFactory)
     {
         if (slotCount <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(slotCount), slotCount, "Slot count must be positive.");
-        }
 
-        if (optionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(optionFactory));
-        }
+        if (optionFactory is null) throw new ArgumentNullException(nameof(optionFactory));
 
         _options = new RecruitmentOption[slotCount];
-        for (var i = 0; i < slotCount; i++)
-        {
-            _options[i] = optionFactory(i);
-        }
+        for (var i = 0; i < slotCount; i++) _options[i] = optionFactory(i);
     }
 
     public IReadOnlyList<RecruitmentOption> Options => _options;
@@ -46,9 +35,7 @@ internal sealed class RecruitmentPool
     public void ReplaceOption(int slotIndex, RecruitmentOption option)
     {
         if (slotIndex < 0 || slotIndex >= _options.Length)
-        {
             throw new ArgumentOutOfRangeException(nameof(slotIndex), slotIndex, "Slot index is out of bounds.");
-        }
 
         option = option ?? throw new ArgumentNullException(nameof(option));
         _options[slotIndex] = option;

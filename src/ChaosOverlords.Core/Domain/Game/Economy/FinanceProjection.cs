@@ -1,17 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace ChaosOverlords.Core.Domain.Game.Economy;
 
 /// <summary>
-/// Identifies a named finance category used in the city and sector previews.
+///     Identifies a named finance category used in the city and sector previews.
 /// </summary>
 public enum FinanceCategoryType
 {
     Upkeep,
     NewRecruits,
+    Research,
     Equipment,
     CityOfficials,
     SectorTax,
@@ -21,16 +19,14 @@ public enum FinanceCategoryType
 }
 
 /// <summary>
-/// Represents an individual line item in the finance preview.
+///     Represents an individual line item in the finance preview.
 /// </summary>
 public sealed class FinanceCategory
 {
     public FinanceCategory(FinanceCategoryType type, string displayName, int amount)
     {
         if (string.IsNullOrWhiteSpace(displayName))
-        {
             throw new ArgumentException("Display name cannot be null or whitespace.", nameof(displayName));
-        }
 
         Type = type;
         DisplayName = displayName;
@@ -42,7 +38,7 @@ public sealed class FinanceCategory
     public string DisplayName { get; }
 
     /// <summary>
-    /// Signed amount for this category. Expenses should be negative values, income positive values.
+    ///     Signed amount for this category. Expenses should be negative values, income positive values.
     /// </summary>
     public int Amount { get; }
 
@@ -52,20 +48,20 @@ public sealed class FinanceCategory
 }
 
 /// <summary>
-/// Finance breakdown for a single sector.
+///     Finance breakdown for a single sector.
 /// </summary>
 public sealed class FinanceSectorProjection
 {
     public FinanceSectorProjection(string sectorId, string displayName, IReadOnlyList<FinanceCategory> categories)
     {
         if (string.IsNullOrWhiteSpace(sectorId))
-        {
             throw new ArgumentException("Sector id cannot be null or whitespace.", nameof(sectorId));
-        }
 
         SectorId = sectorId;
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
-        Categories = new ReadOnlyCollection<FinanceCategory>((categories ?? throw new ArgumentNullException(nameof(categories))).ToList());
+        Categories =
+            new ReadOnlyCollection<FinanceCategory>((categories ?? throw new ArgumentNullException(nameof(categories)))
+                .ToList());
     }
 
     public string SectorId { get; }
@@ -74,30 +70,30 @@ public sealed class FinanceSectorProjection
 
     public IReadOnlyList<FinanceCategory> Categories { get; }
 
-    public int NetChange => Categories.Where(category => category.Type != FinanceCategoryType.CashAdjustment).Sum(category => category.Amount);
+    public int NetChange => Categories.Where(category => category.Type != FinanceCategoryType.CashAdjustment)
+        .Sum(category => category.Amount);
 }
 
 /// <summary>
-/// Aggregated finance preview for the active player.
+///     Aggregated finance preview for the active player.
 /// </summary>
 public sealed class FinanceProjection
 {
-    public FinanceProjection(Guid playerId, string playerName, IReadOnlyList<FinanceCategory> cityCategories, IReadOnlyList<FinanceSectorProjection> sectors)
+    public FinanceProjection(Guid playerId, string playerName, IReadOnlyList<FinanceCategory> cityCategories,
+        IReadOnlyList<FinanceSectorProjection> sectors)
     {
-        if (playerId == Guid.Empty)
-        {
-            throw new ArgumentException("Player id must be provided.", nameof(playerId));
-        }
+        if (playerId == Guid.Empty) throw new ArgumentException("Player id must be provided.", nameof(playerId));
 
         if (string.IsNullOrWhiteSpace(playerName))
-        {
             throw new ArgumentException("Player name cannot be null or whitespace.", nameof(playerName));
-        }
 
         PlayerId = playerId;
         PlayerName = playerName;
-        CityCategories = new ReadOnlyCollection<FinanceCategory>((cityCategories ?? throw new ArgumentNullException(nameof(cityCategories))).ToList());
-        Sectors = new ReadOnlyCollection<FinanceSectorProjection>((sectors ?? throw new ArgumentNullException(nameof(sectors))).ToList());
+        CityCategories =
+            new ReadOnlyCollection<FinanceCategory>(
+                (cityCategories ?? throw new ArgumentNullException(nameof(cityCategories))).ToList());
+        Sectors = new ReadOnlyCollection<FinanceSectorProjection>(
+            (sectors ?? throw new ArgumentNullException(nameof(sectors))).ToList());
     }
 
     public Guid PlayerId { get; }
@@ -108,5 +104,6 @@ public sealed class FinanceProjection
 
     public IReadOnlyList<FinanceSectorProjection> Sectors { get; }
 
-    public int NetCashAdjustment => CityCategories.Where(category => category.Type != FinanceCategoryType.CashAdjustment).Sum(category => category.Amount);
+    public int NetCashAdjustment => CityCategories
+        .Where(category => category.Type != FinanceCategoryType.CashAdjustment).Sum(category => category.Amount);
 }

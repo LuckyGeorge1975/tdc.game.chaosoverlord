@@ -187,7 +187,7 @@
   Keine Multi-Step-Pfade in einer Ausführung.
 - Kapazität: Max. 6 eigene Gangs pro Sektor (Manual). Bewegung in volle Sektoren ist ungültig.
 - Füge Karteninteraktionen hinzu: Offenlegen von Sector-Details beim Betreten, Aktualisierung von Fog/Intel-Platzhaltern.
-- Aktualisiere CommandResolver + Tests für neue Pfadvalidierungen, inklusive RNG-gestützter Escape-Rolls (an Action-Framework angebunden).
+- Aktualisiere CommandResolver + Tests für neue Pfadvalidierungen.
 - UI: MapView markiert legale Ziele; Timeline/Event-Log spiegelt neue Bewegungsresultate.
 
 Hinweise:
@@ -205,21 +205,30 @@ Hinweise:
 
 ## Task 18 – Research & Equipment Management
 
-**Status:** 🟡 Planned – Tech- und Ausrüstungsfluss vorbereiten.
+**Status:** ✅ Done – Grundfunktionen und UI-Ansätze implementiert (2025-10-03).
 
-- Erweiterung von `RecruitmentService`/neuen Services um Research-Punkte, Equipment-Produktion und Einkauf.
-- Implementiere Equip/Unequip-Aktion inkl. Inventar, Kostenabzug, Stat-Aktualisierung am Gang.
-- Aktualisiere Finance Preview (Equipment/Research-Spalten) und TurnViewModel-Bindings.
-- Tests für Inventargrenzen, doppelte Ausrüstung, Research-Payout.
+- Fabrication-Flow eingeführt (Queue + Resolver), Finance Preview berücksichtigt Fabrication-Kosten.
+- Research-UI verbessert: AutoComplete mit „Name (Cost)“, Research-Kategorie in Finance Preview sichtbar.
+- EquipmentService: Equip/Unequip/Give/Sell implementiert; Kapazitätslimit pro Gang (2 Items) und Validierungen.
+- Tests: Fabrication, Give/Sell, Finance Research-Linie + Kapazitätsgrenze grün.
 
-## Task 19 – UI & Logging Integration für Kernaktionen
+## Task 19 – Finance HUD + City Financial Dialog
 
-**Status:** 🟡 Planned – Sichtbarkeit der neuen Aktionen sicherstellen.
+**Status:** 🟡 Planned – UI-Oberflächen auf bestehende Projektion aufsetzen.
 
-- CommandTimeline und TurnManagement-Panel erhalten neue Slots/Badges für Influence/Research/Equip-Aktionen.
-- Map/Recruitment/Finance-Views zeigen Ergebnisse (z. B. neue Boni, laufende Projekte) mit Tooltips.
-- TurnEventLog fasst Kernaktionen pro Phase zusammen; Export/Replay bleibt deterministisch. Datei‑Logging mit Retention ist aktiv; optional: Rotation nach Größe/Zeit.
-- Smoke-Test-Szenario, das einen kompletten Kernaktions-Zyklus durchläuft.
+- CO.FinanceHUDIndicator im Footer zeigt Net +/- der nächsten Runde; Klick öffnet Dialog.
+- CO.CityFinancialDialog listet Kategorien (Upkeep, Recruits, Research, Equipment, Officials, Sector Tax, Site Protection, Chaos Estimate, Cash Adjustment) mit Summen.
+- Anbindung an bestehenden IFinancePreviewService; minimaler Drilldown.
+- Tests/Checks: Bindings fehlerfrei (keine Binding-Errors), simple VM-Snapshot-Test.
+
+## Task 20 – Event Feed + Last Turn Events Dialog
+
+**Status:** 🟡 Planned – Sichtbare Rückmeldungen der Turn-Events.
+
+- CO.EventFeedPanel als nicht-blockierender Panel (rechts/links) mit klickbaren Events.
+- Optional: CO.LastTurnEventsDialog als modal am Rundenende.
+- Adapter vom Turn-Event-Writer auf eine in-memory Collection (deterministisch, seed-stabil).
+- Tests/Checks: Einträge erscheinen nach Execution; Klick wählt Sektor (falls referenziert).
 
 ### Nächste Schritte (Backlog)
 - `appsettings.{Environment}.json`‑Overlays und README‑Dokumentation ergänzen.
@@ -229,45 +238,101 @@ Hinweise:
 
 ---
 
-# Chaos Overlords – Phase 4 Tasks (Kampf & Verstecken)
+# Chaos Overlords – Phase 4 Tasks (Research, Equipment & City Officials)
 
-> Ziel: Kampf- und Stealth-Mechaniken inklusive UI-Feedback, basierend auf dem ActionFramework aus Phase 3.
+> Ziel: Kernökonomie und Inventarfluss komplettieren; Instant/Transaction‑Slots beleben.
 
-## Task 20 – Combat Resolution Engine
+## Task 21 – Equipment Give/Sell Dialogs
 
-**Status:** 🟡 Planned – Grundgerüst für Attack/Terminate.
+**Status:** 🟡 Planned – Dünne Dialogs über bestehende Services.
 
-- Implementiere Kampfausgang (Attack, Counter, Terminate) auf Basis von Gang-Stats, Ausrüstung und Terrain-Boni.
-- Unterstütze Mehr-Gang-Konflikte (Allies vs. Enemies) und wende deterministische Würfelwürfe an.
-- Liefere CombatReport mit Einzelschritten (Rolls, Modifikatoren, Schaden) für UI & Tests.
-- Unit-Tests für typische Szenarien (Übermacht, knapper Sieg, kritischer Fehlschlag).
+- CO.EquipmentGiveDialog: Inventar → Zielgang, Validierungen (Kapazität/Tech) via IEquipmentService.
+- CO.EquipmentSellDialog: Liste verkaufbarer Items + Erlöse; Bestätigung.
+- Reuse bestehender Services/Validierungen; kleine Item/Gang VMs.
+- Tests/Checks: UI-Bindings und Fehlerzustände über einfache VM-Tests.
 
-## Task 21 – Hide & Search Mechanics
+## Task 22 – ItemDetailPanel mit Delta-Vorschau
 
-**Status:** 🟡 Planned – Stealth-Checks und Gegenmaßnahmen.
+**Status:** 🟡 Planned – Wiederverwendbares Delta-Panel.
 
-- Implementiere Hide-Command (Gang versteckt sich, Chaos sinkt) und Search-Command (Gegenaktionen der Gegner/Polizei).
-- Nutze ActionFramework: Erfolgswahrscheinlichkeiten basieren auf Stealth/Detect/Support.
-- Stelle sicher, dass versteckte Gangs spezielle Regeln für Combat/Influence/Movement erhalten.
-- Tests für Sucherfolge, fehlgeschlagene Suche, gestaffelte Mehrfachsuchen.
+- Kompakter View zeigt aktuelle vs. mit-Item Werte (+X/−Y) farblich.
+- Integration in Give/Sell und später Purchase/Research.
+- Erfordert konsistente Effektprojektion in VM.
 
-## Task 22 – Combat & Stealth UI
+## Task 23 – Research UI Polish
 
-**Status:** 🟡 Planned – Spielerfeedback für Actions.
+**Status:** 🟡 Planned – Kleines UI-Feintuning.
 
-- Erstelle modale Dialoge/Overlays für Combat/Hiding mit Schritt-für-Schritt-Anzeige der Würfelwürfe.
-- Timeline markiert laufende Gefechte; MapView zeigt Konfliktstatus (Icons, Farbmarkierungen).
-- Accessibility: Tastatursteuerung, Tooltips (Roll breakdown), Logging-Links zu Event-History.
-- UI-Snapshot-Tests/Automation zur Validierung von Bindings.
+- Case-insensitive Filter für AutoComplete; Label mit Progress/Turns (IResearchService Preview).
+- Optional einfacher Research-Dialog mit Liste + Fortschritt.
 
-## Task 23 – Event Log & Economy Integration
+## Task 24 – Right Panel Shell (Actions)
 
-**Status:** 🟡 Planned – Nachwirkungen der Kämpfe abbilden.
+**Status:** 🟡 Planned – Einstiegsfläche für Aktionen.
 
-- TurnEventLog gruppiert Kampf-/Hide-Ereignisse, inkl. Loot/Schaden, und verweist auf Replay.
-- EconomyService erhält Hooks für Kampfkosten (medizinische Kosten, Ausrüstungsschäden).
-- Finance Preview greift auf Kampf-/Stealth-Resultate zu (z. B. Ausgaben für Heal/Equipment).
-- Regression-/Integrationstests über einen vollständigen Kampf+Hide Turn.
+- CO.RightPanelView mit Buttons (Events, City, Financial, Gangs, Ranking, Done) und optional einklappbarem EventFeed.
+- Buttons öffnen die Dialoge/Panele aus Tasks 19–23.
+
+## Task 25 – Research Service & Instant Command
+
+**Status:** 🟡 Planned – deterministischer Fortschritt & Caps.
+
+- Implementiere `IResearchService` mit Projekten, Progress und Caps; Site‑Boni (z. B. Lab) einrechnen.
+- CommandQueue/Resolver: Research als Instant; Preview zeigt Projekt, Kosten, erwarteten Fortschritt.
+- Tests: deterministische Seeds, Cap‑Erreichung, Multi‑Turn‑Progress.
+
+## Task 26 – City Officials (Bribe/Snitch) Instant Commands
+
+**Status:** 🟡 Planned – Equip/Unequip/Give/Sell mit Slots/Tech.
+
+- Implementiere `IEquipmentService` (Equip/Unequip/Give/Sell); Slots (Weapon/Armor/Misc), TechLevel‑Gates, doppelte/inkompatible Items verhindern.
+- Pricing mit Site‑Discounts (Factories/Markets); Events/Fehlertexte.
+- Finance Preview integriert Käufe/Verkäufe; UI‑Inventory‑Panel.
+- Tests: Slot‑Validierung, Discounts, Preis‑Rundung, Give/Sell‑Kantenfälle.
+
+## Task 27 – Influence Method Options (optional)
+
+**Status:** 🟡 Planned – klare Kosten/Effekte, keine Police‑KI.
+
+- Definiere Bribe/Snitch als Instant (Tolerance ±3; fixer Cash‑Abzug, z. B. 3); deterministisch, Seed‑stabil.
+- Naming‑Klarstellung vs. Influence: City „Bribe“ bleibt, Influence‑Variante ggf. „Payoff“.
+- Finance Preview zeigt Officials‑Kosten; Tests für Kettenaktionen und Ökonomieeffekte.
+
+## Task 28 – UI & Logging Integration für Kernaktionen
+
+**Status:** 🟡 Planned – Sichtbarkeit der neuen Aktionen sicherstellen.
+
+- CommandTimeline und TurnManagement-Panel erhalten Badges für Influence/Research/Equip-Aktionen.
+- Map/Recruitment/Finance-Views zeigen Ergebnisse (z. B. neue Boni, laufende Projekte) mit Tooltips.
+- TurnEventLog fasst Kernaktionen pro Phase zusammen; Datei‑Logging mit Retention aktiv.
+- Smoke-Test-Szenario, das einen kompletten Kernaktions-Zyklus durchläuft.
+
+**Status:** 🟡 Planned – Propaganda/Payoff als auswählbare Methode.
+
+- enum `InfluenceMethod { Propaganda, Payoff }`; UI‑Dropdown; Resolver/Preview mit Formeln.
+- Tests: Beide Methoden, deterministisch, Previews korrekt.
+
+---
+
+# Chaos Overlords – Phase 5 Tasks (Kampf & Verstecken)
+
+> Ziel: Kampf- und Stealth-Mechaniken inklusive UI-Feedback, basierend auf Phase‑4‑Ökosystem.
+
+## Task 29 – Combat Resolution Engine
+
+… (Inhalte wie bisher Task 20, verschoben)
+
+## Task 30 – Hide & Search Mechanics
+
+… (Inhalte wie bisher Task 21, verschoben)
+
+## Task 31 – Combat & Stealth UI
+
+… (Inhalte wie bisher Task 22, verschoben)
+
+## Task 32 – Event Log & Economy Integration
+
+… (Inhalte wie bisher Task 23, verschoben)
 
 ---
 

@@ -38,7 +38,8 @@ public class EmbeddedJsonDataServiceTests
 
     [Theory]
     [MemberData(nameof(GangSamples))]
-    public async Task GetGangsAsync_MapsExpectedSampleValues(string name, int hiringCost, int combat, string image, string thumbnail)
+    public async Task GetGangsAsync_MapsExpectedSampleValues(string name, int hiringCost, int combat, string image,
+        string thumbnail)
     {
         var gangs = await _sut.GetGangsAsync();
         var match = gangs.SingleOrDefault(g => g.Name == name);

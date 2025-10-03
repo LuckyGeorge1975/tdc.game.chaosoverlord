@@ -1,26 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
-using Xunit;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class CommandQueueServiceTests
 {
-
     [Fact]
     public void QueueMove_AddsCommand_WhenInputIsValid()
     {
         var service = new CommandQueueService();
         var (state, playerId, gang) = CreateState();
 
-        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+        var result = service.QueueMove(state, playerId, gang.Id, "A2", 1);
 
         Assert.Equal(CommandQueueRequestStatus.Success, result.Status);
         var snapshot = Assert.Single(result.Snapshot.Commands);
@@ -36,10 +31,10 @@ public sealed class CommandQueueServiceTests
         var service = new CommandQueueService();
         var (state, playerId, gang) = CreateState();
 
-        var first = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+        var first = service.QueueMove(state, playerId, gang.Id, "A2", 1);
         Assert.Equal(CommandQueueRequestStatus.Success, first.Status);
 
-        var second = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+        var second = service.QueueMove(state, playerId, gang.Id, "A2", 1);
 
         Assert.Equal(CommandQueueRequestStatus.Replaced, second.Status);
         Assert.NotNull(second.Command);
@@ -54,7 +49,7 @@ public sealed class CommandQueueServiceTests
         var (state, playerId, gang) = CreateState();
 
         // From A1, A3 is not adjacent (two rows away)
-        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A3", turnNumber: 1);
+        var result = service.QueueMove(state, playerId, gang.Id, "A3", 1);
 
         Assert.Equal(CommandQueueRequestStatus.NotAdjacent, result.Status);
         Assert.Empty(result.Snapshot.Commands);
@@ -69,11 +64,11 @@ public sealed class CommandQueueServiceTests
         // Fill target sector A2 with 6 of the same owner's gangs
         for (var i = 0; i < 6; i++)
         {
-            var fillerGang = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, playerId, sectorId: "A2");
+            var fillerGang = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, playerId, "A2");
             state.Game.AddGang(fillerGang);
         }
 
-        var result = service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+        var result = service.QueueMove(state, playerId, gang.Id, "A2", 1);
 
         Assert.Equal(CommandQueueRequestStatus.InvalidAction, result.Status);
         Assert.Empty(result.Snapshot.Commands);
@@ -84,9 +79,9 @@ public sealed class CommandQueueServiceTests
     {
         var service = new CommandQueueService();
         var (state, playerId, gang) = CreateState();
-        service.QueueMove(state, playerId, gang.Id, targetSectorId: "A2", turnNumber: 1);
+        service.QueueMove(state, playerId, gang.Id, "A2", 1);
 
-        var result = service.Remove(state, playerId, gang.Id, turnNumber: 1);
+        var result = service.Remove(state, playerId, gang.Id, 1);
 
         Assert.Equal(CommandQueueRequestStatus.Removed, result.Status);
         Assert.NotNull(result.ReplacedCommand);
@@ -100,18 +95,15 @@ public sealed class CommandQueueServiceTests
         var (state, playerId, gang) = CreateState();
 
         // Not controlled sector (A2 not controlled)
-        var result1 = service.QueueInfluence(state, playerId, gang.Id, sectorId: "A2", turnNumber: 1);
+        var result1 = service.QueueInfluence(state, playerId, gang.Id, "A2", 1);
         Assert.Equal(CommandQueueRequestStatus.InvalidAction, result1.Status);
 
         // Ensure A1 is controlled and has resistance > 0
         var a1 = state.Game.GetSector("A1");
         a1.SetController(playerId);
-        if (a1.InfluenceResistance == 0)
-        {
-            a1.ResetInfluence();
-        }
+        if (a1.InfluenceResistance == 0) a1.ResetInfluence();
         // Gang is in A1 from CreateState
-        var result2 = service.QueueInfluence(state, playerId, gang.Id, sectorId: "A1", turnNumber: 1);
+        var result2 = service.QueueInfluence(state, playerId, gang.Id, "A1", 1);
         Assert.Equal(CommandQueueRequestStatus.Success, result2.Status);
         Assert.Single(result2.Snapshot.Commands);
         Assert.Equal(PlayerCommandKind.Influence, result2.Snapshot.Commands.Single().Kind);
@@ -126,10 +118,7 @@ public sealed class CommandQueueServiceTests
         // Prepare A1 as controlled with resistance > 0
         var a1 = state.Game.GetSector("A1");
         a1.SetController(playerId);
-        if (a1.InfluenceResistance == 0)
-        {
-            a1.ResetInfluence();
-        }
+        if (a1.InfluenceResistance == 0) a1.ResetInfluence();
 
         // Simulate a temporary desync: gang's SectorId is A1 but the sector's occupant list doesn't include the gang
         Assert.Equal("A1", gang.SectorId);
@@ -137,7 +126,7 @@ public sealed class CommandQueueServiceTests
         Assert.DoesNotContain(gang.Id, a1.GangIds);
 
         // Presence check should accept either occupancy or matching current sector id
-        var result = service.QueueInfluence(state, playerId, gang.Id, sectorId: "A1", turnNumber: 1);
+        var result = service.QueueInfluence(state, playerId, gang.Id, "A1", 1);
 
         Assert.Equal(CommandQueueRequestStatus.Success, result.Status);
         var snapshot = Assert.Single(result.Snapshot.Commands);
@@ -151,7 +140,7 @@ public sealed class CommandQueueServiceTests
         var player = new Player(playerId, "Player One");
         var sectors = new[]
         {
-            new Sector("A1", CreateSite("A1 Block", resistance: 2), playerId),
+            new Sector("A1", CreateSite("A1 Block", 2), playerId),
             new Sector("A2", CreateSite("A2 Block")),
             new Sector("B2", CreateSite("B2 Block")),
             new Sector("A3", CreateSite("A3 Block"))
@@ -165,7 +154,7 @@ public sealed class CommandQueueServiceTests
             Strength = 4
         };
 
-        var gang = new Gang(Guid.NewGuid(), gangData, playerId, sectorId: "A1");
+        var gang = new Gang(Guid.NewGuid(), gangData, playerId, "A1");
 
         var game = new Game(new IPlayer[] { player }, sectors, new[] { gang });
         var scenario = new ScenarioConfig
@@ -187,15 +176,18 @@ public sealed class CommandQueueServiceTests
             Seed = 42
         };
 
-        var state = new GameState(game, scenario, new List<IPlayer> { player }, startingPlayerIndex: 0, randomSeed: 42);
+        var state = new GameState(game, scenario, new List<IPlayer> { player }, 0, 42);
         return (state, playerId, gang);
     }
 
-    private static SiteData CreateSite(string name, int resistance = 0) => new()
+    private static SiteData CreateSite(string name, int resistance = 0)
     {
-        Name = name,
-        Cash = 0,
-        Tolerance = 0,
-        Resistance = resistance
-    };
+        return new SiteData
+        {
+            Name = name,
+            Cash = 0,
+            Tolerance = 0,
+            Resistance = resistance
+        };
+    }
 }

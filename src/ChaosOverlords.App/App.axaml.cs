@@ -4,18 +4,19 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ChaosOverlords.App.ViewModels;
+using ChaosOverlords.Core.Configuration;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Services;
 using ChaosOverlords.Core.Services.Messaging;
 using ChaosOverlords.Data;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace ChaosOverlords.App;
 
-public partial class App : Application
+public class App : Application
 {
     private ServiceProvider? _serviceProvider;
 
@@ -48,7 +49,8 @@ public partial class App : Application
                     field.SetValue(null, false);
                     break;
                 default:
-                    Debug.WriteLine("AvaloniaXamlLoader.AssumeCompiled member not found; runtime XAML fallback unavailable.");
+                    Debug.WriteLine(
+                        "AvaloniaXamlLoader.AssumeCompiled member not found; runtime XAML fallback unavailable.");
                     break;
             }
         }
@@ -64,9 +66,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             if (_serviceProvider is null)
-            {
                 throw new InvalidOperationException("Service provider has not been initialized.");
-            }
 
             // Ensure core services are ready before the UI interacts with the controller.
             var session = _serviceProvider.GetRequiredService<IGameSession>();
@@ -95,7 +95,7 @@ public partial class App : Application
         // Build configuration: appsettings.json + environment variables (keep it simple for now)
         var configBuilder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", true, true)
             .AddEnvironmentVariables();
 
         var configuration = configBuilder.Build();
@@ -108,17 +108,25 @@ public partial class App : Application
         services.AddSingleton<IGameSession, GameSession>();
         services.AddSingleton<IEconomyService, EconomyService>();
         services.AddSingleton<IRecruitmentService, RecruitmentService>();
+        services.AddSingleton<IResearchService>(sp => new ResearchService(sp.GetRequiredService<IDataService>()));
+        services.AddSingleton<IEquipmentService, EquipmentService>();
         services.AddSingleton<ICommandQueueService, CommandQueueService>();
-    services.AddSingleton<ICommandResolutionService, CommandResolutionService>();
-    services.AddSingleton<IFinancePreviewService, FinancePreviewService>();
-    services.AddSingleton<IMessageHub, MessageHub>();
+        services.AddSingleton<ICommandResolutionService>(sp => new CommandResolutionService(
+            sp.GetRequiredService<ITurnEventWriter>(),
+            sp.GetRequiredService<IRngService>(),
+            sp.GetRequiredService<IResearchService>(),
+            sp.GetRequiredService<IDataService>(),
+            sp.GetRequiredService<IEquipmentService>()));
+        services.AddSingleton<IFinancePreviewService>(sp =>
+            new FinancePreviewService(sp.GetRequiredService<IDataService>()));
+        services.AddSingleton<IMessageHub, MessageHub>();
 
-    // Bind domain logging options and expose the bound POCO for constructor injection (keeps Core free of Options deps)
-    services.Configure<ChaosOverlords.Core.Configuration.LoggingOptions>(configuration.GetSection("Logging:TurnEvents"));
-    services.AddSingleton(sp => sp.GetRequiredService<IOptions<ChaosOverlords.Core.Configuration.LoggingOptions>>().Value);
+        // Bind domain logging options and expose the bound POCO for constructor injection (keeps Core free of Options deps)
+        services.Configure<LoggingOptions>(configuration.GetSection("Logging:TurnEvents"));
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<LoggingOptions>>().Value);
         services.AddSingleton<ITurnEventLog, TurnEventLog>();
-        services.AddSingleton<ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider, ChaosOverlords.Core.Domain.Game.Events.LogPathProvider>();
-        services.AddSingleton<ITurnEventWriter, ChaosOverlords.Core.Domain.Game.Events.FileTurnEventWriter>();
+        services.AddSingleton<ILogPathProvider, LogPathProvider>();
+        services.AddSingleton<ITurnEventWriter, FileTurnEventWriter>();
         services.AddSingleton<TurnEventRecorder>();
         services.AddSingleton<TurnPhaseProcessor>();
         services.AddSingleton<ITurnController, TurnController>();

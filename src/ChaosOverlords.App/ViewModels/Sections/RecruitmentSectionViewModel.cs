@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,7 +15,8 @@ public sealed class RecruitmentSectionViewModel : ObservableObject, IDisposable
         _owner.PropertyChanged += OnOwnerPropertyChanged;
     }
 
-    public ObservableCollection<TurnViewModel.RecruitmentOptionViewModel> RecruitmentOptions => _owner.RecruitmentOptions;
+    public ObservableCollection<TurnViewModel.RecruitmentOptionViewModel> RecruitmentOptions =>
+        _owner.RecruitmentOptions;
 
     public ObservableCollection<TurnViewModel.SectorOptionViewModel> ControlledSectors => _owner.ControlledSectors;
 
@@ -43,7 +43,10 @@ public sealed class RecruitmentSectionViewModel : ObservableObject, IDisposable
 
     public IRelayCommand<TurnViewModel.RecruitmentOptionViewModel> DeclineCommand => _owner.DeclineCommand;
 
-    public void Dispose() => _owner.PropertyChanged -= OnOwnerPropertyChanged;
+    public void Dispose()
+    {
+        _owner.PropertyChanged -= OnOwnerPropertyChanged;
+    }
 
     private void OnOwnerPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

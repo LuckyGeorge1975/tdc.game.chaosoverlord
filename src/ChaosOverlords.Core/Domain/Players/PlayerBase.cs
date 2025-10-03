@@ -4,7 +4,7 @@ using ChaosOverlords.Core.Domain.Game;
 namespace ChaosOverlords.Core.Domain.Players;
 
 /// <summary>
-/// Base implementation providing common bookkeeping for all player controllers.
+///     Base implementation providing common bookkeeping for all player controllers.
 /// </summary>
 public abstract class PlayerBase : IPlayer
 {
@@ -12,24 +12,16 @@ public abstract class PlayerBase : IPlayer
 
     protected PlayerBase(Guid id, string name, int cash = 0, IEnumerable<Guid>? gangIds = null)
     {
-        if (id == Guid.Empty)
-        {
-            throw new ArgumentException("Player id cannot be empty.", nameof(id));
-        }
+        if (id == Guid.Empty) throw new ArgumentException("Player id cannot be empty.", nameof(id));
 
         if (string.IsNullOrWhiteSpace(name))
-        {
             throw new ArgumentException("Player name cannot be null or whitespace.", nameof(name));
-        }
 
         Id = id;
         Name = name;
         Cash = cash;
 
-        if (gangIds is not null)
-        {
-            _gangIds.AddRange(gangIds);
-        }
+        if (gangIds is not null) _gangIds.AddRange(gangIds);
     }
 
     public Guid Id { get; }
@@ -45,9 +37,8 @@ public abstract class PlayerBase : IPlayer
     public void Credit(int amount)
     {
         if (amount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be non-negative when crediting cash.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(amount), amount,
+                "Amount must be non-negative when crediting cash.");
 
         Cash += amount;
     }
@@ -55,22 +46,21 @@ public abstract class PlayerBase : IPlayer
     public void Debit(int amount)
     {
         if (amount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be non-negative when debiting cash.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(amount), amount,
+                "Amount must be non-negative when debiting cash.");
 
         Cash -= amount;
     }
 
     public void AssignGang(Guid gangId)
     {
-        if (!_gangIds.Contains(gangId))
-        {
-            _gangIds.Add(gangId);
-        }
+        if (!_gangIds.Contains(gangId)) _gangIds.Add(gangId);
     }
 
-    public bool RemoveGang(Guid gangId) => _gangIds.Remove(gangId);
+    public bool RemoveGang(Guid gangId)
+    {
+        return _gangIds.Remove(gangId);
+    }
 
     public abstract Task ExecuteTurnAsync(GameStateManager manager, CancellationToken cancellationToken);
 }

@@ -1,28 +1,25 @@
-using System;
 using System.Globalization;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
-using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
 
 namespace ChaosOverlords.Core.Services;
 
 /// <summary>
-/// Coordinates phase-dependent service execution whenever the turn controller advances.
+///     Coordinates phase-dependent service execution whenever the turn controller advances.
 /// </summary>
 public sealed class TurnPhaseProcessor : IDisposable
 {
-    private readonly ITurnController _turnController;
-    private readonly IGameSession _gameSession;
-    private readonly IEconomyService _economyService;
-    private readonly IRecruitmentService _recruitmentService;
-    private readonly ITurnEventWriter _eventWriter;
     private readonly ICommandResolutionService _commandResolutionService;
-    private bool _upkeepProcessed;
-    private bool _recruitmentRefreshed;
+    private readonly IEconomyService _economyService;
+    private readonly ITurnEventWriter _eventWriter;
+    private readonly IGameSession _gameSession;
+    private readonly IRecruitmentService _recruitmentService;
+    private readonly ITurnController _turnController;
     private bool _commandsResolved;
-    private int _processedTurnNumber;
     private bool _isDisposed;
+    private int _processedTurnNumber;
+    private bool _recruitmentRefreshed;
+    private bool _upkeepProcessed;
 
     public TurnPhaseProcessor(
         ITurnController turnController,
@@ -37,7 +34,8 @@ public sealed class TurnPhaseProcessor : IDisposable
         _economyService = economyService ?? throw new ArgumentNullException(nameof(economyService));
         _recruitmentService = recruitmentService ?? throw new ArgumentNullException(nameof(recruitmentService));
         _eventWriter = eventWriter ?? throw new ArgumentNullException(nameof(eventWriter));
-        _commandResolutionService = commandResolutionService ?? throw new ArgumentNullException(nameof(commandResolutionService));
+        _commandResolutionService = commandResolutionService ??
+                                    throw new ArgumentNullException(nameof(commandResolutionService));
 
         _turnController.StateChanged += OnTurnStateChanged;
         _turnController.TurnCompleted += OnTurnCompleted;
@@ -45,10 +43,7 @@ public sealed class TurnPhaseProcessor : IDisposable
 
     public void Dispose()
     {
-        if (_isDisposed)
-        {
-            return;
-        }
+        if (_isDisposed) return;
 
         _turnController.StateChanged -= OnTurnStateChanged;
         _turnController.TurnCompleted -= OnTurnCompleted;
@@ -57,10 +52,7 @@ public sealed class TurnPhaseProcessor : IDisposable
 
     private void OnTurnStateChanged(object? sender, EventArgs e)
     {
-        if (!_turnController.IsTurnActive)
-        {
-            return;
-        }
+        if (!_turnController.IsTurnActive) return;
 
         var turnNumber = _turnController.TurnNumber;
         if (turnNumber != _processedTurnNumber)
@@ -103,9 +95,7 @@ public sealed class TurnPhaseProcessor : IDisposable
 
         var report = _economyService.ApplyUpkeep(_gameSession.GameState, turnNumber);
         foreach (var snapshot in report.PlayerSnapshots)
-        {
             _eventWriter.WriteEconomy(turnNumber, TurnPhase.Upkeep, snapshot);
-        }
     }
 
     private void RefreshRecruitment(int turnNumber)
@@ -113,10 +103,7 @@ public sealed class TurnPhaseProcessor : IDisposable
         var results = _recruitmentService.RefreshPools(_gameSession.GameState, turnNumber);
         foreach (var result in results)
         {
-            if (!result.HasChanges)
-            {
-                continue;
-            }
+            if (!result.HasChanges) continue;
 
             var optionNames = string.Join(", ", result.Pool.Options.Select(o => o.GangName));
             var description = string.Format(
@@ -149,10 +136,7 @@ public sealed class TurnPhaseProcessor : IDisposable
 
     private void EnsureSessionInitialised()
     {
-        if (_gameSession.IsInitialized)
-        {
-            return;
-        }
+        if (_gameSession.IsInitialized) return;
 
         _gameSession.InitializeAsync().GetAwaiter().GetResult();
     }

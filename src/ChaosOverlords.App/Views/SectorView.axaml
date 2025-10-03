@@ -4,10 +4,7 @@
              x:Class="ChaosOverlords.App.Views.SectorView"
              x:DataType="vm:MapViewModel+SectorTileViewModel">
     <UserControl.Resources>
-        <SolidColorBrush x:Key="SectorDefaultBackground" Color="{DynamicResource ThemeBackgroundColor}"/>
-        <vm:BoolToBrushConverter x:Key="ControlledToBrush"
-                                  TrueBrush="#2039a94c"
-                                  FalseBrush="{StaticResource SectorDefaultBackground}"/>
+        <SolidColorBrush x:Key="SectorDefaultBackground" Color="{DynamicResource ThemeBackgroundColor}" />
         <vm:PlayerColorToBrushConverter x:Key="PlayerColorToBrush" />
     </UserControl.Resources>
     <UserControl.Styles>
@@ -19,9 +16,9 @@
             <Setter Property="Background">
                 <Setter.Value>
                     <MultiBinding Converter="{StaticResource PlayerColorToBrush}">
-                        <Binding Path="IsControlled"/>
-                        <Binding Path="OwnerColor"/>
-                        <Binding Source="{StaticResource SectorDefaultBackground}"/>
+                        <Binding Path="IsControlled" />
+                        <Binding Path="OwnerColor" />
+                        <Binding Source="{StaticResource SectorDefaultBackground}" />
                     </MultiBinding>
                 </Setter.Value>
             </Setter>
@@ -39,9 +36,9 @@
     </UserControl.Styles>
 
     <Border Classes="root"
-        ToolTip.Tip="{Binding SiteTooltip}"
-        ToolTip.Placement="Pointer">
-      <Grid RowDefinitions="Auto,Auto,Auto"
+            ToolTip.Tip="{Binding SiteTooltip}"
+            ToolTip.Placement="Pointer">
+        <Grid RowDefinitions="Auto,Auto,Auto"
               ColumnDefinitions="*">
             <StackPanel Grid.Row="0" Spacing="2">
                 <TextBlock Classes="sector-id"

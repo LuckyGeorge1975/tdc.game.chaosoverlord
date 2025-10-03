@@ -5,7 +5,7 @@
              x:DataType="sections:CommandTimelineSectionViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Command Timeline" FontWeight="Bold" />
-    <ItemsControl ItemsSource="{Binding Phases}">
+        <ItemsControl ItemsSource="{Binding Phases}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Orientation="Horizontal" />

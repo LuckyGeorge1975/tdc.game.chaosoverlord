@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Security.Cryptography;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Players;
@@ -11,7 +8,7 @@ using ChaosOverlords.Core.GameData;
 namespace ChaosOverlords.Core.Services;
 
 /// <summary>
-/// Default implementation that wires reference data into runtime game state for freshly created campaigns.
+///     Default implementation that wires reference data into runtime game state for freshly created campaigns.
 /// </summary>
 public sealed class ScenarioService : IScenarioService
 {
@@ -24,21 +21,17 @@ public sealed class ScenarioService : IScenarioService
         _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
     }
 
-    public async Task<GameState> CreateNewGameAsync(ScenarioConfig config, CancellationToken cancellationToken = default)
+    public async Task<GameState> CreateNewGameAsync(ScenarioConfig config,
+        CancellationToken cancellationToken = default)
     {
-        if (config is null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
+        if (config is null) throw new ArgumentNullException(nameof(config));
 
         ValidateConfig(config);
 
         var seed = config.Seed ?? RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
         if (seed == 0)
-        {
             // Seed value 0 is reserved or may cause issues with some RNG implementations, so we replace it with 1.
             seed = 1;
-        }
 
         _rngService.Reset(seed);
 
@@ -51,16 +44,17 @@ public sealed class ScenarioService : IScenarioService
         var sectors = new Dictionary<string, Sector>(StringComparer.OrdinalIgnoreCase);
         var gangs = new List<Gang>();
 
-        var palette = new[] { PlayerColor.Red, PlayerColor.Blue, PlayerColor.Green, PlayerColor.Yellow, PlayerColor.Purple, PlayerColor.Orange, PlayerColor.Cyan, PlayerColor.Magenta };
+        var palette = new[]
+        {
+            PlayerColor.Red, PlayerColor.Blue, PlayerColor.Green, PlayerColor.Yellow, PlayerColor.Purple,
+            PlayerColor.Orange, PlayerColor.Cyan, PlayerColor.Magenta
+        };
         var colorIndex = 0;
 
         foreach (var slot in config.Players)
         {
             var player = CreatePlayer(slot);
-            if (player is PlayerBase basePlayer)
-            {
-                basePlayer.Color = palette[colorIndex % palette.Length];
-            }
+            if (player is PlayerBase basePlayer) basePlayer.Color = palette[colorIndex % palette.Length];
             colorIndex++;
             var playerId = player.Id;
             players.Add(player);
@@ -73,9 +67,8 @@ public sealed class ScenarioService : IScenarioService
             var site = siteAllocator.Allocate(desiredSiteName);
 
             if (!sectors.TryAdd(slot.HeadquartersSectorId, new Sector(slot.HeadquartersSectorId, site, playerId)))
-            {
-                throw new InvalidOperationException($"Sector '{slot.HeadquartersSectorId}' is assigned to multiple players.");
-            }
+                throw new InvalidOperationException(
+                    $"Sector '{slot.HeadquartersSectorId}' is assigned to multiple players.");
 
             var gangData = ResolveRequired(gangLookup, slot.StartingGangName, "Starting gang");
             gangs.Add(new Gang(Guid.NewGuid(), gangData, playerId, slot.HeadquartersSectorId));
@@ -84,10 +77,7 @@ public sealed class ScenarioService : IScenarioService
         // Include any additional neutral sectors defined on the scenario.
         foreach (var sectorId in config.MapSectorIds)
         {
-            if (string.IsNullOrWhiteSpace(sectorId) || sectors.ContainsKey(sectorId))
-            {
-                continue;
-            }
+            if (string.IsNullOrWhiteSpace(sectorId) || sectors.ContainsKey(sectorId)) continue;
 
             var configuredSiteName = GetConfiguredSiteName(sectorMetadata, sectorId);
             var site = siteAllocator.Allocate(configuredSiteName);
@@ -97,10 +87,7 @@ public sealed class ScenarioService : IScenarioService
         foreach (var entry in sectorMetadata)
         {
             var sectorId = entry.Key;
-            if (sectors.ContainsKey(sectorId))
-            {
-                continue;
-            }
+            if (sectors.ContainsKey(sectorId)) continue;
 
             var site = siteAllocator.Allocate(entry.Value);
             sectors[sectorId] = new Sector(sectorId, site);
@@ -108,10 +95,7 @@ public sealed class ScenarioService : IScenarioService
 
         var game = new Game(players, sectors.Values, gangs);
         var startingIndex = players.FindIndex(p => p is Player);
-        if (startingIndex < 0)
-        {
-            startingIndex = 0;
-        }
+        if (startingIndex < 0) startingIndex = 0;
 
         return new GameState(game, config, players, startingIndex, seed);
     }
@@ -119,42 +103,30 @@ public sealed class ScenarioService : IScenarioService
     private static void ValidateConfig(ScenarioConfig config)
     {
         if (string.IsNullOrWhiteSpace(config.Name))
-        {
             throw new ArgumentException("Scenario name is required.", nameof(config));
-        }
 
         if (config.Players is null || config.Players.Count == 0)
-        {
             throw new ArgumentException("At least one player configuration must be provided.", nameof(config));
-        }
 
         var sectorIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var player in config.Players)
         {
             if (string.IsNullOrWhiteSpace(player.Name))
-            {
                 throw new ArgumentException("Player name is required.", nameof(config));
-            }
 
             if (string.IsNullOrWhiteSpace(player.HeadquartersSectorId))
-            {
                 throw new ArgumentException("Headquarters sector id is required for all players.", nameof(config));
-            }
 
             if (!sectorIds.Add(player.HeadquartersSectorId))
-            {
-                throw new ArgumentException($"Duplicate headquarters sector '{player.HeadquartersSectorId}' detected.", nameof(config));
-            }
+                throw new ArgumentException($"Duplicate headquarters sector '{player.HeadquartersSectorId}' detected.",
+                    nameof(config));
 
             if (string.IsNullOrWhiteSpace(player.StartingGangName))
-            {
                 throw new ArgumentException("Starting gang name is required for all players.", nameof(config));
-            }
 
             if (player.StartingCash < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(config), player.StartingCash, "Starting cash cannot be negative.");
-            }
+                throw new ArgumentOutOfRangeException(nameof(config), player.StartingCash,
+                    "Starting cash cannot be negative.");
         }
     }
 
@@ -168,7 +140,7 @@ public sealed class ScenarioService : IScenarioService
             PlayerKind.AiMedium => new AiPlayer(id, slot.Name, AiDifficulty.Medium, slot.StartingCash),
             PlayerKind.AiHard => new AiPlayer(id, slot.Name, AiDifficulty.Hard, slot.StartingCash),
             PlayerKind.Network => new NetworkPlayer(id, slot.Name, slot.StartingCash),
-            _ => throw new ArgumentOutOfRangeException(nameof(slot.Kind), slot.Kind, "Unsupported player kind."),
+            _ => throw new ArgumentOutOfRangeException(nameof(slot.Kind), slot.Kind, "Unsupported player kind.")
         };
     }
 
@@ -184,26 +156,20 @@ public sealed class ScenarioService : IScenarioService
         return sites.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
     }
 
-    private async Task<IReadOnlyDictionary<string, string?>> BuildSectorMetadataAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyDictionary<string, string?>> BuildSectorMetadataAsync(
+        CancellationToken cancellationToken)
     {
         var configuration = await _dataService.GetSectorConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (configuration is null)
-        {
             throw new InvalidOperationException("Sector configuration data could not be loaded.");
-        }
 
         if (configuration.Sectors is null || configuration.Sectors.Count == 0)
-        {
             throw new InvalidOperationException("Sector configuration must define at least one sector entry.");
-        }
 
         var sectors = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         foreach (var sectorData in configuration.Sectors)
         {
-            if (string.IsNullOrWhiteSpace(sectorData.Id))
-            {
-                continue;
-            }
+            if (string.IsNullOrWhiteSpace(sectorData.Id)) continue;
 
             sectors[sectorData.Id] = string.IsNullOrWhiteSpace(sectorData.SiteName)
                 ? null
@@ -219,9 +185,8 @@ public sealed class ScenarioService : IScenarioService
         string context)
     {
         if (!lookup.TryGetValue(name, out var data))
-        {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} '{1}' was not found.", context, name));
-        }
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} '{1}' was not found.",
+                context, name));
 
         return data;
     }
@@ -231,19 +196,18 @@ public sealed class ScenarioService : IScenarioService
         string sectorId)
     {
         if (!lookup.TryGetValue(sectorId, out var siteName))
-        {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Sector '{0}' is not defined in the sector configuration.", sectorId));
-        }
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
+                "Sector '{0}' is not defined in the sector configuration.", sectorId));
 
         return siteName;
     }
 
     private sealed class SiteAllocator
     {
-        private readonly IReadOnlyDictionary<string, SiteData> _lookup;
-        private readonly IRngService _rngService;
         private readonly List<SiteData> _allSites;
         private readonly List<SiteData> _available;
+        private readonly IReadOnlyDictionary<string, SiteData> _lookup;
+        private readonly IRngService _rngService;
 
         public SiteAllocator(IReadOnlyDictionary<string, SiteData> lookup, IRngService rngService)
         {
@@ -251,10 +215,7 @@ public sealed class ScenarioService : IScenarioService
             _rngService = rngService ?? throw new ArgumentNullException(nameof(rngService));
 
             _allSites = lookup.Values.ToList();
-            if (_allSites.Count == 0)
-            {
-                throw new InvalidOperationException("Site data is required to seed scenarios.");
-            }
+            if (_allSites.Count == 0) throw new InvalidOperationException("Site data is required to seed scenarios.");
 
             _available = new List<SiteData>(_allSites);
             Shuffle(_available);
@@ -262,10 +223,7 @@ public sealed class ScenarioService : IScenarioService
 
         public SiteData Allocate(string? requestedName)
         {
-            if (!string.IsNullOrWhiteSpace(requestedName))
-            {
-                return AllocateSpecific(requestedName);
-            }
+            if (!string.IsNullOrWhiteSpace(requestedName)) return AllocateSpecific(requestedName);
 
             return AllocateRandom();
         }
@@ -273,9 +231,7 @@ public sealed class ScenarioService : IScenarioService
         private SiteData AllocateSpecific(string siteName)
         {
             if (!_lookup.TryGetValue(siteName, out var site))
-            {
                 throw new InvalidOperationException($"Configured site '{siteName}' was not found in the site data.");
-            }
 
             RemoveFromAvailable(site.Name);
             return site;
@@ -283,10 +239,7 @@ public sealed class ScenarioService : IScenarioService
 
         private SiteData AllocateRandom()
         {
-            if (_available.Count == 0)
-            {
-                Refill();
-            }
+            if (_available.Count == 0) Refill();
 
             var lastIndex = _available.Count - 1;
             var site = _available[lastIndex];
@@ -296,16 +249,11 @@ public sealed class ScenarioService : IScenarioService
 
         private void RemoveFromAvailable(string siteName)
         {
-            var index = _available.FindIndex(site => string.Equals(site.Name, siteName, StringComparison.OrdinalIgnoreCase));
-            if (index >= 0)
-            {
-                _available.RemoveAt(index);
-            }
+            var index = _available.FindIndex(site =>
+                string.Equals(site.Name, siteName, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0) _available.RemoveAt(index);
 
-            if (_available.Count == 0)
-            {
-                Refill();
-            }
+            if (_available.Count == 0) Refill();
         }
 
         private void Refill()

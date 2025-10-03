@@ -25,36 +25,40 @@
 - Logging & UI‑Polish: Datei‑Logging mit Retention, Auto‑Scroll, „Open Logs Folder“, Previews für Control/Influence (✅).
 - Ausstehend: Research & Equipment Management (Task 18), erweiterte UI/Logging‑Integration & Smoke‑Szenario (Task 19).
 
-## Phase 3.1 – Influence‑Methoden (Propaganda/Bribe)
-**Status:** 🟡 Planned – Aufbauend auf Phase 3, klar abgrenzbarer Nachtrag für Influence.
-- Ziel: Einfluss als auswählbare Methode anbieten (Propaganda/Bribe) statt generischer Einheitsaktion.
-- Domain: enum `InfluenceMethod { Propaganda, Bribe }` und Erweiterung der Queue/Resolver‑Signatur.
-- UI: Dropdown neben „Influence Target“ zur Methodenauswahl; Preview zeigt Methode + Formel/Parameter.
-- Regeln (erste Iteration, deterministisch):
-	- Propaganda: Net = Influence + MediaBonus − (2×Support + Security)
-	- Bribe: Net = Influence + ⌊CashSpent/2⌋ − (Support + 2×Security); CashSpent vom Player‑Cash abziehen, Cap pro Action.
-- Acceptance (Phase abgeschlossen, wenn):
-	- Methoden‑Dropdown sichtbar und bindet an Queue/Preview/Execution.
-	- Previews geben Methode, Terme und Net‑Ergebnis korrekt aus (inkl. Cash‑Abzug bei Bribe).
-	- Deterministisches Verhalten gegeben (gleicher Seed ⇒ gleiche Ergebnisse); Unit‑Tests für beide Methoden vorhanden.
-	- Keine Änderungen an Police/Crackdown (bleibt Phase 5), keine neuen Items/Traits nötig (kann später folgen).
+## Phase 4 – Research, Equipment & City Officials
+**Status:** 🟡 Planned – Aufbauend auf Phase 3, schließt Kernökonomie- und Inventarfluss auf.
+- Ziele:
+	- Research als Instant‑Aktion mit deterministischem Fortschritt (projekte/tech‑caps, site‑basierte Boni).
+	- Equipment‑Management als Transaction‑Aktionen (Equip/Unequip/Give/Sell) inkl. Slot‑/Tech‑Gates und Pricing/Discounts.
+	- City Officials (Bribe/Snitch) als Instant‑Aktionen mit klaren Kosten/Effekten (z. B. Tolerance ±3, fixer Cash‑Abzug); Naming‑Klarstellung: „Bribe“ hier ist City Officials, Influence‑Variante wird ggf. „Payoff“ genannt.
+	- Optionale Influence‑Methoden (Propaganda/Payoff) als Auswahl mit deterministischen Formeln; kann schrittweise aktiviert werden.
+- Umsetzung:
+	- Services: `IResearchService`, `IEquipmentService`, Erweiterungen im `ICommandQueueService`/Resolver für Instant/Transaction Slots.
+	- Domain: ItemType/Slots (Weapon/Armor/Misc), TechLevel‑Gates; Validierung und Fehlertexte für doppelte/inkompatible Items.
+	- Finance Preview: Research‑Kosten/Progress, Equipment‑Käufe, City Officials wirken sichtbar auf City/Sector.
+	- UI: Methodenauswahl (optional) neben Influence Target; Inventory‑Panel für Equip/Give/Sell.
+- Acceptance:
+	- Queue/Preview/Execution decken Research, Equip/Unequip/Give/Sell und Bribe/Snitch ab (deterministisch, Seed‑stabil).
+	- Slot‑/Tech‑Gates, Site‑Discounts und Pricing korrekt validiert; verständliche Status/Log‑Meldungen.
+	- Finance Preview reflektiert alle neuen Kosten/Nutzen; Unit‑Tests für Pricing, Slots, Research‑Progress, Officials.
+	- Influence‑Naming nicht kollidierend (City „Bribe“ vs. Influence „Payoff“), Dokumentation konsistent.
 
-## Phase 4 – Kampf & Verstecken/Aufspüren
-**Status:** 🟡 Planned – Aufbauend auf Phase-3-Framework (Tasks 20–23).
+## Phase 5 – Kampf & Verstecken/Aufspüren
+**Status:** 🟡 Planned – Aufbauend auf Phase‑4‑Ökosystem (Tasks 20–23).
 - Combat Engine (Attack, Terminate) inkl. deterministischer Reports.
-- Hide/Search-Mechaniken mit Stealth/Detect Checks.
-- UI-Overlays & Event-Log-Integration für Gefechte/Stealth.
+- Hide/Search‑Mechaniken mit Stealth/Detect Checks.
+- UI‑Overlays & Event‑Log‑Integration für Gefechte/Stealth.
 
-## Phase 5 – Polizei & Szenarien
+## Phase 6 – Polizei & Szenarien
 - Crackdown system (Chaos vs. Tolerance).
 - Implement win/loss checks for scenarios.
 
-## Phase 6 – Feinschliff & Saves
+## Phase 7 – Feinschliff & Saves
 - Save/Load service.
 - UI polish.
 - Stability & performance.
 
-## Phase 7 – Silver City Adaptation (Priority 2)
+## Phase 8 – Silver City Adaptation (Priority 2)
 - Lore- und Fraktions-Remix („Cons“) ausarbeiten.
 - Con-Referenzdaten laden und in GameState integrieren.
 - Modifier in Wirtschaft/Commands/Movement/Recruitment anwenden.

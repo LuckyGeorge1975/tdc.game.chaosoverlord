@@ -3,7 +3,7 @@ using ChaosOverlords.Core.GameData;
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Runtime representation of an item that is created from immutable reference data and can be equipped by a gang.
+///     Runtime representation of an item that is created from immutable reference data and can be equipped by a gang.
 /// </summary>
 public sealed class Item
 {
@@ -17,7 +17,7 @@ public sealed class Item
     public Guid Id { get; }
 
     /// <summary>
-    /// Immutable stats and metadata describing the item blueprint.
+    ///     Immutable stats and metadata describing the item blueprint.
     /// </summary>
     public ItemData Data { get; }
 
@@ -26,21 +26,43 @@ public sealed class Item
     public DateTimeOffset AcquiredAt { get; init; } = DateTimeOffset.UtcNow;
 
     /// <summary>
-    /// Convenience accessor for displaying the item name without re-reading the data object.
+    ///     Convenience accessor for displaying the item name without re-reading the data object.
     /// </summary>
     public string Name => Data.Name;
 
     /// <summary>
-    /// Returns the full stat modifiers baked into the underlying reference data.
+    ///     Returns the full stat modifiers baked into the underlying reference data.
     /// </summary>
     public StatSheet Modifiers => StatSheet.From(Data);
 
     /// <summary>
-    /// Resolves the modifiers that currently affect the owning gang (only when equipped).
+    ///     Resolves the modifiers that currently affect the owning gang (only when equipped).
     /// </summary>
     public StatSheet ActiveBonuses => IsEquipped ? Modifiers : StatSheet.Zero;
 
-    public void Equip() => IsEquipped = true;
+    /// <summary>
+    ///     Indicates whether this item requires research before it can be produced or used.
+    ///     Backed by <see cref="GameData.ItemData.ResearchCost" />.
+    /// </summary>
+    public bool RequiresResearch => Data.ResearchCost > 0;
 
-    public void UnEquip() => IsEquipped = false;
+    /// <summary>
+    ///     The total research points required to unlock this item.
+    /// </summary>
+    public int ResearchCost => Data.ResearchCost;
+
+    /// <summary>
+    ///     The technology level associated with this item blueprint.
+    /// </summary>
+    public int TechLevel => Data.TechLevel;
+
+    public void Equip()
+    {
+        IsEquipped = true;
+    }
+
+    public void UnEquip()
+    {
+        IsEquipped = false;
+    }
 }

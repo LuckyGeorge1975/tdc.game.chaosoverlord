@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Default implementation of <see cref="ITurnController"/> that encapsulates
-/// the turn phase state machine and command sub-phase timeline.
+///     Default implementation of <see cref="ITurnController" /> that encapsulates
+///     the turn phase state machine and command sub-phase timeline.
 /// </summary>
 public sealed class TurnController : ITurnController
 {
@@ -57,15 +53,9 @@ public sealed class TurnController : ITurnController
     {
         get
         {
-            if (!IsTurnActive)
-            {
-                return false;
-            }
+            if (!IsTurnActive) return false;
 
-            if (CurrentPhase == TurnPhase.Command)
-            {
-                return _currentCommandPhaseIndex < _commandPhases.Count;
-            }
+            if (CurrentPhase == TurnPhase.Command) return _currentCommandPhaseIndex < _commandPhases.Count;
 
             var phaseIndex = Array.IndexOf(PhaseOrder, CurrentPhase);
             return phaseIndex >= 0 && phaseIndex < PhaseOrder.Length - 1;
@@ -80,10 +70,7 @@ public sealed class TurnController : ITurnController
 
     public void StartTurn()
     {
-        if (!CanStartTurn)
-        {
-            return;
-        }
+        if (!CanStartTurn) return;
 
         IsTurnActive = true;
         CurrentPhase = TurnPhase.Upkeep;
@@ -96,10 +83,7 @@ public sealed class TurnController : ITurnController
 
     public void AdvancePhase()
     {
-        if (!CanAdvancePhase)
-        {
-            return;
-        }
+        if (!CanAdvancePhase) return;
 
         if (CurrentPhase == TurnPhase.Command && TryAdvanceCommandPhase())
         {
@@ -107,39 +91,29 @@ public sealed class TurnController : ITurnController
             return;
         }
 
-        if (CurrentPhase == TurnPhase.Command)
-        {
-            CompleteCommandPhases();
-        }
+        if (CurrentPhase == TurnPhase.Command) CompleteCommandPhases();
 
         CurrentPhase = GetNextPhase(CurrentPhase);
 
         if (CurrentPhase == TurnPhase.Command)
-        {
             ActivateCommandPhase(0);
-        }
         else
-        {
             ClearActiveCommandPhase();
-        }
 
         RaiseStateChanged();
     }
 
     public void EndTurn()
     {
-        if (!CanEndTurn)
-        {
-            return;
-        }
-    
+        if (!CanEndTurn) return;
+
         TurnNumber++;
         IsTurnActive = false;
         CurrentPhase = TurnPhase.Upkeep;
         _currentCommandPhaseIndex = -1;
         ResetCommandPhases();
         ClearActiveCommandPhase();
-    
+
         TurnCompleted?.Invoke(this, EventArgs.Empty);
         RaiseStateChanged();
     }
@@ -179,26 +153,15 @@ public sealed class TurnController : ITurnController
 
     private void ActivateCommandPhase(int index)
     {
-        if (index < 0 || index >= _commandPhases.Count)
-        {
-            return;
-        }
+        if (index < 0 || index >= _commandPhases.Count) return;
 
         for (var i = 0; i < _commandPhases.Count; i++)
-        {
             if (i < index)
-            {
                 _commandPhases[i].State = CommandPhaseState.Completed;
-            }
             else if (i == index)
-            {
                 _commandPhases[i].State = CommandPhaseState.Active;
-            }
             else
-            {
                 _commandPhases[i].State = CommandPhaseState.Upcoming;
-            }
-        }
 
         _currentCommandPhaseIndex = index;
         ActiveCommandPhase = _commandPhases[index].Phase;
@@ -206,20 +169,14 @@ public sealed class TurnController : ITurnController
 
     private void CompleteCommandPhases()
     {
-        foreach (var phase in _commandPhases)
-        {
-            phase.State = CommandPhaseState.Completed;
-        }
+        foreach (var phase in _commandPhases) phase.State = CommandPhaseState.Completed;
 
         _currentCommandPhaseIndex = _commandPhases.Count - 1;
     }
 
     private void ResetCommandPhases()
     {
-        foreach (var phase in _commandPhases)
-        {
-            phase.State = CommandPhaseState.Upcoming;
-        }
+        foreach (var phase in _commandPhases) phase.State = CommandPhaseState.Upcoming;
     }
 
     private void ClearActiveCommandPhase()
@@ -230,13 +187,13 @@ public sealed class TurnController : ITurnController
     private static TurnPhase GetNextPhase(TurnPhase phase)
     {
         var index = Array.IndexOf(PhaseOrder, phase);
-        if (index < 0 || index >= PhaseOrder.Length - 1)
-        {
-            return phase;
-        }
+        if (index < 0 || index >= PhaseOrder.Length - 1) return phase;
 
         return PhaseOrder[index + 1];
     }
 
-    private void RaiseStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
+    private void RaiseStateChanged()
+    {
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

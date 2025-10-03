@@ -1,9 +1,7 @@
-using System;
-
 namespace ChaosOverlords.Core.Domain.Game.Economy;
 
 /// <summary>
-/// Captures the financial adjustments applied to a single player during the upkeep phase.
+///     Captures the financial adjustments applied to a single player during the upkeep phase.
 /// </summary>
 public sealed record PlayerEconomySnapshot(
     Guid PlayerId,
@@ -16,7 +14,7 @@ public sealed record PlayerEconomySnapshot(
     int EndingCash)
 {
     /// <summary>
-    /// Total income generated before upkeep costs are applied.
+    ///     Total income generated before upkeep costs are applied.
     /// </summary>
     public int TotalIncome => SectorIncome + SiteIncome;
 }

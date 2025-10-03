@@ -1,23 +1,16 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
-using ChaosOverlords.Core.Domain.Game.Actions;
-using Xunit;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class RecruitmentServiceTests
 {
-
     [Fact]
     public void EnsurePool_CreatesThreeDistinctOptions()
     {
@@ -27,7 +20,7 @@ public sealed class RecruitmentServiceTests
         var service = new RecruitmentService(dataService, rng);
         var state = CreateGameState();
 
-        var snapshot = service.EnsurePool(state, state.PrimaryPlayerId, turnNumber: 1);
+        var snapshot = service.EnsurePool(state, state.PrimaryPlayerId, 1);
 
         Assert.Equal(3, snapshot.Options.Count);
         Assert.All(snapshot.Options, option => Assert.Equal(RecruitmentOptionState.Available, option.State));
@@ -41,15 +34,15 @@ public sealed class RecruitmentServiceTests
         var dataService = new TestDataService(gangs);
         var rng = new SequenceRngService(new[] { 0, 0, 0, 0 });
         var service = new RecruitmentService(dataService, rng);
-        var state = CreateGameState(cash: 500);
+        var state = CreateGameState(500);
         var playerId = state.PrimaryPlayerId;
 
-        var snapshot = service.EnsurePool(state, playerId, turnNumber: 1);
+        var snapshot = service.EnsurePool(state, playerId, 1);
         var option = snapshot.Options[0];
         var player = (Player)state.Game.GetPlayer(playerId);
         var initialCash = player.Cash;
 
-        var result = service.Hire(state, playerId, option.OptionId, sectorId: "A1", turnNumber: 1);
+        var result = service.Hire(state, playerId, option.OptionId, "A1", 1);
 
         Assert.Equal(RecruitmentActionStatus.Success, result.Status);
         Assert.NotNull(result.GangId);
@@ -70,14 +63,14 @@ public sealed class RecruitmentServiceTests
         var state = CreateGameState();
         var playerId = state.PrimaryPlayerId;
 
-        var initialPool = service.EnsurePool(state, playerId, turnNumber: 1);
+        var initialPool = service.EnsurePool(state, playerId, 1);
         var declinedOption = initialPool.Options[1];
 
-        var declineResult = service.Decline(state, playerId, declinedOption.OptionId, turnNumber: 1);
+        var declineResult = service.Decline(state, playerId, declinedOption.OptionId, 1);
         Assert.Equal(RecruitmentActionStatus.Success, declineResult.Status);
         Assert.Equal(RecruitmentOptionState.Declined, declineResult.Option!.State);
 
-        var refreshResults = service.RefreshPools(state, turnNumber: 2);
+        var refreshResults = service.RefreshPools(state, 2);
         var refresh = Assert.Single(refreshResults);
 
         Assert.True(refresh.HasChanges);
@@ -90,7 +83,7 @@ public sealed class RecruitmentServiceTests
     private static GameState CreateGameState(int cash = 500)
     {
         var player = new Player(Guid.NewGuid(), "Player One", cash);
-        var sector = new Sector("A1", CreateSiteData("A1 HQ"), controllingPlayerId: player.Id);
+        var sector = new Sector("A1", CreateSiteData("A1 HQ"), player.Id);
         var game = new Game(new IPlayer[] { player }, new[] { sector });
         var scenario = new ScenarioConfig
         {
@@ -110,17 +103,30 @@ public sealed class RecruitmentServiceTests
             Seed = 123
         };
 
-        return new GameState(game, scenario, new List<IPlayer> { player }, startingPlayerIndex: 0, randomSeed: 123);
+        return new GameState(game, scenario, new List<IPlayer> { player }, 0, 123);
     }
 
-    private static IReadOnlyList<GangData> CreateGangData() => new List<GangData>
+    private static IReadOnlyList<GangData> CreateGangData()
     {
-        new() { Name = "Alpha", HiringCost = 100, UpkeepCost = 10 },
-        new() { Name = "Beta", HiringCost = 120, UpkeepCost = 12 },
-        new() { Name = "Gamma", HiringCost = 140, UpkeepCost = 14 },
-        new() { Name = "Delta", HiringCost = 160, UpkeepCost = 16 },
-        new() { Name = "Epsilon", HiringCost = 180, UpkeepCost = 18 }
-    };
+        return new List<GangData>
+        {
+            new() { Name = "Alpha", HiringCost = 100, UpkeepCost = 10 },
+            new() { Name = "Beta", HiringCost = 120, UpkeepCost = 12 },
+            new() { Name = "Gamma", HiringCost = 140, UpkeepCost = 14 },
+            new() { Name = "Delta", HiringCost = 160, UpkeepCost = 16 },
+            new() { Name = "Epsilon", HiringCost = 180, UpkeepCost = 18 }
+        };
+    }
+
+    private static SiteData CreateSiteData(string name)
+    {
+        return new SiteData
+        {
+            Name = name,
+            Cash = 2,
+            Tolerance = 1
+        };
+    }
 
     private sealed class TestDataService : IDataService
     {
@@ -133,23 +139,35 @@ public sealed class RecruitmentServiceTests
             _sites = new List<SiteData>
             {
                 CreateSiteData("A1 HQ"),
-                CreateSiteData("Neutral"),
+                CreateSiteData("Neutral")
             };
         }
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_gangs);
+        {
+            return Task.FromResult(_gangs);
+        }
 
-        public IReadOnlyList<GangData> GetGangs() => _gangs;
+        public IReadOnlyList<GangData> GetGangs()
+        {
+            return _gangs;
+        }
 
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<ItemData>>(Array.Empty<ItemData>());
+        {
+            return Task.FromResult<IReadOnlyList<ItemData>>(Array.Empty<ItemData>());
+        }
 
         public Task<IReadOnlyList<SiteData>> GetSitesAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_sites);
+        {
+            return Task.FromResult(_sites);
+        }
 
-        public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyDictionary<int, ItemTypeData>>(new Dictionary<int, ItemTypeData>());
+        public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyDictionary<int, ItemTypeData>>(new Dictionary<int, ItemTypeData>());
+        }
 
         public Task<SectorConfigurationData> GetSectorConfigurationAsync(CancellationToken cancellationToken = default)
         {
@@ -164,13 +182,6 @@ public sealed class RecruitmentServiceTests
             return Task.FromResult(configuration);
         }
     }
-
-    private static SiteData CreateSiteData(string name) => new()
-    {
-        Name = name,
-        Cash = 2,
-        Tolerance = 1
-    };
 
     private sealed class SequenceRngService : IRngService
     {
@@ -199,10 +210,7 @@ public sealed class RecruitmentServiceTests
 
         public int NextInt(int minInclusive, int maxExclusive)
         {
-            if (maxExclusive <= minInclusive)
-            {
-                return minInclusive;
-            }
+            if (maxExclusive <= minInclusive) return minInclusive;
 
             var value = NextInt();
             var range = maxExclusive - minInclusive;
@@ -210,7 +218,10 @@ public sealed class RecruitmentServiceTests
             return minInclusive + normalized;
         }
 
-        public double NextDouble() => 0.0;
+        public double NextDouble()
+        {
+            return 0.0;
+        }
 
         public PercentileRollResult RollPercent()
         {
@@ -222,10 +233,7 @@ public sealed class RecruitmentServiceTests
         {
             IsInitialised = true;
             var rolls = new int[Math.Max(1, diceCount)];
-            for (var i = 0; i < rolls.Length; i++)
-            {
-                rolls[i] = NextInt(1, sides <= 1 ? 2 : sides + 1);
-            }
+            for (var i = 0; i < rolls.Length; i++) rolls[i] = NextInt(1, sides <= 1 ? 2 : sides + 1);
 
             return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, "stub");
         }

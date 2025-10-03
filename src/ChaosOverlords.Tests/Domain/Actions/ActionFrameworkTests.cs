@@ -1,4 +1,3 @@
-using System;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Events;
@@ -10,7 +9,7 @@ public sealed class ActionFrameworkTests
     [Fact]
     public void ActionDifficulty_ApplyModifiers_ClampsWithinBounds()
     {
-        var difficulty = new ActionDifficulty(baseChance: 40, minimumChance: 10, maximumChance: 80);
+        var difficulty = new ActionDifficulty(40, 10, 80);
         var modifiers = new[]
         {
             new ActionModifier("Positive", 100),
@@ -27,15 +26,15 @@ public sealed class ActionFrameworkTests
     public void ActionResult_FromRoll_ComputesOutcome()
     {
         var actorId = Guid.NewGuid();
-        var difficulty = new ActionDifficulty(baseChance: 60);
+        var difficulty = new ActionDifficulty(60);
         var context = new ActionContext(
-            turnNumber: 1,
-            actorId: actorId,
-            actorName: "Hackers",
-            actionName: "Influence",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Control,
-            difficulty: difficulty);
+            1,
+            actorId,
+            "Hackers",
+            "Influence",
+            TurnPhase.Execution,
+            CommandPhase.Control,
+            difficulty);
 
         var result = ActionResult.FromRoll(context, new PercentileRollResult(55));
 
@@ -48,15 +47,15 @@ public sealed class ActionFrameworkTests
     public void ActionResult_FromRoll_RespectsForcedOutcome()
     {
         var actorId = Guid.NewGuid();
-        var difficulty = new ActionDifficulty(baseChance: 20);
+        var difficulty = new ActionDifficulty(20);
         var context = new ActionContext(
-            turnNumber: 2,
-            actorId: actorId,
-            actorName: "Bruisers",
-            actionName: "Control",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Control,
-            difficulty: difficulty);
+            2,
+            actorId,
+            "Bruisers",
+            "Control",
+            TurnPhase.Execution,
+            CommandPhase.Control,
+            difficulty);
 
         var result = ActionResult.FromRoll(context, new PercentileRollResult(10), ActionCheckOutcome.AutomaticFailure);
 
@@ -71,16 +70,16 @@ public sealed class ActionFrameworkTests
         var writer = new TurnEventWriter(log);
 
         var context = new ActionContext(
-            turnNumber: 3,
-            actorId: Guid.NewGuid(),
-            actorName: "Riggers",
-            actionName: "Control Attempt",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Control,
-            difficulty: new ActionDifficulty(50),
-            modifiers: new[] { new ActionModifier("Control", 5) },
-            targetId: "C3",
-            targetName: "C3 (Night Market)");
+            3,
+            Guid.NewGuid(),
+            "Riggers",
+            "Control Attempt",
+            TurnPhase.Execution,
+            CommandPhase.Control,
+            new ActionDifficulty(50),
+            new[] { new ActionModifier("Control", 5) },
+            "C3",
+            "C3 (Night Market)");
 
         var result = ActionResult.FromRoll(context, new PercentileRollResult(25), ActionCheckOutcome.AutomaticSuccess);
 
@@ -96,16 +95,16 @@ public sealed class ActionFrameworkTests
     [Fact]
     public void ActionDifficulty_AutomaticSuccessAndFailure_ThresholdsApply()
     {
-        var difficulty = new ActionDifficulty(baseChance: 1, minimumChance: 1, maximumChance: 99, automaticSuccessThreshold: 3, automaticFailureThreshold: 98);
+        var difficulty = new ActionDifficulty(1, 1, 99, 3, 98);
 
         var context = new ActionContext(
-            turnNumber: 1,
-            actorId: Guid.NewGuid(),
-            actorName: "Testers",
-            actionName: "Check",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Instant,
-            difficulty: difficulty);
+            1,
+            Guid.NewGuid(),
+            "Testers",
+            "Check",
+            TurnPhase.Execution,
+            CommandPhase.Instant,
+            difficulty);
 
         // Natural low roll is automatic success despite tiny effective chance
         var autoSuccess = ActionResult.FromRoll(context, new PercentileRollResult(2));
@@ -113,13 +112,13 @@ public sealed class ActionFrameworkTests
 
         // Natural high roll is automatic failure despite high effective chance
         var contextHigh = new ActionContext(
-            turnNumber: 1,
-            actorId: Guid.NewGuid(),
-            actorName: "Testers",
-            actionName: "Check",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Instant,
-            difficulty: new ActionDifficulty(baseChance: 90, minimumChance: 1, maximumChance: 99, automaticSuccessThreshold: 3, automaticFailureThreshold: 98));
+            1,
+            Guid.NewGuid(),
+            "Testers",
+            "Check",
+            TurnPhase.Execution,
+            CommandPhase.Instant,
+            new ActionDifficulty(90, 1, 99, 3, 98));
 
         var autoFailure = ActionResult.FromRoll(contextHigh, new PercentileRollResult(99));
         Assert.Equal(ActionCheckOutcome.AutomaticFailure, autoFailure.Outcome);
@@ -128,7 +127,7 @@ public sealed class ActionFrameworkTests
     [Fact]
     public void ActionDifficulty_EmptyModifiers_YieldsBaseChanceClamped()
     {
-        var difficulty = new ActionDifficulty(baseChance: 120, minimumChance: 5, maximumChance: 95);
+        var difficulty = new ActionDifficulty(120, 5, 95);
         var effective = difficulty.ApplyModifiers(Array.Empty<ActionModifier>(), out var net);
         Assert.Equal(95, effective);
         Assert.Equal(0, net);
@@ -137,16 +136,16 @@ public sealed class ActionFrameworkTests
     [Fact]
     public void ActionResult_FromRoll_AppliesModifierAggregation()
     {
-        var difficulty = new ActionDifficulty(baseChance: 50);
+        var difficulty = new ActionDifficulty(50);
         var context = new ActionContext(
-            turnNumber: 1,
-            actorId: Guid.NewGuid(),
-            actorName: "Synths",
-            actionName: "Influence",
-            phase: TurnPhase.Execution,
-            commandPhase: CommandPhase.Instant,
-            difficulty: difficulty,
-            modifiers: new[]
+            1,
+            Guid.NewGuid(),
+            "Synths",
+            "Influence",
+            TurnPhase.Execution,
+            CommandPhase.Instant,
+            difficulty,
+            new[]
             {
                 new ActionModifier("A", 5),
                 new ActionModifier("B", -3),

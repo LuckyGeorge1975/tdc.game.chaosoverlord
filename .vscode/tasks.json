@@ -564,6 +564,28 @@
 				"--no-build"
 			],
 			"group": "test"
+		},
+		{
+			"label": "build-after-service-stubs",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-restore"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build-once",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Workspace\\Source\\Projects\\tdc.game.chaosoverlord\\src\\ChaosOverlords.sln",
+				"--no-restore"
+			],
+			"group": "build"
 		}
 	]
 }

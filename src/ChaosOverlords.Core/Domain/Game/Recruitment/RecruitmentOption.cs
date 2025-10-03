@@ -1,19 +1,15 @@
-using System;
 using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Core.Domain.Game.Recruitment;
 
 /// <summary>
-/// Internal representation of a recruitment candidate exposed to a player for the current turn.
+///     Internal representation of a recruitment candidate exposed to a player for the current turn.
 /// </summary>
 internal sealed class RecruitmentOption
 {
     public RecruitmentOption(int slotIndex, GangData gangData, int createdTurn)
     {
-        if (gangData is null)
-        {
-            throw new ArgumentNullException(nameof(gangData));
-        }
+        if (gangData is null) throw new ArgumentNullException(nameof(gangData));
 
         SlotIndex = slotIndex;
         Id = Guid.NewGuid();
@@ -37,19 +33,14 @@ internal sealed class RecruitmentOption
     public bool NeedsRefresh(int currentTurn)
     {
         if (currentTurn <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(currentTurn), currentTurn, "Turn number must be positive.");
-        }
 
         return State != RecruitmentOptionState.Available && currentTurn > LastUpdatedTurn;
     }
 
     public void Replace(GangData gangData, int currentTurn)
     {
-        if (gangData is null)
-        {
-            throw new ArgumentNullException(nameof(gangData));
-        }
+        if (gangData is null) throw new ArgumentNullException(nameof(gangData));
 
         GangData = gangData;
         Id = Guid.NewGuid();

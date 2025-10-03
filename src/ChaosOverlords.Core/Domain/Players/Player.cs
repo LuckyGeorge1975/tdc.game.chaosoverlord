@@ -3,7 +3,7 @@ using ChaosOverlords.Core.Domain.Game;
 namespace ChaosOverlords.Core.Domain.Players;
 
 /// <summary>
-/// Human-controlled player. Execution waits for UI workflow (placeholder pending integration).
+///     Human-controlled player. Execution waits for UI workflow (placeholder pending integration).
 /// </summary>
 public sealed class Player : PlayerBase
 {

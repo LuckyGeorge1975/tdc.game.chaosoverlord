@@ -3,7 +3,7 @@ using ChaosOverlords.Core.Domain.Game;
 namespace ChaosOverlords.Core.Domain.Players;
 
 /// <summary>
-/// AI-controlled player stub. Actual decision logic will be implemented in later phases.
+///     AI-controlled player stub. Actual decision logic will be implemented in later phases.
 /// </summary>
 public sealed class AiPlayer : PlayerBase
 {

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
@@ -11,14 +6,13 @@ using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
-using ChaosOverlords.Core.Services;
 using ChaosOverlords.Core.GameData;
+using ChaosOverlords.Core.Services;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class TurnPhaseProcessorTests
 {
-
     [Fact]
     public void StartTurn_TriggersUpkeepOncePerTurn()
     {
@@ -27,9 +21,10 @@ public sealed class TurnPhaseProcessorTests
         var economyService = new TrackingEconomyService();
         var recruitmentService = new NoopRecruitmentService();
         var eventWriter = new TrackingEventWriter();
-    var commandResolutionService = new StubCommandResolutionService();
+        var commandResolutionService = new StubCommandResolutionService();
 
-    using var processor = new TurnPhaseProcessor(controller, session, economyService, recruitmentService, eventWriter, commandResolutionService);
+        using var processor = new TurnPhaseProcessor(controller, session, economyService, recruitmentService,
+            eventWriter, commandResolutionService);
 
         controller.StartTurn();
 
@@ -38,31 +33,27 @@ public sealed class TurnPhaseProcessorTests
         Assert.NotEmpty(eventWriter.EconomyEvents);
 
         var guard = 32;
-        while (controller.CanAdvancePhase && guard-- > 0)
-        {
-            controller.AdvancePhase();
-        }
+        while (controller.CanAdvancePhase && guard-- > 0) controller.AdvancePhase();
 
-        if (controller.CanEndTurn)
-        {
-            controller.EndTurn();
-        }
+        if (controller.CanEndTurn) controller.EndTurn();
         controller.StartTurn();
 
         Assert.Equal(2, economyService.CallCount); // once per turn
     }
 
+    private static SiteData CreateSite(string name)
+    {
+        return new SiteData { Name = name, Cash = 1, Tolerance = 1 };
+    }
+
     private sealed class StubGameSession : IGameSession
     {
-        private readonly GameState _state;
-        private readonly GameStateManager _manager;
-
         public StubGameSession()
         {
             var playerOne = new Player(Guid.NewGuid(), "Player One", 100);
             var playerTwo = new Player(Guid.NewGuid(), "Player Two", 100);
-            var sectorOne = new Sector("A1", CreateSite("A1 Hub"), controllingPlayerId: playerOne.Id);
-            var sectorTwo = new Sector("B2", CreateSite("B2 Hub"), controllingPlayerId: playerTwo.Id);
+            var sectorOne = new Sector("A1", CreateSite("A1 Hub"), playerOne.Id);
+            var sectorTwo = new Sector("B2", CreateSite("B2 Hub"), playerTwo.Id);
             var game = new Game(new IPlayer[] { playerOne, playerTwo }, new[] { sectorOne, sectorTwo });
             var scenario = new ScenarioConfig
             {
@@ -89,19 +80,19 @@ public sealed class TurnPhaseProcessorTests
                 }
             };
 
-            _state = new GameState(game, scenario, new List<IPlayer> { playerOne, playerTwo }, 0, randomSeed: 1);
-            _manager = new GameStateManager(_state);
+            GameState = new GameState(game, scenario, new List<IPlayer> { playerOne, playerTwo }, 0, 1);
+            Manager = new GameStateManager(GameState);
         }
+
+        public bool InitializeCalled { get; private set; }
 
         public bool IsInitialized { get; private set; }
 
-        public ScenarioConfig Scenario => _state.Scenario;
+        public ScenarioConfig Scenario => GameState.Scenario;
 
-        public GameState GameState => _state;
+        public GameState GameState { get; }
 
-        public GameStateManager Manager => _manager;
-
-        public bool InitializeCalled { get; private set; }
+        public GameStateManager Manager { get; }
 
         public Task InitializeAsync(CancellationToken cancellationToken = default)
         {
@@ -110,8 +101,6 @@ public sealed class TurnPhaseProcessorTests
             return Task.CompletedTask;
         }
     }
-
-    private static SiteData CreateSite(string name) => new() { Name = name, Cash = 1, Tolerance = 1 };
 
     private sealed class TrackingEconomyService : IEconomyService
     {
@@ -141,7 +130,8 @@ public sealed class TurnPhaseProcessorTests
         public List<(int TurnNumber, PlayerEconomySnapshot Snapshot)> EconomyEvents { get; } = new();
         public List<ActionResult> ActionEvents { get; } = new();
 
-        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
+        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
+            CommandPhase? commandPhase = null)
         {
         }
 
@@ -159,31 +149,41 @@ public sealed class TurnPhaseProcessorTests
     private sealed class StubCommandResolutionService : ICommandResolutionService
     {
         public CommandExecutionReport Execute(GameState gameState, Guid playerId, int turnNumber)
-            => CommandExecutionReport.Empty(playerId);
+        {
+            return CommandExecutionReport.Empty(playerId);
+        }
     }
 
     private sealed class NoopRecruitmentService : IRecruitmentService
     {
         public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
-            => CreateSnapshot(playerId, gameState.Game.GetPlayer(playerId).Name);
+        {
+            return CreateSnapshot(playerId, gameState.Game.GetPlayer(playerId).Name);
+        }
 
         public IReadOnlyList<RecruitmentRefreshResult> RefreshPools(GameState gameState, int turnNumber)
-            => Array.Empty<RecruitmentRefreshResult>();
+        {
+            return Array.Empty<RecruitmentRefreshResult>();
+        }
 
-        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
+        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId,
+            int turnNumber)
         {
             var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId, "No recruitment available in test stub.");
+            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId,
+                "No recruitment available in test stub.");
         }
 
         public RecruitmentDeclineResult Decline(GameState gameState, Guid playerId, Guid optionId, int turnNumber)
         {
             var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null, "No recruitment available in test stub.");
+            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null,
+                "No recruitment available in test stub.");
         }
 
         private static RecruitmentPoolSnapshot CreateSnapshot(Guid playerId, string playerName)
-            => new(playerId, playerName, Array.Empty<RecruitmentOptionSnapshot>());
+        {
+            return new RecruitmentPoolSnapshot(playerId, playerName, Array.Empty<RecruitmentOptionSnapshot>());
+        }
     }
-
 }

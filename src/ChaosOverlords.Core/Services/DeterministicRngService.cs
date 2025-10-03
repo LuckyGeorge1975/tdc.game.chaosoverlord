@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
@@ -7,7 +6,7 @@ using ChaosOverlords.Core.Domain.Game.Actions;
 namespace ChaosOverlords.Core.Services;
 
 /// <summary>
-/// XorShift128+ based deterministic RNG implementation that supports state capture/restore.
+///     XorShift128+ based deterministic RNG implementation that supports state capture/restore.
 /// </summary>
 public sealed class DeterministicRngService : IRngService
 {
@@ -25,10 +24,7 @@ public sealed class DeterministicRngService : IRngService
         _state0 = mixer.Next();
         _state1 = mixer.Next();
 
-        if (_state0 == 0 && _state1 == 0)
-        {
-            _state1 = 1;
-        }
+        if (_state0 == 0 && _state1 == 0) _state1 = 1;
 
         IsInitialised = true;
     }
@@ -44,9 +40,8 @@ public sealed class DeterministicRngService : IRngService
         EnsureInitialised();
 
         if (minInclusive >= maxExclusive)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxExclusive), maxExclusive, "maxExclusive must be greater than minInclusive.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(maxExclusive), maxExclusive,
+                "maxExclusive must be greater than minInclusive.");
 
         var range = (ulong)(maxExclusive - minInclusive);
         var value = NextUInt64() % range;
@@ -71,20 +66,13 @@ public sealed class DeterministicRngService : IRngService
         EnsureInitialised();
 
         if (diceCount <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(diceCount), diceCount, "At least one die must be rolled.");
-        }
 
         if (sides <= 1)
-        {
             throw new ArgumentOutOfRangeException(nameof(sides), sides, "Dice must have at least two sides.");
-        }
 
         var rolls = new int[diceCount];
-        for (var i = 0; i < diceCount; i++)
-        {
-            rolls[i] = NextInt(1, sides + 1);
-        }
+        for (var i = 0; i < diceCount; i++) rolls[i] = NextInt(1, sides + 1);
 
         var expression = FormatExpression(diceCount, sides, modifier);
         return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, expression);
@@ -105,10 +93,7 @@ public sealed class DeterministicRngService : IRngService
 
     private void EnsureInitialised()
     {
-        if (!IsInitialised)
-        {
-            throw new InvalidOperationException("RNG has not been initialised with a seed.");
-        }
+        if (!IsInitialised) throw new InvalidOperationException("RNG has not been initialised with a seed.");
     }
 
     private static string FormatExpression(int diceCount, int sides, int modifier)
@@ -135,7 +120,10 @@ public sealed class DeterministicRngService : IRngService
     {
         private ulong _state;
 
-        public SplitMix64(ulong seed) => _state = seed;
+        public SplitMix64(ulong seed)
+        {
+            _state = seed;
+        }
 
         public ulong Next()
         {

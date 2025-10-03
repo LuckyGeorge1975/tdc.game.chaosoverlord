@@ -1,7 +1,7 @@
 namespace ChaosOverlords.Core.GameData;
 
 /// <summary>
-/// Metadata for converting item type identifiers into readable labels.
+///     Metadata for converting item type identifiers into readable labels.
 /// </summary>
 public sealed record ItemTypeData
 {

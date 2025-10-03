@@ -1,33 +1,28 @@
-using System.Collections.Generic;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Economy;
+using ChaosOverlords.Core.Domain.Players;
 
 namespace ChaosOverlords.Core.Services;
 
 /// <summary>
-/// Default economy processor that applies upkeep, sector tax, and site modifiers.
+///     Default economy processor that applies upkeep, sector tax, and site modifiers.
 /// </summary>
 public sealed class EconomyService : IEconomyService
 {
     public EconomyReport ApplyUpkeep(GameState gameState, int turnNumber)
     {
-        if (gameState is null)
-        {
-            throw new ArgumentNullException(nameof(gameState));
-        }
+        if (gameState is null) throw new ArgumentNullException(nameof(gameState));
 
         if (turnNumber <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be greater than zero.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber,
+                "Turn number must be greater than zero.");
 
         var game = gameState.Game ?? throw new InvalidOperationException("Game state is missing runtime data.");
         var players = game.Players.Values;
         var gangs = game.Gangs.Values;
         var sectors = game.Sectors.Values;
 
-    var snapshots = new List<PlayerEconomySnapshot>();
+        var snapshots = new List<PlayerEconomySnapshot>();
 
         foreach (var player in players)
         {
@@ -58,29 +53,18 @@ public sealed class EconomyService : IEconomyService
     }
 
     private static void ApplyCashAdjustments(
-        Domain.Players.IPlayer player,
+        IPlayer player,
         int upkeep,
         int sectorIncome,
         int siteIncome)
     {
-        if (player is null)
-        {
-            throw new ArgumentNullException(nameof(player));
-        }
+        if (player is null) throw new ArgumentNullException(nameof(player));
 
-        if (upkeep > 0)
-        {
-            player.Debit(upkeep);
-        }
+        if (upkeep > 0) player.Debit(upkeep);
 
         var totalIncome = sectorIncome + siteIncome;
         if (totalIncome > 0)
-        {
             player.Credit(totalIncome);
-        }
-        else if (totalIncome < 0)
-        {
-            player.Debit(-totalIncome);
-        }
+        else if (totalIncome < 0) player.Debit(-totalIncome);
     }
 }

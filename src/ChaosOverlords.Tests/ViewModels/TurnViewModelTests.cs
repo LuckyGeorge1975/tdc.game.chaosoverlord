@@ -1,21 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using ChaosOverlords.App.ViewModels;
 using ChaosOverlords.Core.Domain.Game;
+using ChaosOverlords.Core.Domain.Game.Actions;
+using ChaosOverlords.Core.Domain.Game.Commands;
 using ChaosOverlords.Core.Domain.Game.Economy;
 using ChaosOverlords.Core.Domain.Game.Events;
 using ChaosOverlords.Core.Domain.Game.Recruitment;
 using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
+using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
 using ChaosOverlords.Core.Services.Messaging;
-using System.Linq;
-using Xunit;
-using ChaosOverlords.Core.Domain.Game.Actions;
-using ChaosOverlords.Core.Domain.Game.Commands;
-using ChaosOverlords.Core.GameData;
 
 namespace ChaosOverlords.Tests.ViewModels;
 
@@ -29,10 +23,11 @@ public class TurnViewModelTests
         var recruitmentService = new NoopRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new NullEventWriter();
-    var commandQueueService = new DummyCommandQueueService();
-    var financePreviewService = new StubFinancePreviewService();
+        var commandQueueService = new DummyCommandQueueService();
+        var financePreviewService = new StubFinancePreviewService();
 
-    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
+        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter,
+            commandQueueService, financePreviewService);
 
         Assert.False(viewModel.EndTurnCommand.CanExecute(null));
 
@@ -44,10 +39,7 @@ public class TurnViewModelTests
         var guard = maxPhaseAdvances;
         while (viewModel.CurrentPhase != TurnPhase.Elimination && guard-- > 0)
         {
-            if (!viewModel.AdvancePhaseCommand.CanExecute(null))
-            {
-                break;
-            }
+            if (!viewModel.AdvancePhaseCommand.CanExecute(null)) break;
 
             viewModel.AdvancePhaseCommand.Execute(null);
         }
@@ -65,10 +57,11 @@ public class TurnViewModelTests
         var recruitmentService = new RecordingRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new RecordingEventWriter(eventLog);
-    var commandQueueService = new DummyCommandQueueService();
-    var financePreviewService = new StubFinancePreviewService();
+        var commandQueueService = new DummyCommandQueueService();
+        var financePreviewService = new StubFinancePreviewService();
 
-    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
+        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter,
+            commandQueueService, financePreviewService);
 
         controller.StartTurn();
         AdvanceToPhase(controller, TurnPhase.Hire);
@@ -89,7 +82,9 @@ public class TurnViewModelTests
         Assert.Equal(RecruitmentOptionState.Hired, updatedOption.State);
         Assert.True(viewModel.HasRecruitmentStatusMessage);
         Assert.Contains("Hired", viewModel.RecruitmentStatusMessage!, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(eventWriter.Events, e => e.Type == TurnEventType.Recruitment && e.Description.Contains("hired", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(eventWriter.Events,
+            e => e.Type == TurnEventType.Recruitment &&
+                 e.Description.Contains("hired", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -100,10 +95,11 @@ public class TurnViewModelTests
         var recruitmentService = new RecordingRecruitmentService();
         var eventLog = new TurnEventLog();
         var eventWriter = new RecordingEventWriter(eventLog);
-    var commandQueueService = new DummyCommandQueueService();
+        var commandQueueService = new DummyCommandQueueService();
         var financePreviewService = new StubFinancePreviewService();
 
-    using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
+        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter,
+            commandQueueService, financePreviewService);
 
         controller.StartTurn();
         AdvanceToPhase(controller, TurnPhase.Hire);
@@ -120,7 +116,9 @@ public class TurnViewModelTests
         Assert.Equal(RecruitmentOptionState.Declined, updatedOption.State);
         Assert.True(viewModel.HasRecruitmentStatusMessage);
         Assert.Contains("Declined", viewModel.RecruitmentStatusMessage!, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(eventWriter.Events, e => e.Type == TurnEventType.Recruitment && e.Description.Contains("declined", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(eventWriter.Events,
+            e => e.Type == TurnEventType.Recruitment &&
+                 e.Description.Contains("declined", StringComparison.OrdinalIgnoreCase));
         Assert.False(viewModel.HireCommand.CanExecute(option));
     }
 
@@ -135,7 +133,8 @@ public class TurnViewModelTests
         var commandQueueService = new DummyCommandQueueService();
         var financePreviewService = new StubFinancePreviewService();
 
-        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService);
+        using var viewModel = CreateViewModel(controller, eventLog, session, recruitmentService, eventWriter,
+            commandQueueService, financePreviewService);
 
         controller.StartTurn();
         AdvanceToPhase(controller, TurnPhase.Command);
@@ -144,7 +143,8 @@ public class TurnViewModelTests
         Assert.NotEmpty(viewModel.CityFinanceCategories);
         Assert.NotEmpty(viewModel.SectorFinance);
         Assert.Contains(viewModel.CityFinanceCategories, category => category.DisplayName == "Upkeep");
-        Assert.Contains(viewModel.SectorFinance, sector => sector.DisplayName.StartsWith("Sector", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(viewModel.SectorFinance,
+            sector => sector.DisplayName.StartsWith("Sector", StringComparison.OrdinalIgnoreCase));
     }
 
     private static TurnViewModel CreateViewModel(
@@ -158,53 +158,71 @@ public class TurnViewModelTests
     {
         var messageHub = new MessageHub();
         var logPathProvider = new TestLogPathProvider();
-        return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService, financePreviewService, messageHub, logPathProvider);
+        var researchService = new ResearchService();
+        return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService,
+            financePreviewService, researchService, messageHub, logPathProvider);
     }
 
-    private sealed class TestLogPathProvider : ChaosOverlords.Core.Domain.Game.Events.ILogPathProvider
+    private static SiteData CreateSite(string name)
     {
-        public string GetLogDirectory() => System.IO.Path.Combine(System.IO.Path.GetTempPath(), "co_test_logs");
+        return new SiteData { Name = name, Cash = 2, Tolerance = 1 };
+    }
+
+    private static void AdvanceToPhase(TurnController controller, TurnPhase targetPhase)
+    {
+        var guard = 32;
+        while (controller.CurrentPhase != targetPhase && guard-- > 0)
+        {
+            if (!controller.CanAdvancePhase) break;
+
+            controller.AdvancePhase();
+        }
+    }
+
+    private sealed class TestLogPathProvider : ILogPathProvider
+    {
+        public string GetLogDirectory()
+        {
+            return Path.Combine(Path.GetTempPath(), "co_test_logs");
+        }
     }
 
     private sealed class StubGameSession : IGameSession
     {
-        private readonly GameState _state;
-        private readonly GameStateManager _manager;
-
         public StubGameSession()
         {
             var player = new Player(Guid.NewGuid(), "Player One", 100);
-            var sector = new Sector("A1", CreateSite("A1 Hub"), controllingPlayerId: player.Id);
+            var sector = new Sector("A1", CreateSite("A1 Hub"), player.Id);
             var game = new Game(new IPlayer[] { player }, new[] { sector });
             var scenario = new ScenarioConfig
             {
                 Type = ScenarioType.KillEmAll,
                 Name = "Stub",
                 Players = new List<ScenarioPlayerConfig>
+                {
+                    new()
                     {
-                        new()
-                        {
-                            Name = player.Name,
-                            Kind = PlayerKind.Human,
-                            StartingCash = 100,
-                            HeadquartersSectorId = sector.Id,
-                            StartingGangName = "Hackers"
-                        }
+                        Name = player.Name,
+                        Kind = PlayerKind.Human,
+                        StartingCash = 100,
+                        HeadquartersSectorId = sector.Id,
+                        StartingGangName = "Hackers"
                     }
+                }
             };
 
-            _state = new GameState(game, scenario, new List<IPlayer> { player }, 0, randomSeed: 1);
-            _manager = new GameStateManager(_state);
+            GameState = new GameState(game, scenario, new List<IPlayer> { player }, 0, 1);
+            Manager = new GameStateManager(GameState);
             IsInitialized = true;
         }
 
         public bool IsInitialized { get; private set; }
 
-        public ScenarioConfig Scenario => _state.Scenario;
+        public ScenarioConfig Scenario => GameState.Scenario;
 
-        public GameState GameState => _state;
+        public GameState GameState { get; }
 
-        public GameStateManager Manager => _manager;
+        public GameStateManager Manager { get; }
 
         public Task InitializeAsync(CancellationToken cancellationToken = default)
         {
@@ -213,32 +231,39 @@ public class TurnViewModelTests
         }
     }
 
-    private static SiteData CreateSite(string name) => new() { Name = name, Cash = 2, Tolerance = 1 };
-
     private sealed class NoopRecruitmentService : IRecruitmentService
     {
         public RecruitmentPoolSnapshot EnsurePool(GameState gameState, Guid playerId, int turnNumber)
-            => new(playerId, gameState.Game.GetPlayer(playerId).Name, Array.Empty<RecruitmentOptionSnapshot>());
+        {
+            return new RecruitmentPoolSnapshot(playerId, gameState.Game.GetPlayer(playerId).Name,
+                Array.Empty<RecruitmentOptionSnapshot>());
+        }
 
         public IReadOnlyList<RecruitmentRefreshResult> RefreshPools(GameState gameState, int turnNumber)
-            => Array.Empty<RecruitmentRefreshResult>();
+        {
+            return Array.Empty<RecruitmentRefreshResult>();
+        }
 
-        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
+        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId,
+            int turnNumber)
         {
             var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId, "No recruitment in test stub.");
+            return new RecruitmentHireResult(RecruitmentActionStatus.InvalidOption, snapshot, null, null, sectorId,
+                "No recruitment in test stub.");
         }
 
         public RecruitmentDeclineResult Decline(GameState gameState, Guid playerId, Guid optionId, int turnNumber)
         {
             var snapshot = EnsurePool(gameState, playerId, turnNumber);
-            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null, "No recruitment in test stub.");
+            return new RecruitmentDeclineResult(RecruitmentActionStatus.InvalidOption, snapshot, null,
+                "No recruitment in test stub.");
         }
     }
 
     private sealed class NullEventWriter : ITurnEventWriter
     {
-        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
+        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
+            CommandPhase? commandPhase = null)
         {
         }
 
@@ -258,24 +283,42 @@ public class TurnViewModelTests
             return new CommandQueueSnapshot(playerId, Array.Empty<PlayerCommandSnapshot>());
         }
 
-        public CommandQueueResult QueueChaos(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
+        public CommandQueueResult QueueChaos(GameState gameState, Guid playerId, Guid gangId, string sectorId,
+            int turnNumber)
         {
             return new CommandQueueResult(CommandQueueRequestStatus.Success, "Chaos", GetQueue(gameState, playerId));
         }
 
-        public CommandQueueResult QueueControl(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
+        public CommandQueueResult QueueControl(GameState gameState, Guid playerId, Guid gangId, string sectorId,
+            int turnNumber)
         {
             return new CommandQueueResult(CommandQueueRequestStatus.Success, "Control", GetQueue(gameState, playerId));
         }
 
-        public CommandQueueResult QueueInfluence(GameState gameState, Guid playerId, Guid gangId, string sectorId, int turnNumber)
+        public CommandQueueResult QueueFabricate(GameState gameState, Guid playerId, Guid gangId, string itemName,
+            int turnNumber)
         {
-            return new CommandQueueResult(CommandQueueRequestStatus.Success, "Influence", GetQueue(gameState, playerId));
+            return new CommandQueueResult(CommandQueueRequestStatus.Success, "Fabricate",
+                GetQueue(gameState, playerId));
         }
 
-        public CommandQueueResult QueueMove(GameState gameState, Guid playerId, Guid gangId, string targetSectorId, int turnNumber)
+        public CommandQueueResult QueueInfluence(GameState gameState, Guid playerId, Guid gangId, string sectorId,
+            int turnNumber)
+        {
+            return new CommandQueueResult(CommandQueueRequestStatus.Success, "Influence",
+                GetQueue(gameState, playerId));
+        }
+
+        public CommandQueueResult QueueMove(GameState gameState, Guid playerId, Guid gangId, string targetSectorId,
+            int turnNumber)
         {
             return new CommandQueueResult(CommandQueueRequestStatus.Success, "Move", GetQueue(gameState, playerId));
+        }
+
+        public CommandQueueResult QueueResearch(GameState gameState, Guid playerId, Guid gangId, string projectId,
+            int turnNumber)
+        {
+            return new CommandQueueResult(CommandQueueRequestStatus.Success, "Research", GetQueue(gameState, playerId));
         }
 
         public CommandQueueResult Remove(GameState gameState, Guid playerId, Guid gangId, int turnNumber)
@@ -327,11 +370,11 @@ public class TurnViewModelTests
             if (!_optionsByPlayer.TryGetValue(playerId, out var options))
             {
                 options = new List<RecruitmentOptionSnapshot>
-                    {
-                        new(Guid.NewGuid(), 0, "Alpha", 100, 10, RecruitmentOptionState.Available),
-                        new(Guid.NewGuid(), 1, "Beta", 120, 12, RecruitmentOptionState.Available),
-                        new(Guid.NewGuid(), 2, "Gamma", 140, 14, RecruitmentOptionState.Available)
-                    };
+                {
+                    new(Guid.NewGuid(), 0, "Alpha", 100, 10, RecruitmentOptionState.Available),
+                    new(Guid.NewGuid(), 1, "Beta", 120, 12, RecruitmentOptionState.Available),
+                    new(Guid.NewGuid(), 2, "Gamma", 140, 14, RecruitmentOptionState.Available)
+                };
                 _optionsByPlayer[playerId] = options;
             }
 
@@ -350,7 +393,8 @@ public class TurnViewModelTests
             return results;
         }
 
-        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId, int turnNumber)
+        public RecruitmentHireResult Hire(GameState gameState, Guid playerId, Guid optionId, string sectorId,
+            int turnNumber)
         {
             HireCalls.Add((playerId, optionId, sectorId, turnNumber));
             var updated = UpdateOption(gameState, playerId, optionId, RecruitmentOptionState.Hired);
@@ -367,12 +411,11 @@ public class TurnViewModelTests
             return new RecruitmentDeclineResult(RecruitmentActionStatus.Success, updated, option, null);
         }
 
-        private RecruitmentPoolSnapshot UpdateOption(GameState gameState, Guid playerId, Guid optionId, RecruitmentOptionState newState)
+        private RecruitmentPoolSnapshot UpdateOption(GameState gameState, Guid playerId, Guid optionId,
+            RecruitmentOptionState newState)
         {
             if (!_optionsByPlayer.TryGetValue(playerId, out var options))
-            {
                 throw new InvalidOperationException("Recruitment pool has not been initialised for this player.");
-            }
 
             var updated = options
                 .Select(option => option.OptionId == optionId ? option with { State = newState } : option)
@@ -382,7 +425,8 @@ public class TurnViewModelTests
             return BuildSnapshot(gameState, playerId, updated);
         }
 
-        private static RecruitmentPoolSnapshot BuildSnapshot(GameState gameState, Guid playerId, IReadOnlyList<RecruitmentOptionSnapshot> options)
+        private static RecruitmentPoolSnapshot BuildSnapshot(GameState gameState, Guid playerId,
+            IReadOnlyList<RecruitmentOptionSnapshot> options)
         {
             var player = gameState.Game.GetPlayer(playerId);
             var cloned = options.ToList();
@@ -401,7 +445,8 @@ public class TurnViewModelTests
 
         public List<TurnEvent> Events { get; } = new();
 
-        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
+        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
+            CommandPhase? commandPhase = null)
         {
             var entry = new TurnEvent(turnNumber, phase, commandPhase, type, description, DateTimeOffset.UtcNow);
             Events.Add(entry);
@@ -414,24 +459,10 @@ public class TurnViewModelTests
 
         public void WriteAction(ActionResult result)
         {
-            var entry = new TurnEvent(result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase, TurnEventType.Action, result.ToString(), DateTimeOffset.UtcNow);
+            var entry = new TurnEvent(result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase,
+                TurnEventType.Action, result.ToString(), DateTimeOffset.UtcNow);
             Events.Add(entry);
             _log.Append(entry);
         }
     }
-
-    private static void AdvanceToPhase(TurnController controller, TurnPhase targetPhase)
-    {
-        var guard = 32;
-        while (controller.CurrentPhase != targetPhase && guard-- > 0)
-        {
-            if (!controller.CanAdvancePhase)
-            {
-                break;
-            }
-
-            controller.AdvancePhase();
-        }
-    }
-
 }

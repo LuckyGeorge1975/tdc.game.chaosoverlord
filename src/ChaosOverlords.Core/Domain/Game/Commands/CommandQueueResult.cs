@@ -1,9 +1,7 @@
-using System;
-
 namespace ChaosOverlords.Core.Domain.Game.Commands;
 
 /// <summary>
-/// Enumerates result statuses when interacting with the command queue.
+///     Enumerates result statuses when interacting with the command queue.
 /// </summary>
 public enum CommandQueueRequestStatus
 {
@@ -20,7 +18,7 @@ public enum CommandQueueRequestStatus
 }
 
 /// <summary>
-/// Wrapper describing the outcome of a queue operation along with an updated snapshot.
+///     Wrapper describing the outcome of a queue operation along with an updated snapshot.
 /// </summary>
 public sealed record CommandQueueResult(
     CommandQueueRequestStatus Status,

@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using ChaosOverlords.App.ViewModels;
 using ChaosOverlords.App.ViewModels.Sections;
-using Xunit;
 
 namespace ChaosOverlords.Tests.UI;
 

@@ -286,9 +286,11 @@ public sealed class ScenarioServiceTests
             }
         };
 
-        var scenarioService = new ScenarioService(new StubDataService(gangs, sites: Array.Empty<SiteData>()), new StubRngService());
+        var scenarioService =
+            new ScenarioService(new StubDataService(gangs, Array.Empty<SiteData>()), new StubRngService());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scenarioService.CreateNewGameAsync(config, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            scenarioService.CreateNewGameAsync(config, CancellationToken.None));
     }
 
     [Fact]
@@ -304,10 +306,18 @@ public sealed class ScenarioServiceTests
             Name = "Test",
             Players = new List<ScenarioPlayerConfig>
             {
-                new() { Name = playerOne.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "A1" },
-                new() { Name = playerTwo.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers", HeadquartersSectorId = "B2" }
+                new()
+                {
+                    Name = playerOne.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers",
+                    HeadquartersSectorId = "A1"
+                },
+                new()
+                {
+                    Name = playerTwo.Name, Kind = PlayerKind.Human, StartingGangName = "Hackers",
+                    HeadquartersSectorId = "B2"
+                }
             }
-        }, [playerOne, playerTwo], 0, randomSeed: 42);
+        }, [playerOne, playerTwo], 0, 42);
 
         var manager = new GameStateManager(state);
 
@@ -324,9 +334,9 @@ public sealed class ScenarioServiceTests
     {
         private readonly IReadOnlyList<GangData> _gangs;
         private readonly IReadOnlyList<ItemData> _items;
-        private readonly IReadOnlyList<SiteData> _sites;
         private readonly IReadOnlyDictionary<int, ItemTypeData> _itemTypes;
         private readonly SectorConfigurationData _sectorConfiguration;
+        private readonly IReadOnlyList<SiteData> _sites;
 
         public StubDataService(
             IReadOnlyList<GangData> gangs,
@@ -343,35 +353,45 @@ public sealed class ScenarioServiceTests
         }
 
         public Task<IReadOnlyList<GangData>> GetGangsAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_gangs);
+        {
+            return Task.FromResult(_gangs);
+        }
 
-        public IReadOnlyList<GangData> GetGangs() => _gangs;
+        public IReadOnlyList<GangData> GetGangs()
+        {
+            return _gangs;
+        }
 
         public Task<IReadOnlyList<ItemData>> GetItemsAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_items);
+        {
+            return Task.FromResult(_items);
+        }
 
         public Task<IReadOnlyList<SiteData>> GetSitesAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_sites);
+        {
+            return Task.FromResult(_sites);
+        }
 
-        public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_itemTypes);
+        public Task<IReadOnlyDictionary<int, ItemTypeData>> GetItemTypesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_itemTypes);
+        }
 
         public Task<SectorConfigurationData> GetSectorConfigurationAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult(_sectorConfiguration);
+        {
+            return Task.FromResult(_sectorConfiguration);
+        }
 
         private static SectorConfigurationData CreateDefaultSectorConfiguration()
         {
             var sectors = new List<SectorDefinitionData>();
             for (var row = 'A'; row <= 'H'; row++)
-            {
-                for (var column = 1; column <= 8; column++)
+            for (var column = 1; column <= 8; column++)
+                sectors.Add(new SectorDefinitionData
                 {
-                    sectors.Add(new SectorDefinitionData
-                    {
-                        Id = string.Format("{0}{1}", row, column)
-                    });
-                }
-            }
+                    Id = string.Format("{0}{1}", row, column)
+                });
 
             return new SectorConfigurationData
             {
@@ -392,11 +412,20 @@ public sealed class ScenarioServiceTests
             IsInitialised = true;
         }
 
-        public int NextInt() => Seed;
+        public int NextInt()
+        {
+            return Seed;
+        }
 
-        public int NextInt(int minInclusive, int maxExclusive) => minInclusive;
+        public int NextInt(int minInclusive, int maxExclusive)
+        {
+            return minInclusive;
+        }
 
-        public double NextDouble() => 0.0;
+        public double NextDouble()
+        {
+            return 0.0;
+        }
 
         public PercentileRollResult RollPercent()
         {
@@ -408,10 +437,7 @@ public sealed class ScenarioServiceTests
         {
             IsInitialised = true;
             var rolls = new int[Math.Max(1, diceCount)];
-            for (var i = 0; i < rolls.Length; i++)
-            {
-                rolls[i] = 1;
-            }
+            for (var i = 0; i < rolls.Length; i++) rolls[i] = 1;
 
             return new DiceRollResult(new ReadOnlyCollection<int>(rolls), modifier, "stub");
         }

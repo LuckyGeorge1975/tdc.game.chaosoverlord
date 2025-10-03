@@ -3,7 +3,7 @@ using ChaosOverlords.Core.Domain.Players;
 namespace ChaosOverlords.Core.Domain.Game;
 
 /// <summary>
-/// Coordinates turn execution across the players registered in a <see cref="GameState"/>.
+///     Coordinates turn execution across the players registered in a <see cref="GameState" />.
 /// </summary>
 public sealed class GameStateManager
 {
@@ -21,9 +21,18 @@ public sealed class GameStateManager
         await CurrentPlayer.ExecuteTurnAsync(this, cancellationToken).ConfigureAwait(false);
     }
 
-    public void AdvanceToNextPlayer() => GameState.AdvanceToNextPlayer();
+    public void AdvanceToNextPlayer()
+    {
+        GameState.AdvanceToNextPlayer();
+    }
 
-    public void AdvanceTurn() => GameState.AdvanceTurn();
+    public void AdvanceTurn()
+    {
+        GameState.AdvanceTurn();
+    }
 
-    public void SetCurrentPlayer(Guid playerId) => GameState.SetCurrentPlayer(playerId);
+    public void SetCurrentPlayer(Guid playerId)
+    {
+        GameState.SetCurrentPlayer(playerId);
+    }
 }

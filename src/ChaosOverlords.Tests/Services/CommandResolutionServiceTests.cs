@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Commands;
@@ -10,32 +7,31 @@ using ChaosOverlords.Core.Domain.Players;
 using ChaosOverlords.Core.Domain.Scenario;
 using ChaosOverlords.Core.GameData;
 using ChaosOverlords.Core.Services;
-using Xunit;
 
 namespace ChaosOverlords.Tests.Services;
 
 public sealed class CommandResolutionServiceTests
 {
-
     [Fact]
     public void Execute_ResolvesCommandsAndClearsQueue()
     {
-    var writer = new RecordingEventWriter();
-    var rng = new DeterministicRngService();
-    rng.Reset(123);
-    var service = new CommandResolutionService(writer, rng);
+        var writer = new RecordingEventWriter();
+        var rng = new DeterministicRngService();
+        rng.Reset(123);
+        var research = new ResearchService();
+        var service = new CommandResolutionService(writer, rng, research);
         var context = CreateContext();
         var queue = context.State.Commands.GetOrCreate(context.PlayerId);
 
-    var chaosCommand = new ChaosCommand(Guid.NewGuid(), context.PlayerId, context.ChaosGang.Id, TurnNumber: 1, SectorId: "B1", ProjectedChaos: 5);
-    var moveCommand = new MoveCommand(Guid.NewGuid(), context.PlayerId, context.MoveGang.Id, TurnNumber: 1, SourceSectorId: "A1", TargetSectorId: "A2");
-    var controlCommand = new ControlCommand(Guid.NewGuid(), context.PlayerId, context.ControlGang.Id, TurnNumber: 1, SectorId: "C1");
+        var chaosCommand = new ChaosCommand(Guid.NewGuid(), context.PlayerId, context.ChaosGang.Id, 1, "B1", 5);
+        var moveCommand = new MoveCommand(Guid.NewGuid(), context.PlayerId, context.MoveGang.Id, 1, "A1", "A2");
+        var controlCommand = new ControlCommand(Guid.NewGuid(), context.PlayerId, context.ControlGang.Id, 1, "C1");
 
         queue.SetCommand(chaosCommand);
         queue.SetCommand(moveCommand);
         queue.SetCommand(controlCommand);
 
-        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+        var report = service.Execute(context.State, context.PlayerId, 1);
 
         Assert.Equal(context.PlayerId, report.PlayerId);
         Assert.Equal(3, report.Entries.Count);
@@ -58,13 +54,14 @@ public sealed class CommandResolutionServiceTests
     [Fact]
     public void Execute_ReturnsEmptyReport_WhenQueueMissing()
     {
-    var writer = new RecordingEventWriter();
-    var rng = new DeterministicRngService();
-    rng.Reset(321);
-    var service = new CommandResolutionService(writer, rng);
+        var writer = new RecordingEventWriter();
+        var rng = new DeterministicRngService();
+        rng.Reset(321);
+        var research = new ResearchService();
+        var service = new CommandResolutionService(writer, rng, research);
         var context = CreateContext();
 
-        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+        var report = service.Execute(context.State, context.PlayerId, 1);
 
         Assert.Empty(report.Entries);
         Assert.Empty(writer.Events);
@@ -76,21 +73,22 @@ public sealed class CommandResolutionServiceTests
         var writer = new RecordingEventWriter();
         var rng = new DeterministicRngService();
         rng.Reset(111);
-        var service = new CommandResolutionService(writer, rng);
+        var research = new ResearchService();
+        var service = new CommandResolutionService(writer, rng, research);
         var context = CreateContext();
 
         // Fill A2 with 6 gangs from the same owner before execution
         for (var i = 0; i < 6; i++)
         {
-            var filler = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, context.PlayerId, sectorId: "A2");
+            var filler = new Gang(Guid.NewGuid(), new GangData { Name = $"Filler-{i}" }, context.PlayerId, "A2");
             context.State.Game.AddGang(filler);
         }
 
         var queue = context.State.Commands.GetOrCreate(context.PlayerId);
-        var moveCommand = new MoveCommand(Guid.NewGuid(), context.PlayerId, context.MoveGang.Id, TurnNumber: 1, SourceSectorId: "A1", TargetSectorId: "A2");
+        var moveCommand = new MoveCommand(Guid.NewGuid(), context.PlayerId, context.MoveGang.Id, 1, "A1", "A2");
         queue.SetCommand(moveCommand);
 
-        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+        var report = service.Execute(context.State, context.PlayerId, 1);
 
         var entry = Assert.Single(report.Entries);
         Assert.Equal(CommandPhase.Movement, entry.Phase);
@@ -104,7 +102,8 @@ public sealed class CommandResolutionServiceTests
         var writer = new RecordingEventWriter();
         var rng = new DeterministicRngService();
         rng.Reset(222);
-        var service = new CommandResolutionService(writer, rng);
+        var research = new ResearchService();
+        var service = new CommandResolutionService(writer, rng, research);
         var context = CreateContext();
 
         // Prepare a sector with resistance and control
@@ -115,15 +114,15 @@ public sealed class CommandResolutionServiceTests
 
         // Ensure gang with some influence sits in A1
         var influenceGangData = new GangData { Name = "Influencers", Influence = 2 };
-        var influenceGang = new Gang(Guid.NewGuid(), influenceGangData, context.PlayerId, sectorId: "A1");
+        var influenceGang = new Gang(Guid.NewGuid(), influenceGangData, context.PlayerId, "A1");
         context.State.Game.AddGang(influenceGang);
 
         var queue = context.State.Commands.GetOrCreate(context.PlayerId);
-        var cmd = new InfluenceCommand(Guid.NewGuid(), context.PlayerId, influenceGang.Id, TurnNumber: 1, SectorId: "A1");
+        var cmd = new InfluenceCommand(Guid.NewGuid(), context.PlayerId, influenceGang.Id, 1, "A1");
         queue.SetCommand(cmd);
 
         var before = sector.InfluenceResistance;
-        var report = service.Execute(context.State, context.PlayerId, turnNumber: 1);
+        var report = service.Execute(context.State, context.PlayerId, 1);
 
         var entry = Assert.Single(report.Entries);
         Assert.Equal(CommandPhase.Instant, entry.Phase);
@@ -132,18 +131,46 @@ public sealed class CommandResolutionServiceTests
         Assert.Contains(writer.Events, e => e.Type == TurnEventType.Action);
     }
 
+    [Fact]
+    public void ExecuteResearch_AddsProgressAndWritesEvent()
+    {
+        var writer = new RecordingEventWriter();
+        var rng = new DeterministicRngService();
+        rng.Reset(555);
+        var research = new ResearchService();
+        var service = new CommandResolutionService(writer, rng, research);
+        var context = CreateContext();
+
+        // Add a research-capable gang for player
+        var rGang = new Gang(Guid.NewGuid(), new GangData { Name = "Scientist", Research = 4 }, context.PlayerId, "A2");
+        context.State.Game.AddGang(rGang);
+
+        var queue = context.State.Commands.GetOrCreate(context.PlayerId);
+        var cmd = new ResearchCommand(Guid.NewGuid(), context.PlayerId, rGang.Id, 1, "Prototype-1");
+        queue.SetCommand(cmd);
+
+        var report = service.Execute(context.State, context.PlayerId, 1);
+
+        var entry = Assert.Single(report.Entries);
+        Assert.Equal(CommandPhase.Instant, entry.Phase);
+        Assert.Equal(CommandExecutionStatus.Completed, entry.Status);
+        Assert.Contains(writer.Events,
+            e => e.CommandPhase == CommandPhase.Instant && e.Description.Contains("Research"));
+        Assert.Equal(4, context.State.Research.GetOrCreate(context.PlayerId).Progress);
+    }
+
     private static CommandContext CreateContext()
     {
         var playerId = Guid.NewGuid();
-        var player = new Player(playerId, "Commander", cash: 200);
+        var player = new Player(playerId, "Commander", 200);
 
         var chaosGangData = new GangData { Name = "Chaos Crew", Chaos = 5 };
         var moveGangData = new GangData { Name = "Movers", Strength = 3 };
         var controlGangData = new GangData { Name = "Controllers", Control = 3, Strength = 4 };
 
-        var chaosGang = new Gang(Guid.NewGuid(), chaosGangData, playerId, sectorId: "B1");
-        var moveGang = new Gang(Guid.NewGuid(), moveGangData, playerId, sectorId: "A1");
-        var controlGang = new Gang(Guid.NewGuid(), controlGangData, playerId, sectorId: "C1");
+        var chaosGang = new Gang(Guid.NewGuid(), chaosGangData, playerId, "B1");
+        var moveGang = new Gang(Guid.NewGuid(), moveGangData, playerId, "A1");
+        var controlGang = new Gang(Guid.NewGuid(), controlGangData, playerId, "C1");
 
         var sectors = new[]
         {
@@ -173,26 +200,37 @@ public sealed class CommandResolutionServiceTests
             Seed = 99
         };
 
-        var state = new GameState(game, scenario, new List<IPlayer> { player }, startingPlayerIndex: 0, randomSeed: 99);
+        var state = new GameState(game, scenario, new List<IPlayer> { player }, 0, 99);
         return new CommandContext(state, playerId, chaosGang, moveGang, controlGang);
     }
 
-    private sealed record CommandContext(GameState State, Guid PlayerId, Gang ChaosGang, Gang MoveGang, Gang ControlGang);
-
-    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0, int resistance = 0) => new()
+    private static SiteData CreateSite(string name, int cash = 0, int tolerance = 0, int support = 0,
+        int resistance = 0)
     {
-        Name = name,
-        Cash = cash,
-        Tolerance = tolerance,
-        Support = support,
-        Resistance = resistance
-    };
+        return new SiteData
+        {
+            Name = name,
+            Cash = cash,
+            Tolerance = tolerance,
+            Support = support,
+            Resistance = resistance
+        };
+    }
+
+    private sealed record CommandContext(
+        GameState State,
+        Guid PlayerId,
+        Gang ChaosGang,
+        Gang MoveGang,
+        Gang ControlGang);
 
     private sealed class RecordingEventWriter : ITurnEventWriter
     {
-        public List<(int TurnNumber, TurnPhase Phase, CommandPhase? CommandPhase, TurnEventType Type, string Description)> Events { get; } = new();
+        public List<(int TurnNumber, TurnPhase Phase, CommandPhase? CommandPhase, TurnEventType Type, string Description
+            )> Events { get; } = new();
 
-        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
+        public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
+            CommandPhase? commandPhase = null)
         {
             Events.Add((turnNumber, phase, commandPhase, type, description));
         }
@@ -203,7 +241,8 @@ public sealed class CommandResolutionServiceTests
 
         public void WriteAction(ActionResult result)
         {
-            Events.Add((result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase, TurnEventType.Action, result.ToString()));
+            Events.Add((result.Context.TurnNumber, result.Context.Phase, result.Context.CommandPhase,
+                TurnEventType.Action, result.ToString()));
         }
     }
 }

@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 
 namespace ChaosOverlords.Core.Domain.Game.Actions;
 
 /// <summary>
-/// Final outcome of an action resolution attempt.
+///     Final outcome of an action resolution attempt.
 /// </summary>
 public sealed class ActionResult
 {
@@ -31,54 +28,49 @@ public sealed class ActionResult
     }
 
     /// <summary>
-    /// Original context that described the action.
+    ///     Original context that described the action.
     /// </summary>
     public ActionContext Context { get; }
 
     /// <summary>
-    /// Percentile roll used during evaluation.
+    ///     Percentile roll used during evaluation.
     /// </summary>
     public PercentileRollResult Roll { get; }
 
     /// <summary>
-    /// Effective chance (after modifiers) against which the roll was compared.
+    ///     Effective chance (after modifiers) against which the roll was compared.
     /// </summary>
     public int EffectiveChance { get; }
 
     /// <summary>
-    /// Net sum of all applied modifiers.
+    ///     Net sum of all applied modifiers.
     /// </summary>
     public int NetModifier { get; }
 
     /// <summary>
-    /// Outcome of the action.
+    ///     Outcome of the action.
     /// </summary>
     public ActionCheckOutcome Outcome { get; }
 
     /// <summary>
-    /// Applied modifiers for logging/inspection.
+    ///     Applied modifiers for logging/inspection.
     /// </summary>
     public IReadOnlyList<ActionModifier> AppliedModifiers => _appliedModifiers;
 
     /// <summary>
-    /// Convenience flag exposing whether the action is considered successful.
+    ///     Convenience flag exposing whether the action is considered successful.
     /// </summary>
     public bool IsSuccess => Outcome is ActionCheckOutcome.Success or ActionCheckOutcome.AutomaticSuccess;
 
     /// <summary>
-    /// Creates an action result based on a percentile roll.
+    ///     Creates an action result based on a percentile roll.
     /// </summary>
-    public static ActionResult FromRoll(ActionContext context, PercentileRollResult roll, ActionCheckOutcome? forcedOutcome = null)
+    public static ActionResult FromRoll(ActionContext context, PercentileRollResult roll,
+        ActionCheckOutcome? forcedOutcome = null)
     {
-        if (context is null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        if (context is null) throw new ArgumentNullException(nameof(context));
 
-        if (roll is null)
-        {
-            throw new ArgumentNullException(nameof(roll));
-        }
+        if (roll is null) throw new ArgumentNullException(nameof(roll));
 
         var appliedModifiers = context.Modifiers.Count == 0
             ? EmptyModifiers
@@ -90,17 +82,12 @@ public sealed class ActionResult
         return new ActionResult(context, roll, effectiveChance, netModifier, outcome, appliedModifiers);
     }
 
-    private static ActionCheckOutcome DetermineOutcome(ActionDifficulty difficulty, PercentileRollResult roll, int effectiveChance)
+    private static ActionCheckOutcome DetermineOutcome(ActionDifficulty difficulty, PercentileRollResult roll,
+        int effectiveChance)
     {
-        if (roll.Roll <= difficulty.AutomaticSuccessThreshold)
-        {
-            return ActionCheckOutcome.AutomaticSuccess;
-        }
+        if (roll.Roll <= difficulty.AutomaticSuccessThreshold) return ActionCheckOutcome.AutomaticSuccess;
 
-        if (roll.Roll >= difficulty.AutomaticFailureThreshold)
-        {
-            return ActionCheckOutcome.AutomaticFailure;
-        }
+        if (roll.Roll >= difficulty.AutomaticFailureThreshold) return ActionCheckOutcome.AutomaticFailure;
 
         return roll.Roll <= effectiveChance
             ? ActionCheckOutcome.Success

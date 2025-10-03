@@ -10,8 +10,8 @@ public partial class TurnEventsView : UserControl
     public TurnEventsView()
     {
         InitializeComponent();
-        this.AttachedToVisualTree += (_, _) => HookAutoScroll();
-        this.DetachedFromVisualTree += (_, _) => UnhookAutoScroll();
+        AttachedToVisualTree += (_, _) => HookAutoScroll();
+        DetachedFromVisualTree += (_, _) => UnhookAutoScroll();
     }
 
     private void InitializeComponent()
@@ -21,31 +21,20 @@ public partial class TurnEventsView : UserControl
 
     private void HookAutoScroll()
     {
-        if (DataContext is TurnEventsSectionViewModel vm)
-        {
-            vm.Events.CollectionChanged += OnEventsCollectionChanged;
-        }
+        if (DataContext is TurnEventsSectionViewModel vm) vm.Events.CollectionChanged += OnEventsCollectionChanged;
     }
 
     private void UnhookAutoScroll()
     {
-        if (DataContext is TurnEventsSectionViewModel vm)
-        {
-            vm.Events.CollectionChanged -= OnEventsCollectionChanged;
-        }
+        if (DataContext is TurnEventsSectionViewModel vm) vm.Events.CollectionChanged -= OnEventsCollectionChanged;
     }
 
     private void OnEventsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (DataContext is not TurnEventsSectionViewModel vm || !vm.AutoScrollToLatest)
-        {
-            return;
-        }
+        if (DataContext is not TurnEventsSectionViewModel vm || !vm.AutoScrollToLatest) return;
 
         if (this.FindControl<ScrollViewer>("EventsScrollViewer") is { } scroll)
-        {
             // Scroll to bottom to reveal the latest entries
             scroll.ScrollToEnd();
-        }
     }
 }

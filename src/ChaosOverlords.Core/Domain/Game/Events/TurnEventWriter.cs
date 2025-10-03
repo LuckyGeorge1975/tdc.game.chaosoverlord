@@ -1,14 +1,11 @@
-using System;
 using System.Globalization;
-using System.Linq;
-using ChaosOverlords.Core.Domain.Game;
 using ChaosOverlords.Core.Domain.Game.Actions;
 using ChaosOverlords.Core.Domain.Game.Economy;
 
 namespace ChaosOverlords.Core.Domain.Game.Events;
 
 /// <summary>
-/// Default implementation that materialises <see cref="TurnEvent"/> instances and appends them to the log.
+///     Default implementation that materialises <see cref="TurnEvent" /> instances and appends them to the log.
 /// </summary>
 public sealed class TurnEventWriter : ITurnEventWriter
 {
@@ -19,17 +16,15 @@ public sealed class TurnEventWriter : ITurnEventWriter
         _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
     }
 
-    public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description, CommandPhase? commandPhase = null)
+    public void Write(int turnNumber, TurnPhase phase, TurnEventType type, string description,
+        CommandPhase? commandPhase = null)
     {
         if (turnNumber <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber, "Turn number must be greater than zero.");
-        }
+            throw new ArgumentOutOfRangeException(nameof(turnNumber), turnNumber,
+                "Turn number must be greater than zero.");
 
         if (string.IsNullOrWhiteSpace(description))
-        {
             throw new ArgumentException("Description must be provided.", nameof(description));
-        }
 
         var entry = new TurnEvent(turnNumber, phase, commandPhase, type, description, DateTimeOffset.UtcNow);
         _eventLog.Append(entry);
@@ -37,10 +32,7 @@ public sealed class TurnEventWriter : ITurnEventWriter
 
     public void WriteEconomy(int turnNumber, TurnPhase phase, PlayerEconomySnapshot snapshot)
     {
-        if (snapshot is null)
-        {
-            throw new ArgumentNullException(nameof(snapshot));
-        }
+        if (snapshot is null) throw new ArgumentNullException(nameof(snapshot));
 
         var description = FormatEconomyDescription(snapshot);
         Write(turnNumber, phase, TurnEventType.Economy, description);
@@ -48,10 +40,7 @@ public sealed class TurnEventWriter : ITurnEventWriter
 
     public void WriteAction(ActionResult result)
     {
-        if (result is null)
-        {
-            throw new ArgumentNullException(nameof(result));
-        }
+        if (result is null) throw new ArgumentNullException(nameof(result));
 
         var context = result.Context;
         var description = FormatActionDescription(result);
@@ -64,7 +53,8 @@ public sealed class TurnEventWriter : ITurnEventWriter
         var sectorText = $"Sectors {FormatSigned(snapshot.SectorIncome)}";
         var siteText = $"Sites {FormatSigned(snapshot.SiteIncome)}";
         var netText = $"Net {FormatSigned(snapshot.NetChange)}";
-        var balanceText = $"Cash {snapshot.StartingCash.ToString(CultureInfo.InvariantCulture)} → {snapshot.EndingCash.ToString(CultureInfo.InvariantCulture)}";
+        var balanceText =
+            $"Cash {snapshot.StartingCash.ToString(CultureInfo.InvariantCulture)} → {snapshot.EndingCash.ToString(CultureInfo.InvariantCulture)}";
 
         return string.Format(
             CultureInfo.CurrentCulture,
@@ -99,7 +89,8 @@ public sealed class TurnEventWriter : ITurnEventWriter
                 "mods: {0}",
                 string.Join(
                     ", ",
-                    result.AppliedModifiers.Select(m => string.Format(CultureInfo.CurrentCulture, "{0} {1}", m.Name, FormatSigned(m.Value)))));
+                    result.AppliedModifiers.Select(m =>
+                        string.Format(CultureInfo.CurrentCulture, "{0} {1}", m.Name, FormatSigned(m.Value)))));
 
         return string.Format(
             CultureInfo.CurrentCulture,
