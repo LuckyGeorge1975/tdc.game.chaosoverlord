@@ -159,8 +159,9 @@ public class TurnViewModelTests
         var messageHub = new MessageHub();
         var logPathProvider = new TestLogPathProvider();
         var researchService = new ResearchService();
+        var cityFinancialDialogService = new TestCityFinancialDialogService();
         return new TurnViewModel(controller, eventLog, session, recruitmentService, eventWriter, commandQueueService,
-            financePreviewService, researchService, messageHub, logPathProvider);
+            financePreviewService, researchService, messageHub, logPathProvider, cityFinancialDialogService);
     }
 
     private static SiteData CreateSite(string name)
@@ -456,6 +457,14 @@ public class TurnViewModelTests
                 TurnEventType.Action, result.ToString(), DateTimeOffset.UtcNow);
             Events.Add(entry);
             log.Append(entry);
+        }
+    }
+
+    private sealed class TestCityFinancialDialogService : ChaosOverlords.App.Services.ICityFinancialDialogService
+    {
+        public void ShowFinanceDialog()
+        {
+            // No-op for testing
         }
     }
 }

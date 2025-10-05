@@ -214,12 +214,12 @@ Hinweise:
 
 ## Task 19 – Finance HUD + City Financial Dialog
 
-**Status:** 🟡 Planned – UI-Oberflächen auf bestehende Projektion aufsetzen.
+**Status:** ✅ Done – HUD + Dialog (DI service wired, OpenDialogCommand, unit test for invocation) abgeschlossen (2025-10-04).
 
 - CO.FinanceHUDIndicator im Footer zeigt Net +/- der nächsten Runde; Klick öffnet Dialog.
 - CO.CityFinancialDialog listet Kategorien (Upkeep, Recruits, Research, Equipment, Officials, Sector Tax, Site Protection, Chaos Estimate, Cash Adjustment) mit Summen.
 - Anbindung an bestehenden IFinancePreviewService; minimaler Drilldown.
-- Tests/Checks: Bindings fehlerfrei (keine Binding-Errors), simple VM-Snapshot-Test.
+- Tests/Checks: Bindings fehlerfrei (keine Binding-Errors), VM-Snapshot-Tests + OpenDialogCommand Invocation-Test.
 
 ## Task 20 – Event Feed + Last Turn Events Dialog
 

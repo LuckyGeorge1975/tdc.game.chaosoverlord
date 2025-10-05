@@ -3,7 +3,7 @@ namespace ChaosOverlords.App.ViewModels;
 /// <summary>
 ///     Application shell view model that aggregates the primary screens.
 /// </summary>
-public sealed class MainViewModel(MapViewModel mapViewModel, TurnViewModel turnViewModel) : ViewModelBase
+public sealed class MainViewModel(MapViewModel mapViewModel, TurnViewModel turnViewModel, EventFeedViewModel eventFeedViewModel) : ViewModelBase
 {
     /// <summary>
     ///     View model representing the city map.
@@ -14,4 +14,9 @@ public sealed class MainViewModel(MapViewModel mapViewModel, TurnViewModel turnV
     ///     View model managing the active turn state machine.
     /// </summary>
     public TurnViewModel Turn { get; } = turnViewModel ?? throw new ArgumentNullException(nameof(turnViewModel));
+
+    /// <summary>
+    ///     View model for the event feed panel.
+    /// </summary>
+    public EventFeedViewModel EventFeed { get; } = eventFeedViewModel ?? throw new ArgumentNullException(nameof(eventFeedViewModel));
 }

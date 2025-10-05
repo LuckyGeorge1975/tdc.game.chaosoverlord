@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
         xmlns:views="clr-namespace:ChaosOverlords.App.Views"
+        xmlns:finance="clr-namespace:ChaosOverlords.App.Views.Finance"
         mc:Ignorable="d"
         d:DesignWidth="1024"
         d:DesignHeight="768"
@@ -15,14 +16,21 @@
         <!-- Placeholder for upcoming menu bar integration -->
         <Menu DockPanel.Dock="Top" IsVisible="False" />
 
-        <!-- Placeholder for upcoming status bar integration -->
+        <!-- Footer with Finance HUD indicator -->
         <Border DockPanel.Dock="Bottom"
-                Height="24"
-                IsVisible="False" />
+                Padding="4"
+                Background="#111"
+                BorderBrush="#333"
+                BorderThickness="1,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <finance:FinanceHUDIndicatorView DataContext="{Binding Turn.FinanceHud}"/>
+            </StackPanel>
+        </Border>
 
-        <Grid ColumnDefinitions="3*,2*">
+        <Grid ColumnDefinitions="3*,2*,1.5*">
             <views:MapView DataContext="{Binding Map}" Margin="8" />
             <views:TurnView DataContext="{Binding Turn}" Margin="8" Grid.Column="1" />
+            <views:EventFeedPanel DataContext="{Binding EventFeed}" Margin="8" Grid.Column="2" />
         </Grid>
     </DockPanel>
 </Window>

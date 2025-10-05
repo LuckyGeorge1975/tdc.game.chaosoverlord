@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:ChaosOverlords.App.ViewModels"
+             xmlns:events="clr-namespace:ChaosOverlords.Core.Domain.Game.Events;assembly=ChaosOverlords.Core"
+             x:Class="ChaosOverlords.App.Views.EventFeedPanel"
+             x:DataType="vm:EventFeedViewModel">
+    <Border Padding="4" Background="{DynamicResource ThemeControlLowBrush}" CornerRadius="4">
+        <StackPanel Spacing="4">
+            <TextBlock Text="Event Feed" FontWeight="Bold" />
+            <ListBox ItemsSource="{Binding Events}"
+                     SelectedItem="{Binding SelectedEvent, Mode=TwoWay}"
+                     Height="200"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="events:TurnEvent">
+                        <Button Command="{Binding $parent[UserControl].DataContext.SelectEventCommand}"
+                                CommandParameter="{Binding}"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                        </Button>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </Border>
+</UserControl>

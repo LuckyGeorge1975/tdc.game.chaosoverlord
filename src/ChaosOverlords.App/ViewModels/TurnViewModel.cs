@@ -31,11 +31,17 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private readonly IRecruitmentService _recruitmentService;
     private readonly IResearchService _researchService;
     private readonly ITurnController _turnController;
+    private readonly Services.ICityFinancialDialogService? _cityFinancialDialogService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveCommandPhaseDisplay))]
     [NotifyPropertyChangedFor(nameof(HasActiveCommandPhase))]
     private CommandPhase? _activeCommandPhase;
+
+    /// <summary>
+    ///     Compact finance HUD view model (income/expenses/net) for footer display.
+    /// </summary>
+    public Finance.FinanceHUDIndicatorViewModel FinanceHud { get; }
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(CityNetChangeDisplay))]
     private int _cityNetChange;
@@ -95,7 +101,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         IFinancePreviewService financePreviewService,
         IResearchService researchService,
         IMessageHub messageHub,
-        ILogPathProvider logPathProvider)
+        ILogPathProvider logPathProvider,
+        Services.ICityFinancialDialogService cityFinancialDialogService)
     {
         _turnController = turnController ?? throw new ArgumentNullException(nameof(turnController));
         _eventLog = eventLog ?? throw new ArgumentNullException(nameof(eventLog));
@@ -108,7 +115,8 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         _researchService = researchService ?? throw new ArgumentNullException(nameof(researchService));
         _dataService = null;
         _messageHub = messageHub ?? throw new ArgumentNullException(nameof(messageHub));
-        _logPathProvider = logPathProvider ?? throw new ArgumentNullException(nameof(logPathProvider));
+    _logPathProvider = logPathProvider ?? throw new ArgumentNullException(nameof(logPathProvider));
+    _cityFinancialDialogService = cityFinancialDialogService ?? throw new ArgumentNullException(nameof(cityFinancialDialogService));
 
         TurnEvents = new ObservableCollection<TurnEventViewModel>();
         RecruitmentOptions = new ObservableCollection<RecruitmentOptionViewModel>();
@@ -131,6 +139,22 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         CommandQueue = new CommandQueueSectionViewModel(this);
         Recruitment = new RecruitmentSectionViewModel(this);
         TurnEventsPanel = new TurnEventsSectionViewModel(TurnEvents, OpenLogsFolder);
+    FinanceHud = new Finance.FinanceHUDIndicatorViewModel(_gameSession, _financePreviewService);
+    if (_cityFinancialDialogService is not null)
+    {
+        FinanceHud.ShowDialogAction = () =>
+        {
+            try
+            {
+                _cityFinancialDialogService.ShowFinanceDialog();
+            }
+            catch
+            {
+                // Swallow to avoid UI crash; optionally log when logging service is introduced.
+            }
+        };
+    }
+    FinanceHud.Refresh();
 
         SyncFromController();
         UpdateRecruitmentPanelState();
@@ -155,9 +179,10 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
         IResearchService researchService,
         IDataService dataService,
         IMessageHub messageHub,
-        ILogPathProvider logPathProvider)
+        ILogPathProvider logPathProvider,
+        Services.ICityFinancialDialogService cityFinancialDialogService)
         : this(turnController, eventLog, gameSession, recruitmentService, eventWriter, commandQueueService,
-            financePreviewService, researchService, messageHub, logPathProvider)
+            financePreviewService, researchService, messageHub, logPathProvider, cityFinancialDialogService)
     {
         _dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
         TryLoadResearchSuggestions();
@@ -607,6 +632,7 @@ public sealed partial class TurnViewModel : ViewModelBase, IDisposable
     private void OnEventLogChanged(object? sender, EventArgs e)
     {
         UpdateTurnEvents();
+        _messageHub.Publish(new TurnEventsChangedMessage());
     }
 
     private void SyncFromController()

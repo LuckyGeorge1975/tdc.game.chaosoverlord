@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sections="clr-namespace:ChaosOverlords.App.ViewModels.Finance"
+             xmlns:conv="clr-namespace:ChaosOverlords.App.Converters"
+             x:Class="ChaosOverlords.App.Views.Finance.FinanceHUDIndicatorView"
+             x:DataType="sections:FinanceHUDIndicatorViewModel">
+        <Border Padding="4" CornerRadius="4" Background="#2d2f33" BorderBrush="#666" BorderThickness="1" ToolTip.Tip="Projected next turn net change (click Finance for details)">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button Content="Finance" Command="{Binding OpenDialogCommand}" Padding="4 0" Background="#3b3f45" BorderBrush="#888"/>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="Inc:"/>
+                <TextBlock Text="{Binding Income}" Foreground="#6fbf73"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="Exp:"/>
+                <TextBlock Text="{Binding Expenses}" Foreground="#d46a6a"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="Net:"/>
+                <TextBlock Text="{Binding Net}" FontWeight="Bold" Foreground="{Binding Net, Converter={x:Static conv:ValueToRedGreenConverter.Instance}}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

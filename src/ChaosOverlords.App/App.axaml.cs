@@ -132,6 +132,10 @@ public class App : Application
         services.AddSingleton<ITurnController, TurnController>();
         services.AddSingleton<MapViewModel>();
         services.AddSingleton<TurnViewModel>();
+        services.AddSingleton<EventFeedViewModel>(sp => new EventFeedViewModel(sp.GetRequiredService<ITurnEventLog>(), sp.GetRequiredService<TurnViewModel>(), sp.GetRequiredService<IMessageHub>()));
+    services.AddSingleton<ChaosOverlords.App.ViewModels.Finance.FinanceHUDIndicatorViewModel>();
+    services.AddSingleton<ChaosOverlords.App.ViewModels.Finance.CityFinancialDialogViewModel>();
+        services.AddSingleton<ChaosOverlords.App.Services.ICityFinancialDialogService, ChaosOverlords.App.Services.CityFinancialDialogService>();
         services.AddSingleton<MainViewModel>();
 
         _serviceProvider = services.BuildServiceProvider();
